@@ -1,8 +1,20 @@
 <!DOCTYPE html>
-<!-- CRMO_v1446 -->
+<!-- CRMO_v1447 -->
 
 <html dir="rtl" lang="he">
 <head>
+
+<script id="crmo_sb_defaults">
+/* Supabase defaults (public) */
+window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
+window.CRMO_SUPABASE_ANON_KEY = "sb_publishable_I8FsIRkA1yGcINMDv1Bcng__kNvn16I";
+window.CRMO_SUPABASE_BUCKET = "assets";
+window.CRMO_SUPABASE_CONFIG_TABLE = "crmo_site_config";
+window.CRMO_SUPABASE_CONFIG_ID = "main";
+window.CRMO_SUPABASE_REQUIRE_LOGIN = true;
+window.CRMO_SUPABASE_ADMIN_EMAILS = [];
+</script>
+
 <script id="crmo_storage_ns">
 (function(){
   try{
@@ -27175,9 +27187,9 @@ try{
       }
     }catch(e){}
   })();
-  window.CRMO_SUPABASE_URL = window.CRMO_SUPABASE_URL || "https://rtodtmeqijhszdhelawy.supabase.co";
-  window.CRMO_SUPABASE_ANON_KEY = window.CRMO_SUPABASE_ANON_KEY || "sb_publishable_I8FsIRkA1yGcINMDv1Bcng__kNvn16I";
-  window.CRMO_SUPABASE_BUCKET = window.CRMO_SUPABASE_BUCKET || "images";
+  window.CRMO_SUPABASE_URL = window.CRMO_SUPABASE_URL || "PASTE_YOUR_SUPABASE_URL_HERE";
+  window.CRMO_SUPABASE_ANON_KEY = window.CRMO_SUPABASE_ANON_KEY || "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+  window.CRMO_SUPABASE_BUCKET = window.CRMO_SUPABASE_BUCKET || "assets";
   window.CRMO_SUPABASE_PUBLIC_ASSETS_BASE = window.CRMO_SUPABASE_PUBLIC_ASSETS_BASE || null;
   (function(){
     try{
@@ -27723,7 +27735,7 @@ async function refreshStatus(){
         var key = prompt('Supabase anon key (Settings > API > anon public)', cur.anonKey || window.CRMO_SUPABASE_ANON_KEY || '');
         if(key === null) return;
         key = String(key||'').trim();
-        var bucket = prompt('שם ה-Bucket ב-Storage (ברירת מחדל: assets)', cur.bucket || window.CRMO_SUPABASE_BUCKET || 'images');
+        var bucket = prompt('שם ה-Bucket ב-Storage (ברירת מחדל: assets)', cur.bucket || window.CRMO_SUPABASE_BUCKET || 'assets');
         if(bucket === null) return;
         bucket = String(bucket||'').trim() || 'assets';
         var tbl = prompt('שם טבלת הקונפיג ב-DB (ברירת מחדל: crmo_site_config)', cur.configTable || window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config');
