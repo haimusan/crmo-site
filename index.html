@@ -8775,7 +8775,7 @@ admin@domain.com" rows="3" style="width:100%;padding:10px 12px;border-radius:12p
         var cur = loadCfg() || {};
         byId('crmo-sb-url').value = cur.url || (window.CRMO_SUPABASE_URL && String(window.CRMO_SUPABASE_URL).indexOf('PASTE_')!==0 ? window.CRMO_SUPABASE_URL : '') || '';
         byId('crmo-sb-anon').value = cur.anonKey || (window.CRMO_SUPABASE_ANON_KEY && String(window.CRMO_SUPABASE_ANON_KEY).indexOf('PASTE_')!==0 ? window.CRMO_SUPABASE_ANON_KEY : '') || '';
-        byId('crmo-sb-bucket').value = cur.bucket || window.CRMO_SUPABASE_BUCKET || 'assets';
+        byId('crmo-sb-bucket').value = cur.bucket || window.CRMO_SUPABASE_BUCKET || 'images';
         byId('crmo-sb-table').value = cur.configTable || window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
         byId('crmo-sb-id').value = cur.configId || window.CRMO_SUPABASE_CONFIG_ID || 'main';
         byId('crmo-sb-require-login').checked = (typeof cur.requireLogin === 'boolean') ? cur.requireLogin : (typeof window.CRMO_SUPABASE_REQUIRE_LOGIN === 'boolean' ? window.CRMO_SUPABASE_REQUIRE_LOGIN : true);
@@ -27175,9 +27175,9 @@ try{
       }
     }catch(e){}
   })();
-  window.CRMO_SUPABASE_URL = window.CRMO_SUPABASE_URL || "PASTE_YOUR_SUPABASE_URL_HERE";
-  window.CRMO_SUPABASE_ANON_KEY = window.CRMO_SUPABASE_ANON_KEY || "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
-  window.CRMO_SUPABASE_BUCKET = window.CRMO_SUPABASE_BUCKET || "assets";
+  window.CRMO_SUPABASE_URL = window.CRMO_SUPABASE_URL || "https://rtodtmeqijhszdhelawy.supabase.co";
+  window.CRMO_SUPABASE_ANON_KEY = window.CRMO_SUPABASE_ANON_KEY || "sb_publishable_I8FsIRkA1yGcINMDv1Bcng__kNvn16I";
+  window.CRMO_SUPABASE_BUCKET = window.CRMO_SUPABASE_BUCKET || "images";
   window.CRMO_SUPABASE_PUBLIC_ASSETS_BASE = window.CRMO_SUPABASE_PUBLIC_ASSETS_BASE || null;
   (function(){
     try{
@@ -27322,7 +27322,7 @@ try{
     var ok = await isAdminAllowed();
     if (!ok) throw new Error('not-auth');
     if (!file) throw new Error('no-file');
-    var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
+    var bucket = window.CRMO_SUPABASE_BUCKET || 'images';
     var ext = '';
     try{
       var nm = (file.name||'').toString();
@@ -27389,7 +27389,7 @@ try{
     var sb = await getClient();
     var ok = await isAdminAllowed();
     if(!ok) throw new Error('not-auth');
-    var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
+    var bucket = window.CRMO_SUPABASE_BUCKET || 'images';
     var folder = window.CRMO_galleryFolderForId(galleryId);
     var keepPath = folder + '/.keep';
     try{
@@ -27723,7 +27723,7 @@ async function refreshStatus(){
         var key = prompt('Supabase anon key (Settings > API > anon public)', cur.anonKey || window.CRMO_SUPABASE_ANON_KEY || '');
         if(key === null) return;
         key = String(key||'').trim();
-        var bucket = prompt('שם ה-Bucket ב-Storage (ברירת מחדל: assets)', cur.bucket || window.CRMO_SUPABASE_BUCKET || 'assets');
+        var bucket = prompt('שם ה-Bucket ב-Storage (ברירת מחדל: assets)', cur.bucket || window.CRMO_SUPABASE_BUCKET || 'images');
         if(bucket === null) return;
         bucket = String(bucket||'').trim() || 'assets';
         var tbl = prompt('שם טבלת הקונפיג ב-DB (ברירת מחדל: crmo_site_config)', cur.configTable || window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config');
