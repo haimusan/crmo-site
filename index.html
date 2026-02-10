@@ -8775,7 +8775,7 @@ admin@domain.com" rows="3" style="width:100%;padding:10px 12px;border-radius:12p
         var cur = loadCfg() || {};
         byId('crmo-sb-url').value = cur.url || (window.CRMO_SUPABASE_URL && String(window.CRMO_SUPABASE_URL).indexOf('PASTE_')!==0 ? window.CRMO_SUPABASE_URL : '') || '';
         byId('crmo-sb-anon').value = cur.anonKey || (window.CRMO_SUPABASE_ANON_KEY && String(window.CRMO_SUPABASE_ANON_KEY).indexOf('PASTE_')!==0 ? window.CRMO_SUPABASE_ANON_KEY : '') || '';
-        byId('crmo-sb-bucket').value = cur.bucket || window.CRMO_SUPABASE_BUCKET || 'images';
+        byId('crmo-sb-bucket').value = cur.bucket || window.CRMO_SUPABASE_BUCKET || 'assets';
         byId('crmo-sb-table').value = cur.configTable || window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
         byId('crmo-sb-id').value = cur.configId || window.CRMO_SUPABASE_CONFIG_ID || 'main';
         byId('crmo-sb-require-login').checked = (typeof cur.requireLogin === 'boolean') ? cur.requireLogin : (typeof window.CRMO_SUPABASE_REQUIRE_LOGIN === 'boolean' ? window.CRMO_SUPABASE_REQUIRE_LOGIN : true);
@@ -27322,7 +27322,7 @@ try{
     var ok = await isAdminAllowed();
     if (!ok) throw new Error('not-auth');
     if (!file) throw new Error('no-file');
-    var bucket = window.CRMO_SUPABASE_BUCKET || 'images';
+    var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
     var ext = '';
     try{
       var nm = (file.name||'').toString();
@@ -27389,7 +27389,7 @@ try{
     var sb = await getClient();
     var ok = await isAdminAllowed();
     if(!ok) throw new Error('not-auth');
-    var bucket = window.CRMO_SUPABASE_BUCKET || 'images';
+    var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
     var folder = window.CRMO_galleryFolderForId(galleryId);
     var keepPath = folder + '/.keep';
     try{
