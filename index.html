@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- CRMO_v1452 -->
+<!-- CRMO_v1453 -->
 
 <html dir="rtl" lang="he">
 <head>
 
 
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "CRMO_v1452";
+window.CRMO_BUILD_VERSION = "CRMO_v1453";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -106,7 +106,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1452</title>
+<title>CRMO_v1453</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -4437,6 +4437,11 @@ body.role-guest .tile-like-btn{
   cursor:default;
   pointer-events:none;
 }
+/* v1453: hide the top view-mode bar for non-admin/non-owner */
+#crmo-role-toggle{ display:none !important; }
+body.role-admin #crmo-role-toggle,
+body.role-master #crmo-role-toggle{ display:flex !important; }
+
 #crmo-role-toggle{
   position:fixed;
   top:0;
