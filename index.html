@@ -6,7 +6,7 @@
 
 
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "CRMO_v1453";
+window.CRMO_BUILD_VERSION = "CRMO_v1454";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -8253,8 +8253,40 @@ function render(){
 </div>
 
 <div id="crmo-media-admin" class="crmo-future-panel is-collapsed" aria-label="מדיה">
-  <div class="wrap">
-    <div class="crmo-future-card">מדיה — בפיתוח עתידי</div>
+      <div class="crmo-admin-card">
+        <div class="crmo-admin-card-top">
+          <div>
+            <div class="crmo-admin-name">העלאת עבודה לגלריה</div>
+            <div class="crmo-admin-meta">שומר תמונה + שם עבודה, ומסנכרן אוטומטית לסופהבייס (crmo_site_config)</div>
+          </div>
+        </div>
+
+        <form id="crmo-upload-work-form" class="crmo-admin-editor-grid" style="grid-template-columns: 1fr;">
+          <label class="crmo-auth-label">גלריה</label>
+          <select name="crmo_gallery" class="crmo-auth-input">
+            <option value="">בחר גלריה…</option>
+          </select>
+
+          <label class="crmo-auth-label">שם העבודה</label>
+          <input name="crmo_title" type="text" class="crmo-auth-input" placeholder="כותרת / שם עבודה">
+
+          <label class="crmo-auth-label">תיאור קצר (אופציונלי)</label>
+          <textarea name="crmo_desc" class="crmo-auth-input" rows="2" placeholder="טקסט קצר שיופיע באריח"></textarea>
+
+          <label class="crmo-auth-label">תמונה</label>
+          <input name="crmo_file" type="file" accept="image/*" class="crmo-auth-input">
+
+          <div class="crmo-admin-actions" style="margin-top:8px;">
+            <button type="submit" class="crmo-admin-btn">Upload</button>
+            <span class="crmo-upload-status crmo-admin-meta" style="margin-inline-start:10px;"></span>
+          </div>
+        </form>
+
+        <div class="crmo-admin-meta" style="margin-top:10px; opacity:.85;">
+          נשמר תחת המפתח <code>crmo_dynamic_works_v1</code>. כל מפתח שמתחיל ב-<code>crmo_</code> מסונכרן אוטומטית דרך מנגנון ה-AUTO_SYNC.
+        </div>
+      </div>
+</div>
   </div>
 </div>
 
@@ -16932,8 +16964,9 @@ var requestedRole = null;
       root.classList.remove('role-admin','role-user','role-guest','role-master','role-usability','role-ux','role-user-social','role-client');
       if(role === 'master'){
         root.classList.add('role-admin','role-master');
-      }else if(role === 'admin'){
+      }else if(role === 'admin' || role === 'owner'){
         root.classList.add('role-admin');
+        if(role === 'owner') root.classList.add('role-owner');
       }else if(role === 'ux'){
         root.classList.add('role-admin','role-ux');
       }else if(role === 'usability'){
@@ -24648,7 +24681,202 @@ document.addEventListener('click', function(ev){
     try{
       var v = localStorage.getItem(key);
       return (v === null || v === undefined) ? fallback : v;
-    }catch(e){ return fallback; }
+    }
+
+  // =====================================================================
+  // Dynamic Works (v1) — upload an item (image + title) into any gallery
+  // Stored in localStorage key "crmo_dynamic_works_v1" so AUTO_SYNC persists it
+  // =====================================================================
+
+  var CRMO_WORKS_KEY = 'crmo_dynamic_works_v1';
+
+  function crmoLoadWorks() {
+    var raw = safeGet(CRMO_WORKS_KEY, '[]');
+    try {
+      var arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function crmoSaveWorks(arr) {
+    safeSet(CRMO_WORKS_KEY, JSON.stringify(arr || []));
+  }
+
+  function crmoMakeWorkId() {
+    return 'work_' + Math.random().toString(16).slice(2) + '_' + Date.now();
+  }
+
+  function crmoFindGalleryGrid(galleryId) {
+    var section = document.getElementById(galleryId);
+    if (!section) return null;
+    return section.querySelector('.gallery-grid') || section.querySelector('.gallery-grid.grid');
+  }
+
+  function crmoCreateTileFromTemplate(galleryId) {
+    var grid = crmoFindGalleryGrid(galleryId);
+    if (!grid) return null;
+
+    var tpl = grid.querySelector('.tile-edit-wrapper');
+    if (!tpl) return null;
+
+    var node = tpl.cloneNode(true);
+
+    // Clean any existing images
+    var a = node.querySelector('a.ph');
+    if (a) {
+      var imgs = a.querySelectorAll('img');
+      imgs.forEach(function(img) { img.remove(); });
+      a.removeAttribute('data-full');
+    }
+
+    // Ensure it's not selected / editing state
+    node.classList.remove('editing');
+    return node;
+  }
+
+  function crmoApplyWorkToTile(work, node) {
+    node.setAttribute('data-project-id', work.id);
+
+    var a = node.querySelector('a.ph');
+    if (a) {
+      a.setAttribute('href', '#');
+
+      var url = work && work.assets && work.assets[0] && work.assets[0].url ? work.assets[0].url : '';
+      if (url) {
+        a.setAttribute('data-full', url);
+
+        var img = document.createElement('img');
+        img.alt = work.title || work.name || '';
+        img.loading = 'lazy';
+        img.src = url;
+        a.insertBefore(img, a.firstChild);
+      }
+    }
+
+    var h = node.querySelector('.tile-meta h4');
+    if (h) h.textContent = work.title || work.name || 'Untitled';
+
+    var p = node.querySelector('.tile-meta p');
+    if (p) p.textContent = work.subtitle || work.description || '';
+  }
+
+  function crmoEnsureWorkRendered(work) {
+    if (!work || !work.galleryId) return;
+
+    var grid = crmoFindGalleryGrid(work.galleryId);
+    if (!grid) return;
+
+    if (grid.querySelector('.tile-edit-wrapper[data-project-id="' + work.id + '"]')) return;
+
+    var node = crmoCreateTileFromTemplate(work.galleryId);
+    if (!node) return;
+
+    crmoApplyWorkToTile(work, node);
+    grid.appendChild(node);
+  }
+
+  function crmoRenderAllWorks() {
+    var works = crmoLoadWorks();
+    works.forEach(function(w) { crmoEnsureWorkRendered(w); });
+  }
+
+  async function crmoHandleWorkUpload(e) {
+    e.preventDefault();
+
+    // Admin-only
+    if (typeof isAdmin === 'function' && !isAdmin()) {
+      alert('אין הרשאות מנהל להעלאה.');
+      return;
+    }
+
+    var form = e.currentTarget;
+    var galleryId = (form.querySelector('[name="crmo_gallery"]') || {}).value || '';
+    var title = ((form.querySelector('[name="crmo_title"]') || {}).value || '').trim();
+    var desc = ((form.querySelector('[name="crmo_desc"]') || {}).value || '').trim();
+    var fileInput = form.querySelector('[name="crmo_file"]');
+    var file = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+
+    if (!galleryId) {
+      alert('בחר גלריה.');
+      return;
+    }
+    if (!file) {
+      alert('בחר תמונה להעלאה.');
+      return;
+    }
+
+    var statusEl = form.querySelector('.crmo-upload-status');
+    if (statusEl) statusEl.textContent = 'מעלה…';
+
+    try {
+      var upload = await window.CRMO_uploadImage(file, 'galleries/' + galleryId);
+
+      var work = {
+        id: crmoMakeWorkId(),
+        galleryId: galleryId,
+        title: title || (file.name || 'Untitled'),
+        description: desc || '',
+        assets: [
+          { type: 'image', url: upload.url, path: upload.path, filename: file.name }
+        ],
+        createdAt: new Date().toISOString()
+      };
+
+      var works = crmoLoadWorks();
+      works.push(work);
+      crmoSaveWorks(works);
+
+      crmoEnsureWorkRendered(work);
+
+      if (statusEl) statusEl.textContent = '✅ נשמר (יסונכרן לסופהבייס תוך כמה שניות).';
+      form.reset();
+    } catch (err) {
+      console.error(err);
+      if (statusEl) statusEl.textContent = '❌ העלאה נכשלה. בדוק Console/Logs.';
+      alert('העלאה נכשלה. פתח Console לפרטים.');
+    }
+  }
+
+  function crmoInitMediaUploadUI() {
+    var panel = document.getElementById('crmo-media-admin');
+    if (!panel) return;
+
+    // Build gallery dropdown (once)
+    var select = panel.querySelector('select[name="crmo_gallery"]');
+    if (select && select.options && select.options.length <= 1) {
+      var ids = [];
+      if (window.CREAMO_CONTENT && window.CREAMO_CONTENT.galleries) {
+        ids = Object.keys(window.CREAMO_CONTENT.galleries);
+      } else {
+        document.querySelectorAll('section.gallery[id]').forEach(function(s) { ids.push(s.id); });
+      }
+      ids.forEach(function(id) {
+        var opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = id;
+        select.appendChild(opt);
+      });
+    }
+
+    // Bind submit once
+    var form = panel.querySelector('form#crmo-upload-work-form');
+    if (form && !form.__bound) {
+      form.addEventListener('submit', crmoHandleWorkUpload);
+      form.__bound = true;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Delay to make sure base content + auth is initialized
+    setTimeout(function() {
+      crmoInitMediaUploadUI();
+      crmoRenderAllWorks();
+    }, 250);
+  });
+
+catch(e){ return fallback; }
   }
   function safeSet(key, val){
     try{ localStorage.setItem(key, val); }catch(e){}
