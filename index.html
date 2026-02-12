@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1449 -->
+<!-- CRMO_v1450 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -92,7 +92,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1449</title>
+<title>CRMO_v1450</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -27301,15 +27301,26 @@ try{
     return (s||'').toString().trim().toLowerCase();
   }
   async function isAdminAllowed(){
-    if (!window.CRMO_SUPABASE_REQUIRE_LOGIN) return true;
+    // Viewing can be public, but admin/editor actions must require a signed-in user with an admin role.
     var sb = await getClient();
     var out = await sb.auth.getSession();
     var session = out && out.data && out.data.session;
-    var email = session && session.user && session.user.email;
-    if (!session) return false;
+    if (!session || !session.user) return false;
+
+    // Preferred: role stored in user_metadata (set in Supabase Dashboard -> Auth -> Users -> user_metadata)
+    var role = '';
+    try{
+      role = (session.user.user_metadata && (session.user.user_metadata.crmo_role || session.user.user_metadata.role)) || '';
+    }catch(e){}
+    role = String(role || '').toLowerCase().trim();
+    if (role === 'owner' || role === 'admin' || role === 'ux_tester') return true;
+
+    // Fallback (optional): allow-list by email, if provided
+    var email = session.user.email || '';
     var allow = (window.CRMO_SUPABASE_ADMIN_EMAILS || []).map(normalizeEmail).filter(Boolean);
-    if (!allow.length) return true; // any signed-in user
-    return allow.indexOf(normalizeEmail(email)) !== -1;
+    if (allow.length && allow.indexOf(normalizeEmail(email)) !== -1) return true;
+
+    return false;
   }
   function setStatus(text){
     try{

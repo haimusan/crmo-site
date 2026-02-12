@@ -4,25 +4,35 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>CRMO</title>
-  <meta http-equiv="refresh" content="0;url=/?p=%2F">
   <script>
   (function(){
     try{
       var path = location.pathname || '/';
       var search = location.search || '';
       var hash = location.hash || '';
-      var target = '/?p=' + encodeURIComponent(path + search + hash);
+
+      // Detect base path:
+      // - Custom domain / user pages: '/' (path like '/exhibitions')
+      // - Project pages: '/<repo>/' (path like '/crmo-site/exhibitions')
+      var parts = path.split('/').filter(Boolean);
+      var base = (parts.length > 1) ? ('/' + parts[0] + '/') : '/';
+
+      // Build "virtual path" relative to base
+      var rel = path;
+      if (base !== '/' && path.indexOf(base) === 0){
+        rel = '/' + path.slice(base.length);
+        if (rel === '//') rel = '/';
+      }
+
+      var target = base + '?p=' + encodeURIComponent(rel + search + hash);
       location.replace(target);
     }catch(e){
+      // fallback
       location.replace('/');
     }
   })();
   </script>
-  <style>
-    body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial; padding:24px; line-height:1.4;}
-  </style>
+  <meta http-equiv="refresh" content="0;url=/">
 </head>
-<body>
-  מעביר לעמוד...
-</body>
+<body></body>
 </html>
