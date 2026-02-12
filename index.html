@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1448 -->
+<!-- CRMO_v1449 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -11,7 +11,7 @@ window.CRMO_SUPABASE_ANON_KEY = "sb_publishable_I8FsIRkA1yGcINMDv1Bcng__kNvn16I"
 window.CRMO_SUPABASE_BUCKET = "assets";
 window.CRMO_SUPABASE_CONFIG_TABLE = "crmo_site_config";
 window.CRMO_SUPABASE_CONFIG_ID = "main";
-window.CRMO_SUPABASE_REQUIRE_LOGIN = true;
+window.CRMO_SUPABASE_REQUIRE_LOGIN = false;
 window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 </script>
 
@@ -51,9 +51,25 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
   }
 })();
 </script>
+
+<script id="crmo_gh_pages_router">
+/* GitHub Pages clean-path routing support:
+   404.html redirects to /?p=/path and we restore the path here. */
+(function(){
+  try{
+    var sp = new URLSearchParams(location.search || '');
+    var p = sp.get('p');
+    if(!p) return;
+    try{ history.replaceState(null, '', p); }catch(_){}
+  }catch(e){}
+})();
+</script>
+
 <style id="crmo_route_gallery_styles">
-body.crmo-route-gallery footer{ display:none !important; }
 body.crmo-route-gallery .tiles-manager-bar{ display:none !important; }
+body.role-admin .tiles-manager-bar,
+body.role-master .tiles-manager-bar{ display:flex !important; }
+
 body.crmo-route-gallery .tile-edit-btn,
 body.crmo-route-gallery .tile-admin-icons{ display:none !important; }
 body.crmo-route-gallery .gallery-grid.grid > .tile-edit-wrapper{ display:block !important; }
@@ -76,7 +92,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1448</title>
+<title>CRMO_v1449</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -28736,6 +28752,116 @@ async function refreshStatus(){
   }else{
     init();
   }
+})();
+</script>
+
+
+<script id="crmo_route_gallery_logic">
+(function(){
+  function normSlug(s){
+    s = (s||'').trim().replace(/^\/+|\/+$/g,'');
+    if(!s) return '';
+    // allow /g/<slug> or /<slug>
+    if(s.toLowerCase().startsWith('g/')) s = s.slice(2);
+    // ignore paths that look like files
+    if(/\.[a-z0-9]{1,6}$/i.test(s)) return '';
+    return s;
+  }
+
+  function applyRoute(){
+    try{
+      var path = String(location.pathname || '/');
+      var slug = normSlug(path);
+      if(!slug) {
+        document.body.classList.remove('crmo-route-gallery');
+        document.body.removeAttribute('data-crmo-route');
+        // unhide anything we hid
+        document.querySelectorAll('[data-crmo-hidden-by-route="1"]').forEach(function(el){
+          el.style.display = '';
+          el.removeAttribute('data-crmo-hidden-by-route');
+        });
+        return;
+      }
+
+      // Only route if matching a known section id
+      var target = document.getElementById(slug);
+      if(!target){
+        // try common mapping: underscores->hyphens
+        target = document.getElementById(slug.replace(/_/g,'-'));
+      }
+      if(!target) return; // unknown path: let it behave normally (or 404)
+
+      document.body.classList.add('crmo-route-gallery');
+      document.body.setAttribute('data-crmo-route', slug);
+
+      // Hide all main sections except header (outside main), target gallery, and contact section (if exists)
+      var contact = document.getElementById('contact');
+      var main = document.querySelector('main');
+      if(main){
+        Array.prototype.slice.call(main.children || []).forEach(function(sec){
+          if(!(sec instanceof HTMLElement)) return;
+          if(sec === target) return;
+          if(contact && sec === contact) return;
+          // keep any element that contains the target (in case nested)
+          if(sec.contains(target)) return;
+          // keep any element that contains contact (rare)
+          if(contact && sec.contains(contact)) return;
+          sec.style.display = 'none';
+          sec.setAttribute('data-crmo-hidden-by-route','1');
+        });
+      }
+
+      // Make sure target & contact are visible
+      try{ target.style.display = ''; }catch(_){}
+      try{ if(contact) contact.style.display = ''; }catch(_){}
+
+      // Scroll to top / into view
+      try{ window.scrollTo(0,0); }catch(_){}
+      try{ target.scrollIntoView({behavior:'instant', block:'start'}); }catch(_){}
+    }catch(e){}
+  }
+
+  // Run after DOM is ready
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', applyRoute, {once:true});
+  }else{
+    applyRoute();
+  }
+
+  // Handle navigation changes
+  window.addEventListener('popstate', applyRoute);
+})();
+</script>
+
+
+<script id="crmo_route_nav">
+(function(){
+  function isInternalPath(href){
+    if(!href) return false;
+    // ignore hashes and mailto etc
+    if(/^#/.test(href) || /^[a-z]+:/i.test(href)) return false;
+    if(href.startsWith('//')) return false;
+    return href.startsWith('/');
+  }
+  document.addEventListener('click', function(ev){
+    try{
+      var a = ev.target && ev.target.closest ? ev.target.closest('a[href]') : null;
+      if(!a) return;
+      var href = a.getAttribute('href') || '';
+      if(!isInternalPath(href)) return;
+      // Only intercept for /g/<slug> or /<slug> without dot-ext
+      var s = href.replace(/^\/+|\/+$/g,'');
+      if(!s) return;
+      if(/\.[a-z0-9]{1,6}$/i.test(s)) return;
+      if(!(s.toLowerCase().startsWith('g/') || /^[a-z0-9_-]+$/i.test(s))) return;
+      // Let browser handle if target is _blank
+      if(a.target && a.target.toLowerCase() === '_blank') return;
+      ev.preventDefault();
+      try{ history.pushState(null,'',href); }catch(_){ location.href = href; return; }
+      // trigger popstate-like
+      try{ window.dispatchEvent(new PopStateEvent('popstate')); }catch(_){}
+    }catch(e){}
+  }, true);
 })();
 </script>
 
