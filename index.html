@@ -1,9 +1,39 @@
 <!DOCTYPE html>
-<!-- CRMO_v1451 -->
+<!-- CRMO_v1452 -->
 
 <html dir="rtl" lang="he">
 <head>
 
+
+<script id="crmo_build_info">
+window.CRMO_BUILD_VERSION = "CRMO_v1452";
+window.CRMO_STUDIO_TITLE = "CRMO";
+</script>
+
+<script id="crmo_title_and_footer_version">
+(function(){
+  function apply(){
+    try{
+      var p = String(location.pathname || "/");
+      var parts = p.split("/").filter(Boolean);
+      var base = parts.length ? parts[parts.length-1] : "";
+      var isIndex = (!base || base.toLowerCase() === "index.html");
+      if (isIndex) {
+        document.title = window.CRMO_STUDIO_TITLE || document.title;
+      } else {
+        document.title = base.replace(/\.html?$/i, "");
+      }
+      var vEl = document.getElementById("crmo-footer-version");
+      if (vEl) vEl.textContent = window.CRMO_BUILD_VERSION || "";
+    } catch(e){}
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", apply);
+  } else {
+    apply();
+  }
+})();
+</script>
 <script id="crmo_sb_defaults">
 /* Supabase defaults (public) */
 window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
@@ -76,7 +106,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1451</title>
+<title>CRMO_v1452</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -12509,6 +12539,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 <div class="crmo-footer-bottom" dir="ltr">
     <img class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg" alt="Creative Monster favicon"/>
     <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span>
+    <span id="crmo-footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;"></span>
   </div>
 </div>
 </footer>
