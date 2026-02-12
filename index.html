@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1450 -->
+<!-- CRMO_v1451 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -11,7 +11,7 @@ window.CRMO_SUPABASE_ANON_KEY = "sb_publishable_I8FsIRkA1yGcINMDv1Bcng__kNvn16I"
 window.CRMO_SUPABASE_BUCKET = "assets";
 window.CRMO_SUPABASE_CONFIG_TABLE = "crmo_site_config";
 window.CRMO_SUPABASE_CONFIG_ID = "main";
-window.CRMO_SUPABASE_REQUIRE_LOGIN = false;
+window.CRMO_SUPABASE_REQUIRE_LOGIN = true;
 window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 </script>
 
@@ -51,25 +51,9 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
   }
 })();
 </script>
-
-<script id="crmo_gh_pages_router">
-/* GitHub Pages clean-path routing support:
-   404.html redirects to /?p=/path and we restore the path here. */
-(function(){
-  try{
-    var sp = new URLSearchParams(location.search || '');
-    var p = sp.get('p');
-    if(!p) return;
-    try{ history.replaceState(null, '', p); }catch(_){}
-  }catch(e){}
-})();
-</script>
-
 <style id="crmo_route_gallery_styles">
+body.crmo-route-gallery footer{ display:none !important; }
 body.crmo-route-gallery .tiles-manager-bar{ display:none !important; }
-body.role-admin .tiles-manager-bar,
-body.role-master .tiles-manager-bar{ display:flex !important; }
-
 body.crmo-route-gallery .tile-edit-btn,
 body.crmo-route-gallery .tile-admin-icons{ display:none !important; }
 body.crmo-route-gallery .gallery-grid.grid > .tile-edit-wrapper{ display:block !important; }
@@ -92,7 +76,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1450</title>
+<title>CRMO_v1451</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -7251,6 +7235,15 @@ html[dir="rtl"] .crmo-mobile-panel{right:0; left:auto;}
   body.crmo-mobile-nav-open{overflow:visible;}
 }
 </style>
+
+<style id="CRMO_v1451_admin_visibility_fix">
+/* v1451: show admin UI only when authenticated role is owner/admin/etc */
+body.role-admin #crmo-admin-bar{ display:block !important; }
+body.role-admin #crmo-header-admin .crmo-header-admin-toggle,
+body.role-admin #crmo-galleries-admin .crmo-galleries-admin-toggle{ display:flex !important; }
+body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role switch bar is dev/admin only */
+</style>
+
 </head>
 <body class="gallery-hover-ready role-guest">
 <div dir="rtl" id="crmo-role-toggle">
@@ -27301,26 +27294,15 @@ try{
     return (s||'').toString().trim().toLowerCase();
   }
   async function isAdminAllowed(){
-    // Viewing can be public, but admin/editor actions must require a signed-in user with an admin role.
+    if (!window.CRMO_SUPABASE_REQUIRE_LOGIN) return true;
     var sb = await getClient();
     var out = await sb.auth.getSession();
     var session = out && out.data && out.data.session;
-    if (!session || !session.user) return false;
-
-    // Preferred: role stored in user_metadata (set in Supabase Dashboard -> Auth -> Users -> user_metadata)
-    var role = '';
-    try{
-      role = (session.user.user_metadata && (session.user.user_metadata.crmo_role || session.user.user_metadata.role)) || '';
-    }catch(e){}
-    role = String(role || '').toLowerCase().trim();
-    if (role === 'owner' || role === 'admin' || role === 'ux_tester') return true;
-
-    // Fallback (optional): allow-list by email, if provided
-    var email = session.user.email || '';
+    var email = session && session.user && session.user.email;
+    if (!session) return false;
     var allow = (window.CRMO_SUPABASE_ADMIN_EMAILS || []).map(normalizeEmail).filter(Boolean);
-    if (allow.length && allow.indexOf(normalizeEmail(email)) !== -1) return true;
-
-    return false;
+    if (!allow.length) return true; // any signed-in user
+    return allow.indexOf(normalizeEmail(email)) !== -1;
   }
   function setStatus(text){
     try{
@@ -28767,112 +28749,119 @@ async function refreshStatus(){
 </script>
 
 
-<script id="crmo_route_gallery_logic">
+<script id="CRMO_v1451_role_bootstrap">
 (function(){
-  function normSlug(s){
-    s = (s||'').trim().replace(/^\/+|\/+$/g,'');
-    if(!s) return '';
-    // allow /g/<slug> or /<slug>
-    if(s.toLowerCase().startsWith('g/')) s = s.slice(2);
-    // ignore paths that look like files
-    if(/\.[a-z0-9]{1,6}$/i.test(s)) return '';
-    return s;
+  function byId(id){ return document.getElementById(id); }
+  function setRoleClasses(role){
+    var root = document.body;
+    if(!root) return;
+    root.classList.remove('role-admin','role-user','role-guest','role-master','role-usability','role-ux','role-user-social','role-client');
+    if(role === 'master'){
+      root.classList.add('role-admin','role-master');
+    }else if(role === 'admin'){
+      root.classList.add('role-admin');
+    }else if(role === 'ux'){
+      root.classList.add('role-admin','role-ux');
+    }else if(role === 'client'){
+      root.classList.add('role-client');
+    }else if(role === 'social'){
+      root.classList.add('role-user','role-user-social');
+    }else if(role === 'user'){
+      root.classList.add('role-user');
+    }else{
+      root.classList.add('role-guest');
+    }
+
+    // update role toggle active state (if visible)
+    try{
+      var box = byId('crmo-role-toggle');
+      if(box){
+        var btns = box.querySelectorAll('button[data-role]');
+        btns.forEach(function(b){
+          b.classList.toggle('active', b.getAttribute('data-role') === role);
+        });
+      }
+    }catch(e){}
+    try{
+      document.dispatchEvent(new CustomEvent('crmo:role-changed', { detail: { role: role } }));
+    }catch(e){}
   }
 
-  function applyRoute(){
+  function mapDbRoleToUi(dbRole){
+    dbRole = String(dbRole||'').toLowerCase();
+    if(dbRole === 'owner') return 'master';
+    if(dbRole === 'admin') return 'admin';
+    if(dbRole === 'ux' || dbRole === 'ux_tester' || dbRole === 'uxui') return 'ux';
+    if(dbRole === 'client') return 'client';
+    return 'user';
+  }
+
+  async function getSb(){
+    if(!window.CRMO_getSbClient) throw new Error('Supabase client not ready');
+    return await window.CRMO_getSbClient();
+  }
+
+  async function readProfileRole(sb){
     try{
-      var path = String(location.pathname || '/');
-      var slug = normSlug(path);
-      if(!slug) {
-        document.body.classList.remove('crmo-route-gallery');
-        document.body.removeAttribute('data-crmo-route');
-        // unhide anything we hid
-        document.querySelectorAll('[data-crmo-hidden-by-route="1"]').forEach(function(el){
-          el.style.display = '';
-          el.removeAttribute('data-crmo-hidden-by-route');
-        });
+      var out = await sb.auth.getSession();
+      var session = out && out.data && out.data.session ? out.data.session : null;
+      if(!session || !session.user || !session.user.id) return null;
+      var uid = session.user.id;
+      // prefer profiles table (public.profiles)
+      var q = await sb.from('profiles').select('role').eq('id', uid).maybeSingle();
+      var r = q && q.data ? q.data.role : null;
+      if(r) return r;
+      // fallback: also check in config table if someone used it that way
+      return null;
+    }catch(e){
+      return null;
+    }
+  }
+
+  async function bootstrap(){
+    try{
+      // if supabase not configured, keep existing behavior
+      var url = String(window.CRMO_SUPABASE_URL||'');
+      var key = String(window.CRMO_SUPABASE_ANON_KEY||'');
+      if(!url || !key || url.indexOf('PASTE_')===0 || key.indexOf('PASTE_')===0) return;
+
+      var sb = await getSb();
+
+      // get role from db
+      var dbRole = await readProfileRole(sb);
+      if(dbRole){
+        var uiRole = mapDbRoleToUi(dbRole);
+        setRoleClasses(uiRole);
+        // show role switch bar only for role-admin (CSS handles it)
         return;
       }
 
-      // Only route if matching a known section id
-      var target = document.getElementById(slug);
-      if(!target){
-        // try common mapping: underscores->hyphens
-        target = document.getElementById(slug.replace(/_/g,'-'));
-      }
-      if(!target) return; // unknown path: let it behave normally (or 404)
-
-      document.body.classList.add('crmo-route-gallery');
-      document.body.setAttribute('data-crmo-route', slug);
-
-      // Hide all main sections except header (outside main), target gallery, and contact section (if exists)
-      var contact = document.getElementById('contact');
-      var main = document.querySelector('main');
-      if(main){
-        Array.prototype.slice.call(main.children || []).forEach(function(sec){
-          if(!(sec instanceof HTMLElement)) return;
-          if(sec === target) return;
-          if(contact && sec === contact) return;
-          // keep any element that contains the target (in case nested)
-          if(sec.contains(target)) return;
-          // keep any element that contains contact (rare)
-          if(contact && sec.contains(contact)) return;
-          sec.style.display = 'none';
-          sec.setAttribute('data-crmo-hidden-by-route','1');
-        });
-      }
-
-      // Make sure target & contact are visible
-      try{ target.style.display = ''; }catch(_){}
-      try{ if(contact) contact.style.display = ''; }catch(_){}
-
-      // Scroll to top / into view
-      try{ window.scrollTo(0,0); }catch(_){}
-      try{ target.scrollIntoView({behavior:'instant', block:'start'}); }catch(_){}
+      // fallback: if signed in but no profile row yet -> user
+      try{
+        var out = await sb.auth.getSession();
+        var session = out && out.data && out.data.session ? out.data.session : null;
+        if(session) setRoleClasses('user');
+      }catch(e){}
     }catch(e){}
   }
 
-  // Run after DOM is ready
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', applyRoute, {once:true});
-  }else{
-    applyRoute();
-  }
-
-  // Handle navigation changes
-  window.addEventListener('popstate', applyRoute);
-})();
-</script>
-
-
-<script id="crmo_route_nav">
-(function(){
-  function isInternalPath(href){
-    if(!href) return false;
-    // ignore hashes and mailto etc
-    if(/^#/.test(href) || /^[a-z]+:/i.test(href)) return false;
-    if(href.startsWith('//')) return false;
-    return href.startsWith('/');
-  }
-  document.addEventListener('click', function(ev){
+  function schedule(){
+    // run now + on auth state changes
+    bootstrap();
     try{
-      var a = ev.target && ev.target.closest ? ev.target.closest('a[href]') : null;
-      if(!a) return;
-      var href = a.getAttribute('href') || '';
-      if(!isInternalPath(href)) return;
-      // Only intercept for /g/<slug> or /<slug> without dot-ext
-      var s = href.replace(/^\/+|\/+$/g,'');
-      if(!s) return;
-      if(/\.[a-z0-9]{1,6}$/i.test(s)) return;
-      if(!(s.toLowerCase().startsWith('g/') || /^[a-z0-9_-]+$/i.test(s))) return;
-      // Let browser handle if target is _blank
-      if(a.target && a.target.toLowerCase() === '_blank') return;
-      ev.preventDefault();
-      try{ history.pushState(null,'',href); }catch(_){ location.href = href; return; }
-      // trigger popstate-like
-      try{ window.dispatchEvent(new PopStateEvent('popstate')); }catch(_){}
+      if(window.CRMO_getSbClient){
+        window.CRMO_getSbClient().then(function(sb){
+          sb.auth.onAuthStateChange(function(){ bootstrap(); });
+        }).catch(function(){});
+      }
     }catch(e){}
-  }, true);
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', schedule);
+  }else{
+    schedule();
+  }
 })();
 </script>
 
