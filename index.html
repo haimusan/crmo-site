@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- CRMO_v1453 -->
+<!-- CRMO_v1455 -->
 
 <html dir="rtl" lang="he">
 <head>
 
 
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "CRMO_v1454";
+window.CRMO_BUILD_VERSION = "CRMO_v1455";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -106,7 +106,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1453</title>
+<title>CRMO_v1455</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -4437,7 +4437,7 @@ body.role-guest .tile-like-btn{
   cursor:default;
   pointer-events:none;
 }
-/* v1453: hide the top view-mode bar for non-admin/non-owner */
+/* v1455: hide the top view-mode bar for non-admin/non-owner */
 #crmo-role-toggle{ display:none !important; }
 body.role-admin #crmo-role-toggle,
 body.role-master #crmo-role-toggle{ display:flex !important; }
@@ -8253,40 +8253,8 @@ function render(){
 </div>
 
 <div id="crmo-media-admin" class="crmo-future-panel is-collapsed" aria-label="מדיה">
-      <div class="crmo-admin-card">
-        <div class="crmo-admin-card-top">
-          <div>
-            <div class="crmo-admin-name">העלאת עבודה לגלריה</div>
-            <div class="crmo-admin-meta">שומר תמונה + שם עבודה, ומסנכרן אוטומטית לסופהבייס (crmo_site_config)</div>
-          </div>
-        </div>
-
-        <form id="crmo-upload-work-form" class="crmo-admin-editor-grid" style="grid-template-columns: 1fr;">
-          <label class="crmo-auth-label">גלריה</label>
-          <select name="crmo_gallery" class="crmo-auth-input">
-            <option value="">בחר גלריה…</option>
-          </select>
-
-          <label class="crmo-auth-label">שם העבודה</label>
-          <input name="crmo_title" type="text" class="crmo-auth-input" placeholder="כותרת / שם עבודה">
-
-          <label class="crmo-auth-label">תיאור קצר (אופציונלי)</label>
-          <textarea name="crmo_desc" class="crmo-auth-input" rows="2" placeholder="טקסט קצר שיופיע באריח"></textarea>
-
-          <label class="crmo-auth-label">תמונה</label>
-          <input name="crmo_file" type="file" accept="image/*" class="crmo-auth-input">
-
-          <div class="crmo-admin-actions" style="margin-top:8px;">
-            <button type="submit" class="crmo-admin-btn">Upload</button>
-            <span class="crmo-upload-status crmo-admin-meta" style="margin-inline-start:10px;"></span>
-          </div>
-        </form>
-
-        <div class="crmo-admin-meta" style="margin-top:10px; opacity:.85;">
-          נשמר תחת המפתח <code>crmo_dynamic_works_v1</code>. כל מפתח שמתחיל ב-<code>crmo_</code> מסונכרן אוטומטית דרך מנגנון ה-AUTO_SYNC.
-        </div>
-      </div>
-</div>
+  <div class="wrap">
+    <div class="crmo-future-card">מדיה — בפיתוח עתידי</div>
   </div>
 </div>
 
@@ -16638,7 +16606,7 @@ saveBtn.addEventListener('click', function () {
             baseAnchor2.setAttribute('data-files', mainName);
           }
         }
-        (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(mainFile, 'tile-main') : Promise.reject(new Error('no-uploader')))
+        (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(mainFile, CRMO_getTileUploadFolder() + '/main') : Promise.reject(new Error('no-uploader')))
           .then(function(urlMain){
             if (!urlMain) return;
             try{
@@ -16785,7 +16753,7 @@ window.CRMO_tilesManagerSyncFromDom(currentTile);
         baseAnchor.setAttribute('data-files', filename);
       }
     }
-    (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, 'tile-main') : Promise.reject(new Error('no-uploader')))
+    (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, CRMO_getTileUploadFolder() + '/extra') : Promise.reject(new Error('no-uploader')))
       .then(function(url){
         if(!url) return;
         var anchor = currentTile.querySelector('a.ph');
@@ -16964,9 +16932,8 @@ var requestedRole = null;
       root.classList.remove('role-admin','role-user','role-guest','role-master','role-usability','role-ux','role-user-social','role-client');
       if(role === 'master'){
         root.classList.add('role-admin','role-master');
-      }else if(role === 'admin' || role === 'owner'){
+      }else if(role === 'admin'){
         root.classList.add('role-admin');
-        if(role === 'owner') root.classList.add('role-owner');
       }else if(role === 'ux'){
         root.classList.add('role-admin','role-ux');
       }else if(role === 'usability'){
@@ -20203,6 +20170,90 @@ window.CRMO_MasterGalleries = {
   try{ window.CRMO_GALLERIES_MAP = GALLERIES; }catch(e){}
   var galleryState = {};
   var galleryMetaState = {};
+var CRMO_GALLERY_STATE_KEY = 'crmo_gallery_state_v1';
+
+  // Expose for debugging
+  try{ window.CRMO__galleryState = galleryState; }catch(e){} 
+  // Restore gallery state from localStorage (and/or Supabase-pulled localStorage)
+  try{
+    var __raw = localStorage.getItem(CRMO_GALLERY_STATE_KEY);
+    if(__raw){
+      var __parsed = JSON.parse(__raw);
+      if(__parsed && typeof __parsed === 'object'){
+        galleryState = __parsed;
+        try{ window.CRMO__galleryState = galleryState; }catch(e){}
+      }
+    }
+  }catch(e){}
+
+  function persistGalleryState(){
+    try{
+      var v = JSON.stringify(galleryState || {});
+      if(typeof window.safeSet === 'function') window.safeSet(CRMO_GALLERY_STATE_KEY, v);
+      else localStorage.setItem(CRMO_GALLERY_STATE_KEY, v);
+    }catch(e){}
+  }
+
+  window.CRMO_restoreGalleriesFromStorage = function(){
+    try{
+      var raw = localStorage.getItem(CRMO_GALLERY_STATE_KEY);
+      if(!raw) return;
+      var saved = JSON.parse(raw);
+      if(!saved || typeof saved !== 'object') return;
+
+      // keep in-memory in sync
+      galleryState = saved;
+      try{ window.CRMO__galleryState = galleryState; }catch(e){}
+
+      // Apply to DOM
+      Object.keys(saved).forEach(function(key){
+        var arr = saved[key];
+        if(!Array.isArray(arr)) return;
+
+        var wrappers = document.querySelectorAll('.tile-edit-wrapper[data-crmo-owner-key="' + key + '"]');
+        if(!wrappers || !wrappers.length){
+          var sec = (window.GALLERIES && window.GALLERIES[key] && window.GALLERIES[key].sectionId) ? document.getElementById(window.GALLERIES[key].sectionId) : null;
+          if(sec) wrappers = sec.querySelectorAll('.tile-edit-wrapper');
+        }
+        if(!wrappers || !wrappers.length) return;
+
+        wrappers.forEach(function(w, i){
+          var item = arr[i];
+          if(!item) return;
+
+          if(item.client != null) w.setAttribute('data-client', item.client);
+          if(item.extra != null) w.setAttribute('data-extra', item.extra);
+          if(item.label != null) w.setAttribute('data-label', item.label);
+          if(item.multi != null) w.setAttribute('data-multi', item.multi ? '1' : '0');
+          if(item.totalImages != null) w.setAttribute('data-total-images', String(item.totalImages));
+          if(item.imagesPerRow != null) w.setAttribute('data-images-per-row', String(item.imagesPerRow));
+
+          // Update hover text
+          var strong = w.querySelector('.hover strong');
+          if(strong) strong.textContent = item.client || '';
+          var p = w.querySelector('.hover p');
+          if(p) p.textContent = item.extra || '';
+
+          // Update image
+          if(item.imageSrc){
+            var a = w.querySelector('a.ph');
+            var img = a ? a.querySelector('img') : null;
+            if(img){
+              img.src = item.imageSrc;
+              img.alt = item.client || '';
+            }
+            if(a){
+              a.style.backgroundImage = 'url("' + String(item.imageSrc).replace(/"/g, '%22') + '")';
+              a.style.backgroundSize = 'cover';
+              a.style.backgroundPosition = 'center';
+            }
+            w.classList.remove('placeholder');
+          }
+        });
+      });
+    }catch(e){}
+  };
+
   try{ window.CRMO__galleryMetaState = galleryMetaState; }catch(e){}
   try{ window.CRMO__galleryState = galleryState; }catch(e){}
   var currentGalleryKey = null;
@@ -20655,6 +20706,8 @@ function ensureGalleryState(key){
         console.warn('syncGalleryStateFromDom failed', e);
       }
     }
+    // persist to localStorage (and Supabase sync layer)
+    persistGalleryState();
   }
 function syncTileToDom(gKey, idx){
     try{
@@ -24681,202 +24734,7 @@ document.addEventListener('click', function(ev){
     try{
       var v = localStorage.getItem(key);
       return (v === null || v === undefined) ? fallback : v;
-    }
-
-  // =====================================================================
-  // Dynamic Works (v1) — upload an item (image + title) into any gallery
-  // Stored in localStorage key "crmo_dynamic_works_v1" so AUTO_SYNC persists it
-  // =====================================================================
-
-  var CRMO_WORKS_KEY = 'crmo_dynamic_works_v1';
-
-  function crmoLoadWorks() {
-    var raw = safeGet(CRMO_WORKS_KEY, '[]');
-    try {
-      var arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function crmoSaveWorks(arr) {
-    safeSet(CRMO_WORKS_KEY, JSON.stringify(arr || []));
-  }
-
-  function crmoMakeWorkId() {
-    return 'work_' + Math.random().toString(16).slice(2) + '_' + Date.now();
-  }
-
-  function crmoFindGalleryGrid(galleryId) {
-    var section = document.getElementById(galleryId);
-    if (!section) return null;
-    return section.querySelector('.gallery-grid') || section.querySelector('.gallery-grid.grid');
-  }
-
-  function crmoCreateTileFromTemplate(galleryId) {
-    var grid = crmoFindGalleryGrid(galleryId);
-    if (!grid) return null;
-
-    var tpl = grid.querySelector('.tile-edit-wrapper');
-    if (!tpl) return null;
-
-    var node = tpl.cloneNode(true);
-
-    // Clean any existing images
-    var a = node.querySelector('a.ph');
-    if (a) {
-      var imgs = a.querySelectorAll('img');
-      imgs.forEach(function(img) { img.remove(); });
-      a.removeAttribute('data-full');
-    }
-
-    // Ensure it's not selected / editing state
-    node.classList.remove('editing');
-    return node;
-  }
-
-  function crmoApplyWorkToTile(work, node) {
-    node.setAttribute('data-project-id', work.id);
-
-    var a = node.querySelector('a.ph');
-    if (a) {
-      a.setAttribute('href', '#');
-
-      var url = work && work.assets && work.assets[0] && work.assets[0].url ? work.assets[0].url : '';
-      if (url) {
-        a.setAttribute('data-full', url);
-
-        var img = document.createElement('img');
-        img.alt = work.title || work.name || '';
-        img.loading = 'lazy';
-        img.src = url;
-        a.insertBefore(img, a.firstChild);
-      }
-    }
-
-    var h = node.querySelector('.tile-meta h4');
-    if (h) h.textContent = work.title || work.name || 'Untitled';
-
-    var p = node.querySelector('.tile-meta p');
-    if (p) p.textContent = work.subtitle || work.description || '';
-  }
-
-  function crmoEnsureWorkRendered(work) {
-    if (!work || !work.galleryId) return;
-
-    var grid = crmoFindGalleryGrid(work.galleryId);
-    if (!grid) return;
-
-    if (grid.querySelector('.tile-edit-wrapper[data-project-id="' + work.id + '"]')) return;
-
-    var node = crmoCreateTileFromTemplate(work.galleryId);
-    if (!node) return;
-
-    crmoApplyWorkToTile(work, node);
-    grid.appendChild(node);
-  }
-
-  function crmoRenderAllWorks() {
-    var works = crmoLoadWorks();
-    works.forEach(function(w) { crmoEnsureWorkRendered(w); });
-  }
-
-  async function crmoHandleWorkUpload(e) {
-    e.preventDefault();
-
-    // Admin-only
-    if (typeof isAdmin === 'function' && !isAdmin()) {
-      alert('אין הרשאות מנהל להעלאה.');
-      return;
-    }
-
-    var form = e.currentTarget;
-    var galleryId = (form.querySelector('[name="crmo_gallery"]') || {}).value || '';
-    var title = ((form.querySelector('[name="crmo_title"]') || {}).value || '').trim();
-    var desc = ((form.querySelector('[name="crmo_desc"]') || {}).value || '').trim();
-    var fileInput = form.querySelector('[name="crmo_file"]');
-    var file = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
-
-    if (!galleryId) {
-      alert('בחר גלריה.');
-      return;
-    }
-    if (!file) {
-      alert('בחר תמונה להעלאה.');
-      return;
-    }
-
-    var statusEl = form.querySelector('.crmo-upload-status');
-    if (statusEl) statusEl.textContent = 'מעלה…';
-
-    try {
-      var upload = await window.CRMO_uploadImage(file, 'galleries/' + galleryId);
-
-      var work = {
-        id: crmoMakeWorkId(),
-        galleryId: galleryId,
-        title: title || (file.name || 'Untitled'),
-        description: desc || '',
-        assets: [
-          { type: 'image', url: upload.url, path: upload.path, filename: file.name }
-        ],
-        createdAt: new Date().toISOString()
-      };
-
-      var works = crmoLoadWorks();
-      works.push(work);
-      crmoSaveWorks(works);
-
-      crmoEnsureWorkRendered(work);
-
-      if (statusEl) statusEl.textContent = '✅ נשמר (יסונכרן לסופהבייס תוך כמה שניות).';
-      form.reset();
-    } catch (err) {
-      console.error(err);
-      if (statusEl) statusEl.textContent = '❌ העלאה נכשלה. בדוק Console/Logs.';
-      alert('העלאה נכשלה. פתח Console לפרטים.');
-    }
-  }
-
-  function crmoInitMediaUploadUI() {
-    var panel = document.getElementById('crmo-media-admin');
-    if (!panel) return;
-
-    // Build gallery dropdown (once)
-    var select = panel.querySelector('select[name="crmo_gallery"]');
-    if (select && select.options && select.options.length <= 1) {
-      var ids = [];
-      if (window.CREAMO_CONTENT && window.CREAMO_CONTENT.galleries) {
-        ids = Object.keys(window.CREAMO_CONTENT.galleries);
-      } else {
-        document.querySelectorAll('section.gallery[id]').forEach(function(s) { ids.push(s.id); });
-      }
-      ids.forEach(function(id) {
-        var opt = document.createElement('option');
-        opt.value = id;
-        opt.textContent = id;
-        select.appendChild(opt);
-      });
-    }
-
-    // Bind submit once
-    var form = panel.querySelector('form#crmo-upload-work-form');
-    if (form && !form.__bound) {
-      form.addEventListener('submit', crmoHandleWorkUpload);
-      form.__bound = true;
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
-    // Delay to make sure base content + auth is initialized
-    setTimeout(function() {
-      crmoInitMediaUploadUI();
-      crmoRenderAllWorks();
-    }, 250);
-  });
-
-catch(e){ return fallback; }
+    }catch(e){ return fallback; }
   }
   function safeSet(key, val){
     try{ localStorage.setItem(key, val); }catch(e){}
@@ -27557,18 +27415,38 @@ try{
   function normalizeEmail(s){
     return (s||'').toString().trim().toLowerCase();
   }
-  async function isAdminAllowed(){
-    if (!window.CRMO_SUPABASE_REQUIRE_LOGIN) return true;
-    var sb = await getClient();
-    var out = await sb.auth.getSession();
-    var session = out && out.data && out.data.session;
-    var email = session && session.user && session.user.email;
-    if (!session) return false;
-    var allow = (window.CRMO_SUPABASE_ADMIN_EMAILS || []).map(normalizeEmail).filter(Boolean);
-    if (!allow.length) return true; // any signed-in user
-    return allow.indexOf(normalizeEmail(email)) !== -1;
+  async async function isAdminAllowed(userEmail){
+  try{
+    const sb = await getClient();
+    const sessRes = await sb.auth.getSession();
+    const session = sessRes && sessRes.data && sessRes.data.session;
+    if(!session || !session.user) return false;
+
+    const uid = session.user.id;
+    const email = (userEmail || session.user.email || '').toString().toLowerCase().trim();
+
+    const allow = window.CRMO_ADMIN_ALLOWLIST || [];
+    const allowHit = Array.isArray(allow) && allow.length && email && allow.indexOf(email) >= 0;
+
+    // Role-based admin check (profiles table)
+    let roleOk = false;
+    try{
+      const q = await sb.from('profiles').select('role').eq('id', uid).limit(1);
+      const row = q && q.data && q.data[0];
+      const role = row && row.role;
+      roleOk = (role === 'owner' || role === 'admin');
+    }catch(e){ /* ignore */ }
+
+    // If allowlist exists, allow either allowlist OR role.
+    // If no allowlist, require role.
+    if(Array.isArray(allow) && allow.length) return allowHit || roleOk;
+    return roleOk;
+  }catch(e){
+    return false;
   }
-  function setStatus(text){
+}
+
+function setStatus(text){
     try{
       var el = document.getElementById('crmo-sb-status');
       if (el) el.textContent = text;
@@ -29127,6 +29005,13 @@ async function refreshStatus(){
     schedule();
   }
 })();
+
+// Restore gallery tiles from persisted state on load
+try{
+  window.addEventListener('DOMContentLoaded', function(){
+    try{ if(window.CRMO_restoreGalleriesFromStorage) window.CRMO_restoreGalleriesFromStorage(); }catch(e){}
+  });
+}catch(e){}
 </script>
 
 </body>
