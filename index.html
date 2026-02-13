@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- CRMO_v1456 -->
+<!-- CRMO_v1457 -->
 
 <html dir="rtl" lang="he">
 <head>
 
 
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "CRMO_v1456";
+window.CRMO_BUILD_VERSION = "CRMO_v1457";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -20370,6 +20370,8 @@ if (key === currentGalleryKey){
       renderCurrentGallery();
     }
     closeTileEditor();
+    try{ persistGalleryState(currentEditGalleryKey); }catch(e){}
+    if (window.CRMO_sbPushNow){ window.CRMO_sbPushNow().catch(()=>{}); }
   }
   function handleTileEditorImageChange(ev){
     if (currentEditGalleryKey === null || currentEditIndex === null) return;
@@ -27957,7 +27959,9 @@ async function refreshStatus(){
       });
     }
   }
-  function boot(){
+  window.CRMO_sbPushNow = pushToDb;
+window.CRMO_sbPullNow = pullFromDb;
+function boot(){
     try{
       if(!isAdminRole){
       }
