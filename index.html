@@ -4204,8 +4204,7 @@ editor.addEventListener('click', function(ev){
       if(!btn ||
  btn.id !== 'te-save') return;
       if(!currentWrapper || !currentAnchor) return;
-      mpApplyMultiProjectChanges();
-    }, true);;
+      mpApplyMultiProjectChanges(); var r = CRMO_persistEditorState('tile-editor'); try{ var st = document.getElementById('tm-status'); if(st){ st.textContent = r.ok ? 'Saved to server' : ('Save failed: ' + r.error); } }catch(_e){} }, true);;
   }
   if(document.readyState === 'complete' || document.readyState === 'interactive'){
     setTimeout(setupMultiProject, 0);
@@ -16152,6 +16151,19 @@ const items = ensureDataset(tempGrid);
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   var dataScript = document.getElementById('content-data');
+  // --- CRMO persistence override (localStorage -> seed scripts) ---
+  try{
+    var savedContent = safeGet('crmo_content_data');
+    if(savedContent){
+      dataScript.textContent = savedContent;
+    }
+    var metaScript0 = document.getElementById('crmo-gallery-meta-store');
+    var savedMeta = safeGet('crmo_gallery_meta');
+    if(metaScript0 && savedMeta){
+      metaScript0.textContent = savedMeta;
+    }
+  }catch(_e){}
+
   var content = {};
   try {
     content = JSON.parse(dataScript.textContent || dataScript.innerText || '{}');
@@ -20711,6 +20723,31 @@ function ensureGalleryState(key){
     // persist to localStorage (and Supabase sync layer)
     persistGalleryState();
   }
+
+  // --- Persist current editor state to localStorage (and Supabase via safeSet) ---
+  function CRMO_persistEditorState(scopeLabel){
+    try{
+      if(!isAdminAllowed()){ throw new Error('NOT_ADMIN'); }
+      try{
+        var gals = (window.CREAMO_CONTENT && Array.isArray(window.CREAMO_CONTENT.galleries)) ? window.CREAMO_CONTENT.galleries : [];
+        for(var i=0;i<gals.length;i++){
+          var g = gals[i];
+          if(g && g.id){
+            try{ syncGalleryStateFromDom(g.id); }catch(_e){}
+          }
+        }
+      }catch(_e){}
+      var ds = document.getElementById('content-data');
+      var ms = document.getElementById('crmo-gallery-meta-store');
+      if(ds && typeof safeSet === 'function'){ safeSet('crmo_content_data', ds.textContent || ''); }
+      if(ms && typeof safeSet === 'function'){ safeSet('crmo_gallery_meta', ms.textContent || ''); }
+      return { ok:true };
+    }catch(e){
+      console.warn('[CRMO] persist failed', e);
+      return { ok:false, error: String((e&&e.message)||e) };
+    }
+  }
+
 function syncTileToDom(gKey, idx){
     try{
       var cfg = tmEnsureGalleryConfig(gKey) || GALLERIES[gKey];
@@ -22163,6 +22200,8 @@ document.addEventListener("DOMContentLoaded", function(){
         try{ tmCommitMetaToContentAndStores(); }catch(e){}
         try{ tmApplyMetaToAllSections(); }catch(e){}
         try{ crmoUpdateExpandButtonsForAll(); }catch(e){}
+        var r = CRMO_persistEditorState('tiles-manager');
+        try{ if(status){ status.textContent = r.ok ? 'Saved to server' : ('Save failed: ' + r.error); } }catch(_e){}
         closeOverlay();
       }, {passive:false});
     }
