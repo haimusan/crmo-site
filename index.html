@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- CRMO_v1459 -->
+<!-- CRMO_v1460 -->
 
 <html dir="rtl" lang="he">
 <head>
 
 
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1459";
+window.CRMO_BUILD_VERSION = "1460";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -16181,6 +16181,29 @@ document.addEventListener('DOMContentLoaded', function () {
     content = {};
   }
   window.CREAMO_CONTENT = content;
+  // --- CRMO_v1460: resolve upload folder per current gallery ---
+  (function(){
+    try{
+      window.CRMO_getTileUploadFolder = function(){
+        // Prefer hash section id (e.g. #exhibitions) which matches your gallery ids
+        try{
+          var h = String(location.hash || '').replace(/^#/, '').trim();
+          if (h){
+            // strip any params
+            h = h.split('?')[0].split('&')[0].trim();
+            if (h) return 'galleries/' + h;
+          }
+        }catch(_e){}
+        return 'galleries/uploads';
+      };
+      // Back-compat: some handlers call CRMO_getTileUploadFolder() directly
+      if (typeof window.CRMO_getTileUploadFolder === 'function' && typeof window.CRMO_getTileUploadFolderCompat !== 'function'){
+        window.CRMO_getTileUploadFolderCompat = window.CRMO_getTileUploadFolder;
+      }
+    }catch(_e){}
+  })();
+  function CRMO_getTileUploadFolder(){ try{ return (window.CRMO_getTileUploadFolder || window.CRMO_getTileUploadFolderCompat)(); }catch(e){ return 'galleries/uploads'; } }
+
   if (content.projects) {
     content.projects.forEach(function (p) {
       if (!p.galleries || !p.galleries.length) return;
