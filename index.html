@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1478 -->
+<!-- CRMO_v1479 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1478";
+window.CRMO_BUILD_VERSION = "1479";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -28058,6 +28058,13 @@ async function CRMO_cloudRestoreOnce() {
 
 async function ensureGalleryFolder(galleryId){
     var sb = await getClient();
+    try{
+      var ses = await sb.auth.getSession();
+      if(!(ses && ses.data && ses.data.session)){
+        return { folder: window.CRMO_galleryFolderForId(galleryId), path: null, skipped: true, reason: 'no-session' };
+      }
+    }catch(e){}
+
     var ok = await isAdminAllowed();
     if(!ok) throw new Error('not-auth');
     var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
@@ -28088,7 +28095,17 @@ async function ensureGalleryFolder(galleryId){
   }
   window.CRMO_ensureGalleryFolder = ensureGalleryFolder;
   window.CRMO_syncGalleryFolders = async function(){
-    var ok = await isAdminAllowed();
+    
+    // Wait for an auth session (up to ~5s) to avoid Storage RLS errors before login is ready.
+    try{
+      var sb0 = await getClient();
+      for (var i=0;i<25;i++){
+        var s0 = await sb0.auth.getSession();
+        if (s0 && s0.data && s0.data.session) break;
+        await new Promise(function(r){ setTimeout(r, 200); });
+      }
+    }catch(e){}
+var ok = await isAdminAllowed();
     if(!ok) return { ok:false, reason:'not-auth' };
     var ids = [];
     try{
