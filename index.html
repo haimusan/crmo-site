@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1473 -->
+<!-- CRMO_v1474 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1473";
+window.CRMO_BUILD_VERSION = "1474";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -27786,7 +27786,9 @@ function setStatus(text){
       var res = await window.CRMO_uploadImage(file, folder);
       return res && res.url ? res.url : null;
     }catch(err){
-      if (window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK){
+      
+      try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(err); }catch(e){}
+if (window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK){
         try{
           var dataUrl = await new Promise(function(resolve, reject){
             try{
