@@ -1,12 +1,27 @@
 <!DOCTYPE html>
-<!-- CRMO_v1460 -->
+<!-- CRMO_v1469 -->
 
 <html dir="rtl" lang="he">
 <head>
 
 
+<script id="crmo_ghpages_redirect_fix">
+(function(){
+  try{
+    var sp = new URLSearchParams(location.search || '');
+    var r = sp.get('redirect') || sp.get('p') || '';
+    if(!r) return;
+    try{ r = decodeURIComponent(r); }catch(e){}
+    if(!r) return;
+    // Accept full URL fragment: "/exhibitions?x=1#y"
+    // Normalize: ensure leading "/"
+    if(r.charAt(0) !== '/') r = '/' + r;
+    history.replaceState(null, '', r);
+  }catch(e){}
+})();
+</script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1460";
+window.CRMO_BUILD_VERSION = "1469";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -293,7 +308,7 @@ section{padding-block: var(--vpad); scroll-margin-top: 88px;}
 .desc{margin:6px auto 0}
 .grid{display:grid;gap:10px;grid-template-columns:repeat(3,1fr);margin-top:var(--gap-v)}
 .ph{position:relative;display:block;overflow:hidden;border:1px solid #bdbdbd;aspect-ratio:1/1;background:#d9d9d9}
-.ph img{width:100%;height:100%;object-fit:cover}
+.ph img{width:100%;height:100%;object-fit:contain}
 @media (max-width:900px){
  .grid{grid-template-columns:repeat(2,1fr)} .grid .ph:nth-child(n+5){display:none} 
 }
@@ -308,7 +323,7 @@ section{padding-block: var(--vpad); scroll-margin-top: 88px;}
   height:100%;
   max-width:none;
   max-height:none;
-  object-fit:cover;
+  object-fit:contain;
   display:block;
 }
 #brands .brandcell{ position:relative; overflow:hidden; }
@@ -321,7 +336,7 @@ section{padding-block: var(--vpad); scroll-margin-top: 88px;}
   height:100% !important;
   max-width:none !important;
   max-height:none !important;
-  object-fit:cover !important;
+  object-fit:contain !important;
   object-position:center center !important;
 }
 #brands .gallery-grid.brands > .brandcell:nth-child(n+19){ display:none !important; }
@@ -439,7 +454,7 @@ section{padding-block: var(--vpad); scroll-margin-top: 88px;}
 .brand-editor-logo-thumb{
   width:100%;
   height:100%;
-  object-fit:cover;
+  object-fit:contain;
   display:none;
 }
 .brand-editor-logo-thumb-empty{
@@ -1037,7 +1052,7 @@ form textarea.autogrow{ overflow:hidden; resize:none; }
   height:100% !important;
   max-width:none !important;
   max-height:none !important;
-  object-fit:cover !important;
+  object-fit:contain !important;
   object-position:center center !important;
   display:block !important;
 }
@@ -1180,7 +1195,7 @@ form textarea.autogrow{ overflow:hidden; resize:none; }
 </style>
 <style>
 #stores figure.ph{position:relative;display:block;margin:0}
-#stores figure.ph img{width:100%;height:100%;object-fit:cover;display:block}
+#stores figure.ph img{width:100%;height:100%;object-fit:contain;display:block}
 #stores figure.ph
 </style>
 <style>
@@ -1238,7 +1253,7 @@ form textarea.autogrow{ overflow:hidden; resize:none; }
 .gallery-hover-ready .grid .ph{ position:relative; overflow:hidden; background:#fff; }
 .gallery-hover-ready .grid .ph img{
   width:100%; height:100%;
-  object-fit:cover; object-position:center center;
+  object-fit:contain; object-position:center center;
   display:block; background:#fff;
 }
 .gallery-hover-ready .grid .ph.fit-contain img{ object-fit:contain; }
@@ -1319,7 +1334,7 @@ a.ph
 </style>
 <style>
 a.ph{ position:relative; display:block; width:100%; aspect-ratio:16/9; }
-a.ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+a.ph img{ width:100%; height:100%; object-fit:contain; display:block; }
 </style>
 <style>
 a.ph{ position:relative }
@@ -1346,7 +1361,7 @@ a.ph img{
   inset:0 !important;
   width:100% !important;
   height:100% !important;
-  object-fit:cover !important;
+  object-fit:contain !important;
 }
 a.ph
 a.ph
@@ -1364,7 +1379,7 @@ a.ph img{
   inset:0 !important;
   width:100% !important;
   height:100% !important;
-  object-fit:cover !important;
+  object-fit:contain !important;
   transition:transform 0.4s ease !important;
 }
 a.ph:hover img{
@@ -1386,7 +1401,7 @@ a.ph
   inset:0 !important;
   width:100% !important;
   height:100% !important;
-  object-fit:cover !important;
+  object-fit:contain !important;
   transition:transform 0.4s ease !important;
 }
 #stores a.ph:hover img{
@@ -1407,7 +1422,7 @@ a.ph
   inset:0 !important;
   width:100% !important;
   height:100% !important;
-  object-fit:cover !important;
+  object-fit:contain !important;
   z-index:0 !important;
   transition:transform 0.35s ease !important;
 }
@@ -1427,7 +1442,7 @@ a.ph
   position:absolute !important;
   inset:0 !important;
   width:100% !important; height:100% !important;
-  object-fit:cover !important;
+  object-fit:contain !important;
 }
 #main-gallery .grid > a.ph .cap, #stores .grid > a.ph
 #main-gallery .grid > a.ph .cap > *,
@@ -1439,7 +1454,7 @@ a.ph
 </style>
 <style>
 #main-gallery a.ph, #stores a.ph{ position:relative !important; display:flex !important; align-items:center !important; justify-content:center !important; overflow:hidden !important; }
-#main-gallery a.ph img, #stores a.ph img{ position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; object-fit:cover !important; z-index:0 !important; transition:transform .35s ease !important; }
+#main-gallery a.ph img, #stores a.ph img{ position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; object-fit:contain !important; z-index:0 !important; transition:transform .35s ease !important; }
 #main-gallery a.ph:hover img, #stores a.ph:hover img{ transform:scale(1.03) !important; }
 #main-gallery a.ph .cap, #stores a.ph
 #main-gallery a.ph:hover .cap, #stores a.ph:hover
@@ -1454,7 +1469,7 @@ a.ph
   position:absolute !important;
   inset:0 !important;
   width:100% !important; height:100% !important;
-  object-fit:cover !important;
+  object-fit:contain !important;
   z-index:0 !important;
   transition:transform .35s ease !important;
 }
@@ -1609,9 +1624,12 @@ a.ph, .ph { position: relative; }
 .crmo-lb-overlay.open{display:block}
 .crmo-lb-frame{position:absolute;left:50%;transform:translateX(-50%);width:min(98vw,1080px);top:max(12px,6vh);background:#111;color:#fff;border:1px solid #2e2e2e;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden}
 .crmo-lb-stage{position:relative;background:#ffffff;width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
-.crmo-lb-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font:800 clamp(18px,4vw,34px)/1 Heebo,Arial;color:#000}
+.crmo-lb-img{width:100%;height:100%;display:block;object-fit:contain;background:#111;}
 .crmo-lb-img{position:relative;overflow:hidden}
-.crmo-lb-img>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.crmo-lb-img>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.crmo-lb-slotnum{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:96px;font-weight:700;color:#000;pointer-events:none}
+.crmo-lb-slotnum.show{display:flex}
+
 .crmo-lb-ctrl{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.95);color:#000;border-radius:12px;border:1px solid #666;cursor:pointer}
 .crmo-lb-ctrl:hover{background:#f2f2f2}
 .crmo-lb-prev{left:12px} .crmo-lb-next{right:12px}
@@ -1620,10 +1638,10 @@ a.ph, .ph { position: relative; }
 .crmo-lb-caption{font-size:clamp(13px,2.8vw,15px);color:#000000}
 .crmo-lb-filename{font-size:clamp(11px,2.4vw,13px);color:#9aa0a6;direction:ltr;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:36ch}
 .crmo-lb-counter{font-size:13px;color:#333333}
-.crmo-thumbs{padding:12px;background:#ffffff;border-top:1px solid #cccccc;overflow:auto;display:flex;gap:10px}
-.crmo-thumb{min-width:84px;width:84px;height:calc(84px * 9/16);background:#ffffff;border:1px solid #999;border-radius:10px;color:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;font:700 12px/1 Arial;padding:4px;text-align:center}
-.crmo-thumb.active{outline:2px solid #000000}
-@media (max-width:560px){.crmo-lb-frame{width:100vw;border-radius:0;border:none;top:0}.crmo-thumbs{display:none}}
+.crmo-thumbs{padding:12px;background:#ffffff;border-top:1px solid #cccccc;display:flex;flex-wrap:wrap;gap:0.75rem;overflow:visible;align-items:stretch}
+.crmo-thumbs .crmo-thumb{background:#ffffff;border:1px solid #999;border-radius:10px;color:#000;display:block;cursor:pointer;padding:0;overflow:hidden;flex:0 0 calc(25% - 0.75rem);max-width:calc(25% - 0.75rem);aspect-ratio:16/9}
+.crmo-thumbs .crmo-thumb.active{outline:2px solid #000000}
+@media (min-width:901px) and (max-width:1200px){.crmo-thumbs .crmo-thumb{flex:0 0 calc(33.3333% - 0.75rem);max-width:calc(33.3333% - 0.75rem)}}@media (min-width:641px) and (max-width:900px){.crmo-thumbs .crmo-thumb{flex:0 0 calc(50% - 0.75rem);max-width:calc(50% - 0.75rem)}}@media (max-width:640px){.crmo-thumbs .crmo-thumb{flex:0 0 100%;max-width:100%}}@media (max-width:560px){.crmo-lb-frame{width:100vw;border-radius:0;border:none;top:0}.crmo-thumbs{display:none}}
 </style>
 <style id="crmo_hidden_extra_tiles_css">
 .gallery-grid.grid .tile-edit-wrapper.tile-hidden-extra{
@@ -1869,7 +1887,7 @@ section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
 #crmo-auth .actions.secondary button{background:#555}
 #crmo-auth .small{font-size:12px;opacity:.9;margin-top:6px}
 #crmo-auth .hero{display:flex;justify-content:flex-start}
-#crmo-auth .mascot{width:220px;height:220px;object-fit:cover;border-radius:6px;border:1px solid #ddd;background:#fff}
+#crmo-auth .mascot{width:220px;height:220px;object-fit:contain;border-radius:6px;border:1px solid #ddd;background:#fff}
 #crmo-auth .copy{font-size:14px;line-height:1.6;color:#333}
 #crmo-auth .providers.row{display:flex;gap:18px;align-items:center;margin-top:6px}
 #crmo-auth .providers.row .round{width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;
@@ -1913,7 +1931,7 @@ section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
 .crmo-auth-header .x{background:none;border:0;font:inherit;cursor:pointer}
 #crmo-auth .body.one-col{display:flex;flex-direction:column;gap:14px;padding:18px}
 #crmo-auth .hero-top{display:flex;align-items:center;gap:12px;justify-content:center;text-align:center}
-#crmo-auth .hero-top .mascot{width:86px;height:86px;border-radius:50%;object-fit:cover;border:1px solid #eee;background:#fff}
+#crmo-auth .hero-top .mascot{width:86px;height:86px;border-radius:50%;object-fit:contain;border:1px solid #eee;background:#fff}
 #crmo-auth .hero-top .lead{margin:0;font-size:15px;opacity:.95}
 #crmo-auth .providers.icons{display:flex;justify-content:center;gap:18px}
 #crmo-auth .providers.icons .icon{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid #999;cursor:pointer;transition:transform .15s}
@@ -3261,7 +3279,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
   width:48px;
   height:48px;
   border-radius:6px;
-  object-fit:cover;
+  object-fit:contain;
   flex:0 0 48px;
   background:#ddd;
 }
@@ -4235,7 +4253,9 @@ editor.addEventListener('click', function(ev){
   padding-inline: 0.75rem;
   direction: rtl;
   justify-content: flex-start !important;
-}
+
+  overflow: visible !important;
+
 #crmoThumbs .crmo-thumb{
   text-align: center;
   white-space: nowrap;
@@ -4248,7 +4268,12 @@ editor.addEventListener('click', function(ev){
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-}
+
+  min-width: 0 !important;
+  height: auto !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+
 #crmoThumbs .crmo-thumb:focus-visible{ border-radius: 0 !important; }
 
 @media (min-width: 1201px){
@@ -7054,7 +7079,7 @@ body:not(.role-admin) .brands-manager-bar{ display:none; }
   top:0 !important; right:0 !important; bottom:0 !important; left:0 !important;
   width:100% !important; height:100% !important;
   max-width:none !important; max-height:none !important;
-  object-fit:cover !important;
+  object-fit:contain !important;
   object-position:center center !important;
   transform:none !important;
 }
@@ -13176,7 +13201,7 @@ document.addEventListener('DOMContentLoaded', function(){
 <div aria-hidden="true" class="crmo-lb-overlay" id="crmoLB">
 <div class="crmo-lb-frame">
 <div class="crmo-lb-stage" id="crmoStage">
-<div class="crmo-lb-img" id="crmoImg">PIC</div>
+<img class="crmo-lb-img" id="crmoImg" alt="" />
 <div class="crmo-lb-ctrl crmo-lb-prev" id="crmoPrev">◀</div>
 <div class="crmo-lb-ctrl crmo-lb-next" id="crmoNext">▶</div>
 <div class="crmo-lb-ctrl crmo-lb-close" id="crmoClose">✕</div>
@@ -13212,6 +13237,44 @@ document.addEventListener('DOMContentLoaded', function(){
   const prev = document.getElementById('crmoPrev');
   const next = document.getElementById('crmoNext');
   const closeBtn = document.getElementById('crmoClose');
+  const stage = document.getElementById('crmoStage');
+  let slotNumEl = document.getElementById('crmoSlotNum');
+  if (!slotNumEl){
+    slotNumEl = document.createElement('div');
+    slotNumEl.id = 'crmoSlotNum';
+    slotNumEl.className = 'crmo-lb-slotnum';
+    try{ if(stage) stage.appendChild(slotNumEl); }catch(e){}
+  }
+
+  // v1463 hotfix: make lightbox resilient (missing nodes / legacy markup)
+  if (!overlay || !img || !cap || !prev || !next || !closeBtn) {
+    return;
+  }
+  const imgEl = img;
+  const thumbsWrap = thumbs || document.getElementById('crmoThumbs');
+  // Caption content (title + description) – create if missing
+  let titleEl = cap.querySelector && cap.querySelector('.crmo-lb-title');
+  let descEl  = cap.querySelector && cap.querySelector('.crmo-lb-desc');
+  if (!titleEl || !descEl) {
+    try { cap.textContent = ''; } catch(e){}
+    titleEl = document.createElement('span');
+    titleEl.className = 'crmo-lb-title';
+    descEl = document.createElement('span');
+    descEl.className = 'crmo-lb-desc';
+    cap.appendChild(titleEl);
+    cap.appendChild(descEl);
+  }
+  // Project/image counter label (optional)
+  let labelEl = document.getElementById('crmoCounter');
+  if (!labelEl) {
+    labelEl = document.createElement('span');
+    labelEl.id = 'crmoCounter';
+    labelEl.className = 'crmo-lb-counter';
+    try {
+      const meta = overlay.querySelector && overlay.querySelector('.crmo-lb-meta');
+      if (meta) meta.appendChild(labelEl);
+    } catch(e){}
+  }
   function normalizeUrl(u){
     u = (u || '').trim();
     if(!u) return '';
@@ -13442,259 +13505,137 @@ function normalizeBrandName(str){
   let curGrid = null;
   let curIdx = 0;   // אינדקס פרויקט
   let fileIdx = 0;  // אינדקס תת־תמונה בתוך פרויקט
+  let curItems = []; // cached items for current grid
   function renderThumbs(item){
-    thumbs.innerHTML = '';
-    if (curGrid && curGrid.id === 'brandLbGrid'){
-      const items = datasets.get(curGrid) || [];
-      if (!items.length || items.length <= 1) return;
-      items.forEach(function(it, idx){
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'crmo-thumb' + (idx === curIdx ? ' active' : '');
-        const proj = it.projectIndex || (idx + 1);
-        let thumbSrc = null;
-        try{
-          if (it && it.tileData && it.tileData.imageSrc){
-            thumbSrc = it.tileData.imageSrc;
-          }
-        }catch(e){}
-        try{
-          if (!thumbSrc && it && Array.isArray(it.files) && it.files.length){
-            const f0 = (it.files[0]||'').trim();
-            if (f0 && window.CRMO_mpThumbs && window.CRMO_mpThumbs[f0]){
-              thumbSrc = window.CRMO_mpThumbs[f0];
-            }
-          }
-        }catch(e){}
-        try{
-          if (!thumbSrc && it && it.el){
-            const cs = window.getComputedStyle(it.el);
-            const bg = cs && cs.backgroundImage;
-            if (bg && bg !== 'none'){
-              const mm = bg.match(/url\(["']?(.*?)["']?\)/);
-              if (mm && mm[1]) thumbSrc = mm[1];
-            }
-            if (!thumbSrc){
-              const im = it.el.querySelector('img');
-              if (im && (im.getAttribute('src') || im.src)) thumbSrc = im.getAttribute('src') || im.src;
-            }
-          }
-        }catch(e){}
-        if (thumbSrc){
-          const im = document.createElement('img');
-          im.src = thumbSrc;
-          im.alt = String(proj);
-          btn.appendChild(im);
-        }else{
-          btn.textContent = String(proj);
-        }
-        btn.addEventListener('click', function(ev){
-          ev.preventDefault();
-          curIdx = idx;
-          fileIdx = 0;
-          setImage();
-        });
-        thumbs.appendChild(btn);
-      });
+    thumbsWrap.innerHTML = '';
+    const infosAll = getAvailableFileInfos(item);
+    const MAX_THUMBS = 12;
+    const infos = infosAll.slice(0, MAX_THUMBS);
+    if (infosAll.length <= 1){
+      thumbsWrap.style.display = 'none';
       return;
     }
-    if (!item || !item.files || item.files.length <= 1) return;
-    item.files.forEach(function(_file, idx){
+    thumbsWrap.style.display = 'flex';
+    let activeVis = infos.findIndex(function(x){ return x.orig === fileIdx; });
+    if (activeVis < 0) activeVis = 0;
+    infos.forEach(function(info, visIdx){
       const btn = document.createElement('button');
+      btn.className = 'crmo-thumb' + (visIdx === activeVis ? ' active' : '');
       btn.type = 'button';
-      btn.className = 'crmo-thumb' + (idx === fileIdx ? ' active' : '');
-      const proj = item.projectIndex;
-      const label = proj + '.' + (idx + 1);
-      let thumbSrc = null;
-      try{
-        if (window.CRMO_mpThumbs && _file && window.CRMO_mpThumbs[_file]){
-          thumbSrc = window.CRMO_mpThumbs[_file];
-        }
-      }catch(e){
-        thumbSrc = null;
-      }
-      if (!thumbSrc && item && item.tileData){
-        try{
-          if (idx === 0 && item.tileData.imageSrc) thumbSrc = item.tileData.imageSrc;
-          if (!thumbSrc && idx > 0 && item.tileData.extraImages && item.tileData.extraImages[idx-1] && item.tileData.extraImages[idx-1].src){
-            thumbSrc = item.tileData.extraImages[idx-1].src;
-          }
-        }catch(e){}
-      }
-if (thumbSrc){
-        const im = document.createElement('img');
-        im.src = thumbSrc;
-        im.alt = String(label);
-        btn.appendChild(im);
-      } else {
-        btn.textContent = String(label);
-      }
-      btn.addEventListener('click', function(ev){
-        ev.preventDefault();
-        fileIdx = idx;
+      btn.title = 'תמונה ' + (visIdx + 1);
+      btn.innerHTML = '<img src="' + info.src + '" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:8px;background:#111"/>';
+      btn.addEventListener('click', function(){
+        fileIdx = info.orig;
         setImage();
       });
-      thumbs.appendChild(btn);
+      thumbsWrap.appendChild(btn);
     });
   }
 function setImage(){
-        const items = datasets.get(curGrid) || [];
+        const items = (curItems && curItems.length) ? curItems : (datasets.get(curGrid) || []);
         const item = items[curIdx];
-        if (!item) return;
-        renderThumbs(item);
-        const proj = item.projectIndex;
-        const filesCount = item.files.length;
-        let labelText;
-        if (filesCount > 1){
-          labelText = proj + '.' + (fileIdx + 1);
-        } else {
-          labelText = String(proj);
-        }
-        let src = null;
+        const declared = (item && Array.isArray(item.files)) ? item.files.some(function(k){ return k && String(k).toLowerCase() !== 'single'; }) : false;
+        // Always clear previous image to avoid "cached" image showing on empty tiles
         try{
-          if (item && Array.isArray(item.files) && item.files.length){
-            const files = item.files;
-            const fname = (filesCount > 1 && files[fileIdx]) ? files[fileIdx] : files[0];
-            if (fname && window.CRMO_mpThumbs && window.CRMO_mpThumbs[fname]){
-              src = window.CRMO_mpThumbs[fname];
-            }
-            if (!src && item && item.tileData){
-              try{
-                if (filesCount > 1){
-                  if (fileIdx === 0 && item.tileData.imageSrc) src = item.tileData.imageSrc;
-                  if (!src && fileIdx > 0 && item.tileData.extraImages && item.tileData.extraImages[fileIdx-1] && item.tileData.extraImages[fileIdx-1].src){
-                    src = item.tileData.extraImages[fileIdx-1].src;
-                  }
-                }else{
-                  if (item.tileData.imageSrc) src = item.tileData.imageSrc;
-                }
-              }catch(e){}
-            }
-          }
+          imgEl.removeAttribute('src');
+          imgEl.src = '';
         }catch(e){}
-        if (!src && item.el){
-          const innerImg = item.el.querySelector && item.el.querySelector('img');
-          if (innerImg && innerImg.src){
-            src = innerImg.src;
-          } else if (window.getComputedStyle){
+        imgEl.alt = '';
+        titleEl.textContent = '';
+        descEl.textContent  = '';
+        labelEl.textContent = '';
+        try{ slotNumEl.classList.remove('show'); slotNumEl.textContent = ''; }catch(e){}
+        try{ imgEl.style.display = ''; }catch(e){}
+        if (!item) {
+          renderThumbs({files:[]});
+          return false;
+        }
+
+        // Determine which file slots actually have images
+        const infosAll = getAvailableFileInfos(item);
+    const MAX_THUMBS = 12;
+    const infos = infosAll.slice(0, MAX_THUMBS);
+        const hasMulti = infos.length > 1;
+
+        // Clamp fileIdx to an existing slot when needed (important for multi-layer templates with empty slots)
+        if (infos.length){
+          const exists = infos.some(function(x){ return x.orig === fileIdx; });
+          if (!exists) fileIdx = infos[0].orig;
+        } else {
+          fileIdx = 0;
+        }
+
+        renderThumbs(item);
+
+        // Prefer resolved src; fall back to tile background-image if exists; finally <img> src.
+        let src = resolveFileSrc(item, fileIdx) || null;
+
+        if (!src && fileIdx === 0 && item && item.el && declared){
+          try{
+            const a = item.el.querySelector && (item.el.querySelector('a') || item.el.querySelector('.tile') || item.el);
+            const bg = (a && (a.style && a.style.backgroundImage)) ? a.style.backgroundImage : '';
+            const m = bg && bg.match(/url\((['"]?)(.*?)\1\)/i);
+            if (m && m[2]) src = m[2];
+          }catch(e){}
+          if (!src){
             try{
-              const cs = window.getComputedStyle(item.el);
-              const bg = cs && cs.backgroundImage;
-              if (bg && bg !== 'none'){
-                const m = bg.match(/url\(["']?(.*?)["']?\)/);
-                if (m && m[1]){
-                  src = m[1];
-                }
-              }
+              const a2 = item.el.querySelector && (item.el.querySelector('a') || item.el);
+              const cs = a2 ? getComputedStyle(a2) : null;
+              const bg2 = cs ? cs.backgroundImage : '';
+              const m2 = bg2 && bg2.match(/url\((['"]?)(.*?)\1\)/i);
+              if (m2 && m2[2]) src = m2[2];
             }catch(e){}
           }
         }
-        img.innerHTML = '';
-        if (src){
-          const big = document.createElement('img');
-          big.src = src;
-          big.alt = labelText || '';
-          img.appendChild(big);
+
+        if (!src && item.el && item.el.querySelector && declared){
+          const im = item.el.querySelector('img');
+          if (im && im.src) src = im.src;
+        }
+
+        if (!src){
+          // Slot mode (v1467): allow navigating even when tile is empty.
+          try{ imgEl.removeAttribute('src'); imgEl.src = ''; imgEl.style.display = 'none'; }catch(e){}
+          const projEmpty = (item && typeof item.projectIndex === 'number') ? item.projectIndex : (curIdx + 1);
+          try{ slotNumEl.textContent = String(projEmpty); slotNumEl.classList.add('show'); }catch(e){}
+          titleEl.textContent = item.title || '';
+          descEl.textContent  = item.desc  || '';
+          labelEl.textContent = String(projEmpty);
+          // No thumbs for empty slot
+          try{ thumbsWrap.innerHTML=''; thumbsWrap.style.display='none'; }catch(e){}
+          return true;
+        }
+
+        try{ imgEl.style.display = ''; }catch(e){}
+        try{ slotNumEl.classList.remove('show'); }catch(e){}
+        imgEl.src = src;
+        imgEl.alt = item.title || 'תמונה';
+
+        titleEl.textContent = item.title || '';
+        descEl.textContent  = item.desc  || '';
+
+        // Label: show file index only when there are 2+ actual images
+        const proj = item.projectIndex;
+        if (typeof proj === 'number'){
+          if (hasMulti){
+            const visIdx = infos.findIndex(function(x){ return x.orig === fileIdx; });
+            labelEl.textContent = proj + '.' + (visIdx + 1);
+          } else {
+            labelEl.textContent = String(proj);
+          }
         } else {
-          img.textContent = labelText || '';
+          labelEl.textContent = '';
         }
-        let captionHTML = '';
-        let specificCaption = null;
-        try {
-          if (item.el && item.el.getAttribute){
-            const attrName = 'data-caption-' + (fileIdx + 1);
-            const specific = item.el.getAttribute(attrName);
-            if (specific && specific.trim().length){
-              specificCaption = specific.trim();
-            }
-          }
-        } catch(e){
-          specificCaption = null;
-        }
-        if (specificCaption){
-          captionHTML = specificCaption;
-        } else if (item.el && item.el.querySelector){
-          const hover = item.el.querySelector('.hover-desc');
-          if (hover){
-            captionHTML = hover.innerHTML;
-          }
-        }
-        if (!captionHTML){
-          const fallback = getCaptionFor(item.el);
-          if (fallback) captionHTML = fallback;
-        }
-           function escHtml(str){
-             return (str || '').replace(/[&<>"]/g, function(ch){
-               return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[ch] || ch;
-             });
-           }
-           let title = '';
-           let desc  = '';
-           if (item.el && item.el.querySelector){
-             const h = item.el.querySelector('.crmo-ov h4');
-             const d = item.el.querySelector('.crmo-ov .desc');
-             if (h || d){
-               title = (h ? h.textContent : '').trim();
-               desc  = (d ? d.textContent : '').trim();
-             }
-           }
-           try{
-             var curName = '';
-             if (item && item.files && item.files.length){
-               curName = (item.files[fileIdx] || item.files[0] || '').trim();
-             }
-             var fm = (item && item.filesMeta) || (item && item.tileData && item.tileData.filesMeta);
-             if (curName && fm && fm[curName]){
-               var mt = (fm[curName].title || '').trim();
-               var md = (fm[curName].desc  || '').trim();
-               if (mt) title = mt;
-               if (md) desc  = md;
-             }
-           }catch(e){}
-           if (!title && captionHTML){
-             const plain = captionHTML.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
-             if (plain){
-               const parts = plain.split(/[:\-–]/);
-               if (parts.length>1){
-                 title = parts[0].trim();
-                 desc = parts.slice(1).join(' - ').trim();
-               } else {
-                 title = plain;
-               }
-             }
-           }
-           let finalHTML='';
-           if (title) finalHTML += '<span class="crmo-lb-title">' + escHtml(title) + '</span>';
-           if (desc) finalHTML += '<span class="crmo-lb-desc">' + escHtml(desc) + '</span>';
-           try{
-             var lnkRaw = '';
-             var lnkDisabled = false;
-             var lnkNewTab = false;
-             if (item){
-               lnkRaw = (item.link ? String(item.link) : '').trim();
-               lnkDisabled = !!item.linkDisabled;
-               lnkNewTab = !!item.linkNewTab;
-             }
-             if (!lnkRaw && item && item.el && item.el.getAttribute){
-               lnkRaw = (item.el.getAttribute('data-link') || '').trim();
-               lnkDisabled = (item.el.getAttribute('data-link-disabled') === '1') || lnkDisabled;
-               lnkNewTab = (item.el.getAttribute('data-link-newtab') === '1') || lnkNewTab;
-             }
-             if (lnkRaw && !lnkDisabled){
-               var lnkUrl = normalizeUrl(lnkRaw);
-               if (lnkUrl){
-                 var attrs = ' target="_blank" rel="noopener"';
-                 finalHTML += '<a class="crmo-lb-link" href="' + escHtml(lnkUrl) + '"' + attrs + '>' + escHtml(displayLinkText(lnkRaw) || lnkRaw) + '</a>';
-               }
-             }
-           }catch(e){}
-           if (!finalHTML) finalHTML = captionHTML || '';
-           cap.innerHTML = finalHTML;
-}
+        return true;
+      }
+
 function open(grid, idx){
     curGrid = grid;
     curIdx = idx;
     fileIdx = 0;
+    // Refresh item list for navigation (work 1-6 etc.)
+    try{ curItems = ensureDataset(grid) || []; }catch(e){ curItems = (datasets.get(grid) || []); }
+    // v1467: open also for empty slots (shows slot number)
     setImage();
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden','false');
@@ -13703,22 +13644,24 @@ function open(grid, idx){
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden','true');
   }
-  function prevItem(){
-    const items = datasets.get(curGrid) || [];
+  function seek(delta){
+    // Use cached items when possible; refresh from DOM if the list is missing/too small
+    let items = (curItems && curItems.length) ? curItems : (datasets.get(curGrid) || []);
+    if (curGrid && (!items || items.length <= 1)){
+      try{ curItems = ensureDataset(curGrid) || []; }catch(e){}
+      items = (curItems && curItems.length) ? curItems : items;
+    }
     const len = items.length;
     if (!len) return;
-    curIdx = (curIdx + len - 1) % len;  // פרויקט קודם
-    fileIdx = 0;                        // לחזור לתת־תמונה הראשונה
-    setImage();
+    for (let step=0; step<len; step++){
+      curIdx = (curIdx + delta + len) % len;
+      fileIdx = 0;
+      if (setImage()) return;
+    }
   }
-  function nextItem(){
-    const items = datasets.get(curGrid) || [];
-    const len = items.length;
-    if (!len) return;
-    curIdx = (curIdx + 1) % len;        // פרויקט הבא
-    fileIdx = 0;
-    setImage();
-  }
+  function prevItem(){ seek(-1); }
+  function nextItem(){ seek(1); }
+
   document.addEventListener('click', function(ev){
     const brandEditBtn = ev.target.closest && ev.target.closest('#brands .brandcell-icon-edit');
     if (brandEditBtn){
@@ -13830,8 +13773,8 @@ const items = ensureDataset(tempGrid);
       open(gridEl, idx);
     }
   }, true);
-  prev.addEventListener('click', function(e){ e.preventDefault(); nextItem(); });
-  next.addEventListener('click', function(e){ e.preventDefault(); prevItem(); });
+  prev.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); prevItem(); });
+  next.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); nextItem(); });
   closeBtn.addEventListener('click', function(e){ e.preventDefault(); close(); });
   overlay.addEventListener('click', function(e){
     if (e.target === overlay){
@@ -13842,10 +13785,76 @@ const items = ensureDataset(tempGrid);
   document.addEventListener('keydown', function(e){
     if (!overlay.classList.contains('open')) return;
     if (e.key === 'Escape'){ e.preventDefault(); close(); }
-    if (e.key === 'ArrowRight'){ e.preventDefault(); prevItem(); }
-    if (e.key === 'ArrowLeft'){ e.preventDefault(); nextItem(); }
+    if (e.key === 'ArrowRight'){ e.preventDefault(); nextItem(); }
+    if (e.key === 'ArrowLeft'){ e.preventDefault(); prevItem(); }
   });
 })();
+  function isKeepLike(pathOrUrl){
+    if(!pathOrUrl) return false;
+    const s = String(pathOrUrl).toLowerCase();
+    const clean = s.split('?')[0].split('#')[0];
+    const base = clean.split('/').pop();
+    return base === '.keep' || base === '_keep.txt' || base === 'keep.txt' || base === '.gitkeep';
+  }
+  function resolveFileSrc(item, fileIndex){
+    try{
+      const declared = (item && Array.isArray(item.files)) ? item.files.some(function(k){ return k && String(k).toLowerCase() !== 'single'; }) : false;
+      if (!declared) return null;
+      const pick = (v) => (v && !isKeepLike(v)) ? v : null;
+      const norm = (v) => {
+        if (!v) return null;
+        if (typeof v === 'string') return pick(v);
+        if (typeof v === 'object'){
+          if (v.src)  return pick(v.src);
+          if (v.url)  return pick(v.url);
+          if (v.href) return pick(v.href);
+        }
+        return null;
+      };
+
+      const key = (item && Array.isArray(item.files)) ? item.files[fileIndex] : null;
+      const t = (key && key !== 'single' && window.CRMO_mpThumbs) ? window.CRMO_mpThumbs[key] : null;
+      const s1 = norm(t);
+      if (s1) return s1;
+
+      if (fileIndex === 0){
+        const s2 = norm(item && item.tileData && item.tileData.imageSrc);
+        if (s2) return s2;
+
+        // Some legacy paths store a direct string/object in image / src
+        const s2b = norm(item && item.tileData && (item.tileData.image || item.tileData.src));
+        if (s2b) return s2b;
+
+        const img = (item && item.el && item.el.querySelector) ? item.el.querySelector('img') : null;
+        const s3 = norm(img && img.src);
+        return s3;
+      }
+
+      const exArr = (item && item.tileData && Array.isArray(item.tileData.extraImages)) ? item.tileData.extraImages : null;
+      const ex = (exArr && exArr[fileIndex - 1]) ? exArr[fileIndex - 1] : null;
+      const s4 = norm(ex);
+      if (s4) return s4;
+
+      // Fallback: sometimes extraImages are stored as {src:...} in a parallel array
+      const exArr2 = (item && item.tileData && Array.isArray(item.tileData.extraSrcs)) ? item.tileData.extraSrcs : null;
+      const s5 = norm(exArr2 && exArr2[fileIndex - 1]);
+      return s5;
+    }catch(err){
+      return null;
+    }
+  }
+
+  function getAvailableFileInfos(item){
+    const out = [];
+    const n = (item && Array.isArray(item.files)) ? item.files.length : 0;
+    for (let i=0;i<n;i++){
+      const src = resolveFileSrc(item, i);
+      if (src){
+        out.push({ orig:i, key: item.files[i], src });
+      }
+    }
+    return out;
+  }
 </script>
 <script id="crmo_extended_gallery_js">
 (function(){
@@ -16181,7 +16190,7 @@ document.addEventListener('DOMContentLoaded', function () {
     content = {};
   }
   window.CREAMO_CONTENT = content;
-  // --- CRMO_v1460: resolve upload folder per current gallery ---
+  // --- CRMO_v1462: lightbox thumbs filtering + contain fit ---
   (function(){
     try{
       window.CRMO_getTileUploadFolder = function(){
@@ -19699,7 +19708,7 @@ window.CRMO_MasterGalleries = {
     inset:0;
     width:100%;
     height:100%;
-    object-fit:cover;
+    object-fit:contain;
     display:block;
   }
   .tm-preview .hover-desc{
@@ -19841,7 +19850,7 @@ window.CRMO_MasterGalleries = {
   .tm-extra-images img{
     width:40px;
     height:40px;
-    object-fit:cover;
+    object-fit:contain;
     border-radius:4px;
     border:1px solid #ddd;
   }
