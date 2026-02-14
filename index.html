@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1471 -->
+<!-- CRMO_v1473 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1471";
+window.CRMO_BUILD_VERSION = "1473";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -68,6 +68,109 @@ window.CRMO_SUPABASE_CONFIG_ID = "main";
 window.CRMO_SUPABASE_REQUIRE_LOGIN = true;
 window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 </script>
+
+<script id="crmo_upload_hint_v1472">
+(function(){
+  if (window.CRMO_showUploadHint) return;
+  function safeStringify(x){
+    try{ return JSON.stringify(x); }catch(e){}
+    try{ return String(x); }catch(e){}
+    return '';
+  }
+  function pickErr(err){
+    if(!err) return {title:'שגיאה לא ידועה', body:'לא התקבל פירוט שגיאה.'};
+    var msg = err.message || err.error_description || err.error || '';
+    var status = err.status || err.statusCode || err.code || '';
+    var details = err.details || err.hint || err.stack || '';
+    var body = '';
+    if (status) body += 'קוד: ' + status + '\n';
+    if (msg) body += 'הודעה: ' + msg + '\n';
+    if (details && details !== msg) body += 'פרטים: ' + (typeof details === 'string' ? details : safeStringify(details)) + '\n';
+    if (!body) body = safeStringify(err);
+    return {title:'העלאה נכשלה', body:body.trim()};
+  }
+  function ensureBox(){
+    var id = 'crmo-upload-hint-box';
+    var el = document.getElementById(id);
+    if(el) return el;
+    el = document.createElement('div');
+    el.id = id;
+    el.style.position = 'fixed';
+    el.style.left = '12px';
+    el.style.bottom = '12px';
+    el.style.zIndex = '999999';
+    el.style.maxWidth = '420px';
+    el.style.background = '#111';
+    el.style.color = '#fff';
+    el.style.padding = '12px 14px';
+    el.style.borderRadius = '12px';
+    el.style.boxShadow = '0 10px 30px rgba(0,0,0,.35)';
+    el.style.fontSize = '13px';
+    el.style.lineHeight = '1.35';
+    el.style.whiteSpace = 'pre-wrap';
+    el.style.direction = 'rtl';
+    el.style.display = 'none';
+
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.textContent = 'סגור';
+    close.style.marginTop = '10px';
+    close.style.background = '#fff';
+    close.style.border = '0';
+    close.style.borderRadius = '10px';
+    close.style.padding = '6px 10px';
+    close.style.cursor = 'pointer';
+
+    close.addEventListener('click', function(){ el.style.display = 'none'; });
+
+    var title = document.createElement('div');
+    title.id = 'crmo-upload-hint-title';
+    title.style.fontWeight = '700';
+    title.style.marginBottom = '6px';
+
+    var body = document.createElement('div');
+    body.id = 'crmo-upload-hint-body';
+
+    el.appendChild(title);
+    el.appendChild(body);
+    el.appendChild(close);
+    document.body.appendChild(el);
+    return el;
+  }
+
+  window.CRMO_showUploadHint = function(err){
+    try{
+      var d = pickErr(err);
+      var box = ensureBox();
+      var t = document.getElementById('crmo-upload-hint-title');
+      var b = document.getElementById('crmo-upload-hint-body');
+      if (t) t.textContent = d.title;
+      if (b) b.textContent = d.body + "\n\nטיפ: אם אתה מחובר ועדיין יש 401/403 — זה כמעט תמיד Policy ב‑Supabase Storage (bucket assets).";
+      box.style.display = 'block';
+      try{ if(window.console && console.warn) console.warn('CRMO upload error:', err); }catch(e){}
+    }catch(e){}
+  };
+
+  window.CRMO_debugSupabase = async function(){
+    try{
+      if(!window.CRMO_getSB) throw new Error('no CRMO_getSB');
+      var sb = await window.CRMO_getSB();
+      var ses = await sb.auth.getSession();
+      console.log('[CRMO] session:', ses);
+      try{
+        var b = window.CRMO_SUPABASE_BUCKET || 'assets';
+        var lst = await sb.storage.from(b).list('uploads', { limit: 5 });
+        console.log('[CRMO] storage.list:', lst);
+      }catch(e){
+        console.warn('[CRMO] storage.list failed:', e);
+      }
+    }catch(e){
+      console.warn('[CRMO] debug failed:', e);
+    }
+  };
+})();
+</script>
+
 
 <script id="crmo_storage_ns">
 (function(){
@@ -13553,13 +13656,32 @@ function normalizeBrandName(str){
   }
 function CRMO_lbGetMeta(item){
     try{
+      const el = (item && item.el) ? item.el : null;
       const td = (item && item.tileData && typeof item.tileData === 'object') ? item.tileData : {};
-      const title = (td && td.title) ? String(td.title) : (item && item.caption ? String(item.caption) : getCaptionFor(item && item.el ? item.el : document.body));
-      const desc  = (td && td.desc)  ? String(td.desc)  : '';
-      let link = (td && td.link) ? String(td.link) : '';
+
+      // Title: prefer saved state, then explicit caption, then DOM fallback
+      const title = (td && td.title) ? String(td.title)
+        : (item && item.caption ? String(item.caption) : getCaptionFor(el || document.body));
+
+      // Desc: prefer saved state, then DOM attribute fallback
+      const desc = (td && td.desc) ? String(td.desc)
+        : (el && el.getAttribute ? String(el.getAttribute('data-desc') || '') : '');
+
+      // Link: prefer saved state, then DOM attribute fallback (matches "כוורת")
+      let link = (td && (td.link || td.href || td.url)) ? String(td.link || td.href || td.url)
+        : (el && el.getAttribute ? String(el.getAttribute('data-link') || '') : '');
+
+      // Flags: prefer saved state, then DOM attribute fallback
+      const linkNewTab = !!(
+        (td && (td.linkNewTab || td.newTab || td.link_new_tab)) ||
+        (el && el.getAttribute && (el.getAttribute('data-link-newtab') === '1' || el.getAttribute('data-link-target') === '_blank'))
+      );
+      const linkDisabled = !!(
+        (td && (td.linkDisabled || td.link_disabled)) ||
+        (el && el.getAttribute && (el.getAttribute('data-link-disabled') === '1'))
+      );
+
       link = normalizeUrl(link);
-      const linkNewTab = !!(td && td.linkNewTab);
-      const linkDisabled = !!(td && td.linkDisabled);
       return { title: title || '', desc: desc || '', link: link || '', linkNewTab, linkDisabled };
     }catch(e){
       return { title:'', desc:'', link:'', linkNewTab:true, linkDisabled:false };
