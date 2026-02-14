@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1474 -->
+<!-- CRMO_v1475 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1474";
+window.CRMO_BUILD_VERSION = "1475";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -172,6 +172,40 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 </script>
 
 
+
+<script id="crmo_global_error_listeners_v1475">
+(function(){
+  if (window.__CRMO_GLOBAL_ERR_LISTENERS__) return;
+  window.__CRMO_GLOBAL_ERR_LISTENERS__ = true;
+
+  function show(e){
+    try{
+      if (window.CRMO_showUploadHint) window.CRMO_showUploadHint(e);
+    }catch(_){}
+  }
+
+  window.addEventListener('unhandledrejection', function(ev){
+    try{
+      var reason = ev && ev.reason ? ev.reason : ev;
+      if (reason && typeof reason === 'object' && !reason.message && reason.error_description) {
+        reason.message = reason.error_description;
+      }
+      show(reason || {message:'unhandledrejection'});
+    }catch(e){}
+  });
+
+  window.addEventListener('error', function(ev){
+    try{
+      var err = (ev && ev.error) ? ev.error : ev;
+      show(err || {message:'window.error'});
+    }catch(e){}
+  });
+
+  window.CRMO_testHint = function(){
+    show({status: 403, message: 'TEST: אם אתה רואה את זה, התיבה עובדת. עכשיו נסה העלאה שוב.'});
+  };
+})();
+</script>
 <script id="crmo_storage_ns">
 (function(){
   try{
