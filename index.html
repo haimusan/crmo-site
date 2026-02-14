@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1475 -->
+<!-- CRMO_v1476 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1475";
+window.CRMO_BUILD_VERSION = "1476";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -12944,6 +12944,10 @@ document.addEventListener('DOMContentLoaded', function(){
   const bClose= document.getElementById('crmo-close');
   const bPrev = document.getElementById('crmo-prev');
   const bNext = document.getElementById('crmo-next');
+  if(!modal || !img || !bClose || !bPrev || !bNext){
+    console.warn('[CRMO] legacy project modal elements missing; skipping legacy lightbox script');
+    return;
+  }
   let key=null, idx=0;
   function open(k){
     const arr = MAP[k]||[];
