@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1479 -->
+<!-- CRMO_v1481 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1479";
+window.CRMO_BUILD_VERSION = "1481";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -40,6 +40,8 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       }
       var vEl = document.getElementById("crmo-footer-version");
       if (vEl) vEl.textContent = window.CRMO_BUILD_VERSION || "";
+      var vTop = document.getElementById("crmo-top-version");
+      if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
       // Cloud restore (first-run): pull saved state from Supabase into localStorage, then reload.
       setTimeout(async function(){
         try{
@@ -7561,6 +7563,8 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
+
+<span id="crmo-top-version" style="opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;">1481</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
@@ -28070,13 +28074,33 @@ async function ensureGalleryFolder(galleryId){
     var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
     var folder = window.CRMO_galleryFolderForId(galleryId);
     var keepPath = folder + '/_keep.txt';
+      // If the folder already has any object, we consider it existing and skip creating _keep.txt
+      try{
+        var bkt = window.CRMO_SUPABASE_BUCKET || 'assets';
+        var lst = await sb.storage.from(bkt).list(folder, { limit: 1 });
+        if (lst && !lst.error && lst.data && lst.data.length > 0){
+          return { ok:true, folder: folder, path: keepPath, existed:true, reason:'nonempty' };
+        }
+      }catch(_e){}
+
     try{
       var blob = new Blob(['keep'], { type:'text/plain' });
-      var up = await sb.storage.from(bucket).upload(keepPath, blob, {
+      var up = await sb.storage.from(bucket).upload(keepPath, blob, {upsert:true, 
         upsert: false,
         contentType: 'text/plain'
       });
+      
+      // Supabase Storage returns 409 Duplicate when the keep-file already exists.
       if (up && up.error){
+        var err = up.error;
+        var code = (err.statusCode || err.status || err.code || '');
+        var msg = (err.message || err.error_description || String(err));
+        if (code == 409 || /duplicate|already exists|resource already exists/i.test(String(msg))){
+          return { ok:true, folder: folder, path: keepPath, existed:true };
+        }
+        return { ok:false, folder: folder, path: keepPath, error: String(msg), code: code, raw: err };
+      }
+if (up && up.error){
         try{
           if (up.error.statusCode === 409) return { folder: folder, path: keepPath, existed: true };
           var msg = (up.error.message || '').toLowerCase();
@@ -28096,7 +28120,9 @@ async function ensureGalleryFolder(galleryId){
   window.CRMO_ensureGalleryFolder = ensureGalleryFolder;
   window.CRMO_syncGalleryFolders = async function(){
     
-    // Wait for an auth session (up to ~5s) to avoid Storage RLS errors before login is ready.
+    
+    var created=0, existed=0, failed=0, skipped=0;
+// Wait for an auth session (up to ~5s) to avoid Storage RLS errors before login is ready.
     try{
       var sb0 = await getClient();
       for (var i=0;i<25;i++){
@@ -28135,7 +28161,7 @@ var ok = await isAdminAllowed();
         created++;
       }catch(e){}
     }
-    return { ok:true, count: created };
+    return { ok:true, total:created, created:created, existed:existed, failed:failed, skipped:skipped };
   };
   function installGalleryFolderHooks(){
     try{
