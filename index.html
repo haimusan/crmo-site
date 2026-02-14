@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1482 -->
+<!-- CRMO_v1483 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1482";
+window.CRMO_BUILD_VERSION = "1483";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -40,6 +40,8 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       }
       var vEl = document.getElementById("crmo-footer-version");
       if (vEl) vEl.textContent = window.CRMO_BUILD_VERSION || "";
+      var vTop = document.getElementById("crmo-top-version");
+      if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
       var vTop = document.getElementById("crmo-top-version");
       if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
       // Cloud restore (first-run): pull saved state from Supabase into localStorage, then reload.
@@ -28366,7 +28368,10 @@ var ok = await isAdminAllowed();
   function schedulePush(){
     if (_pushTimer) clearTimeout(_pushTimer);
     _pushTimer = setTimeout(function(){
-      pushToDb().catch(function(){});
+      pushToDb().catch(function(err){
+        try{ setSyncInfo('שגיאה בשמירה לשרת (בדוק RLS/Policy בטבלת הקונפיג).'); }catch(e){}
+        try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(err); }catch(e){}
+      });
     }, 1500);
   }
   try{
@@ -28394,7 +28399,10 @@ var ok = await isAdminAllowed();
     try{
       if(!_isConfigured()) return;
       if(sessionStorage.getItem('crmo_remote_pulled')) return;
-      pullFromDb(true).catch(function(){});
+      pullFromDb(true).catch(function(err){
+        try{ setSyncInfo('שגיאה בטעינה מהשרת (בדוק RLS/Policy בטבלת הקונפיג).'); }catch(e){}
+        try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(err); }catch(e){}
+      });
     }catch(e){}
   }
 async function refreshStatus(){
