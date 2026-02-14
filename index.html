@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- CRMO_v1458 -->
+<!-- CRMO_v1459 -->
 
 <html dir="rtl" lang="he">
 <head>
 
 
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "CRMO_v1458";
+window.CRMO_BUILD_VERSION = "1459";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -25,6 +25,15 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       }
       var vEl = document.getElementById("crmo-footer-version");
       if (vEl) vEl.textContent = window.CRMO_BUILD_VERSION || "";
+      // Cloud restore (first-run): pull saved state from Supabase into localStorage, then reload.
+      setTimeout(async function(){
+        try{
+          if (typeof CRMO_cloudRestoreOnce === "function") {
+            var restored = await CRMO_cloudRestoreOnce();
+            if (restored) location.reload();
+          }
+        }catch(_e){}
+      }, 0);
     } catch(e){}
   }
   if (document.readyState === "loading") {
@@ -20741,6 +20750,7 @@ function ensureGalleryState(key){
       var ms = document.getElementById('crmo-gallery-meta-store');
       if(ds && typeof safeSet === 'function'){ safeSet('crmo_content_data', ds.textContent || ''); }
       if(ms && typeof safeSet === 'function'){ safeSet('crmo_gallery_meta', ms.textContent || ''); }
+      try{ CRMO_scheduleCloudSave('persist:'+String(scopeLabel||'')); }catch(_e){}
       return { ok:true };
     }catch(e){
       console.warn('[CRMO] persist failed', e);
@@ -27589,13 +27599,113 @@ function setStatus(text){
     var gid = _crmoSanitizeId(galleryId);
     return 'galleries/' + gid;
   };
-  async function ensureGalleryFolder(galleryId){
+  // ---- Cloud persistence (Supabase) -----------------------------------------
+// We store a snapshot of all CRMO localStorage keys in public.crmo_site_config(storage->ls)
+// so every HTML version can load the same data.
+const CRMO_CLOUD_LS_KEY_PREFIX = "crmo_";
+const CRMO_CLOUD_STATE_FIELD = "ls";
+const CRMO_CLOUD_TS_FIELD = "ts";
+const CRMO_CLOUD_RESTORED_FLAG_KEY = `crmo_cloud_restored__${CRMO_STORAGE_NS_PATH}`;
+
+function CRMO_collectLocalStateSnapshot() {
+  const out = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (!k) continue;
+    if (!k.startsWith(CRMO_CLOUD_LS_KEY_PREFIX)) continue;
+    // Keep only keys from the current namespace (path-based suffix), to avoid cross-site pollution
+    if (!k.endsWith(`__${CRMO_STORAGE_NS_PATH}`) && !k.includes(`__${CRMO_STORAGE_NS_PATH}__`)) {
+      // Some CRMO keys may not be namespaced; keep them only if clearly CRMO.
+      // (This keeps backwards compatibility without saving unrelated keys.)
+      if (!k.startsWith("crmo_")) continue;
+    }
+    out[k] = localStorage.getItem(k);
+  }
+  return out;
+}
+
+let CRMO_cloudSaveTimer = null;
+async function CRMO_cloudSaveNow(reason = "manual") {
+  const client = getClient();
+  const { data: sess } = await client.auth.getSession();
+  if (!sess?.session) throw new Error("Not signed in");
+  const ok = await isAdminAllowed();
+  if (!ok) throw new Error("Not admin/owner");
+
+  const payload = {
+    [CRMO_CLOUD_STATE_FIELD]: CRMO_collectLocalStateSnapshot(),
+    [CRMO_CLOUD_TS_FIELD]: Date.now(),
+    reason: String(reason || "manual"),
+    path: CRMO_STORAGE_NS_PATH,
+  };
+
+  const { error } = await client
+    .from(CRMO_SITE_CONFIG_TABLE)
+    .upsert({ id: CRMO_SITE_CONFIG_ROW_ID, storage: payload }, { onConflict: "id" });
+
+  if (error) throw error;
+  return true;
+}
+
+function CRMO_scheduleCloudSave(reason = "autosave") {
+  // debounce to avoid spamming writes while dragging
+  if (CRMO_cloudSaveTimer) clearTimeout(CRMO_cloudSaveTimer);
+  CRMO_cloudSaveTimer = setTimeout(async () => {
+    try {
+      await CRMO_cloudSaveNow(reason);
+      // small breadcrumb for debugging
+      console.info("[CloudSave] OK", reason);
+    } catch (e) {
+      console.warn("[CloudSave] skipped/failed", reason, e?.message || e);
+    }
+  }, 800);
+}
+
+async function CRMO_cloudRestoreOnce() {
+  // Do not auto-restore if we already restored for this namespace in this browser session
+  if (sessionStorage.getItem(CRMO_CLOUD_RESTORED_FLAG_KEY) === "1") return false;
+
+  const client = getClient();
+  const { data: sess } = await client.auth.getSession();
+  if (!sess?.session) return false;
+
+  // We allow restore for any signed-in user (read policy controls access)
+  const { data, error } = await client
+    .from(CRMO_SITE_CONFIG_TABLE)
+    .select("storage, updated_at")
+    .eq("id", CRMO_SITE_CONFIG_ROW_ID)
+    .maybeSingle();
+
+  if (error || !data?.storage) return false;
+  const remote = data.storage || {};
+  const ls = remote[CRMO_CLOUD_STATE_FIELD];
+  if (!ls || typeof ls !== "object") return false;
+
+  // Apply only if local doesn't have any CRMO keys yet (first run), to avoid overwriting in-progress work
+  let hasLocal = false;
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(CRMO_CLOUD_LS_KEY_PREFIX)) { hasLocal = true; break; }
+  }
+  if (hasLocal) return false;
+
+  Object.entries(ls).forEach(([k, v]) => {
+    try { localStorage.setItem(k, String(v)); } catch {}
+  });
+
+  sessionStorage.setItem(CRMO_CLOUD_RESTORED_FLAG_KEY, "1");
+  console.info("[CloudRestore] applied from server");
+  return true;
+}
+// --------------------------------------------------------------------------
+
+async function ensureGalleryFolder(galleryId){
     var sb = await getClient();
     var ok = await isAdminAllowed();
     if(!ok) throw new Error('not-auth');
     var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
     var folder = window.CRMO_galleryFolderForId(galleryId);
-    var keepPath = folder + '/.keep';
+    var keepPath = folder + '/_keep.txt';
     try{
       var blob = new Blob(['keep'], { type:'text/plain' });
       var up = await sb.storage.from(bucket).upload(keepPath, blob, {
