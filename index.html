@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1469 -->
+<!-- CRMO_v1471 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1469";
+window.CRMO_BUILD_VERSION = "1471";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -3754,6 +3754,8 @@ mpRows.appendChild(row);
                   currentAnchor.style.backgroundSize = 'cover';
                   currentAnchor.style.backgroundPosition = 'center center';
                 }
+                try{ if (typeof mpApplyMultiProjectChanges === 'function') mpApplyMultiProjectChanges(); }catch(e){}
+                try{ if (typeof CRMO_persistEditorState === 'function') CRMO_persistEditorState('upload'); }catch(e){}
               })
               .catch(function(err){
                 try{
@@ -13275,6 +13277,24 @@ document.addEventListener('DOMContentLoaded', function(){
       if (meta) meta.appendChild(labelEl);
     } catch(e){}
   }
+  // Link element (optional) – create if missing
+  let linkEl = cap.querySelector && cap.querySelector('.crmo-lb-link');
+  if (!linkEl){
+    linkEl = document.createElement('a');
+    linkEl.className = 'crmo-lb-link';
+    linkEl.href = '#';
+    linkEl.target = '_blank';
+    linkEl.rel = 'noopener noreferrer';
+    linkEl.style.display = 'none';
+    linkEl.addEventListener('click', function(ev){
+      try{
+        if (!linkEl.getAttribute('href') || linkEl.getAttribute('href') === '#'){
+          ev.preventDefault();
+        }
+      }catch(e){}
+    });
+    cap.appendChild(linkEl);
+  }
   function normalizeUrl(u){
     u = (u || '').trim();
     if(!u) return '';
@@ -13531,7 +13551,21 @@ function normalizeBrandName(str){
       thumbsWrap.appendChild(btn);
     });
   }
-function setImage(){
+function CRMO_lbGetMeta(item){
+    try{
+      const td = (item && item.tileData && typeof item.tileData === 'object') ? item.tileData : {};
+      const title = (td && td.title) ? String(td.title) : (item && item.caption ? String(item.caption) : getCaptionFor(item && item.el ? item.el : document.body));
+      const desc  = (td && td.desc)  ? String(td.desc)  : '';
+      let link = (td && td.link) ? String(td.link) : '';
+      link = normalizeUrl(link);
+      const linkNewTab = !!(td && td.linkNewTab);
+      const linkDisabled = !!(td && td.linkDisabled);
+      return { title: title || '', desc: desc || '', link: link || '', linkNewTab, linkDisabled };
+    }catch(e){
+      return { title:'', desc:'', link:'', linkNewTab:true, linkDisabled:false };
+    }
+  }
+  function setImage(){
         const items = (curItems && curItems.length) ? curItems : (datasets.get(curGrid) || []);
         const item = items[curIdx];
         const declared = (item && Array.isArray(item.files)) ? item.files.some(function(k){ return k && String(k).toLowerCase() !== 'single'; }) : false;
@@ -13543,6 +13577,7 @@ function setImage(){
         imgEl.alt = '';
         titleEl.textContent = '';
         descEl.textContent  = '';
+        try{ linkEl.style.display='none'; linkEl.textContent=''; linkEl.removeAttribute('href'); }catch(e){}
         labelEl.textContent = '';
         try{ slotNumEl.classList.remove('show'); slotNumEl.textContent = ''; }catch(e){}
         try{ imgEl.style.display = ''; }catch(e){}
@@ -13598,8 +13633,22 @@ function setImage(){
           try{ imgEl.removeAttribute('src'); imgEl.src = ''; imgEl.style.display = 'none'; }catch(e){}
           const projEmpty = (item && typeof item.projectIndex === 'number') ? item.projectIndex : (curIdx + 1);
           try{ slotNumEl.textContent = String(projEmpty); slotNumEl.classList.add('show'); }catch(e){}
-          titleEl.textContent = item.title || '';
-          descEl.textContent  = item.desc  || '';
+          const meta = CRMO_lbGetMeta(item);
+          titleEl.textContent = meta.title || '';
+          descEl.textContent  = meta.desc  || '';
+          try{
+            if (meta.link && !meta.linkDisabled){
+              linkEl.style.display = 'inline-block';
+              linkEl.href = meta.link;
+              linkEl.target = meta.linkNewTab ? '_blank' : '_self';
+              linkEl.rel = meta.linkNewTab ? 'noopener noreferrer' : '';
+              linkEl.textContent = displayLinkText(meta.link);
+            } else {
+              linkEl.style.display = 'none';
+              linkEl.textContent = '';
+              linkEl.removeAttribute('href');
+            }
+          }catch(e){}
           labelEl.textContent = String(projEmpty);
           // No thumbs for empty slot
           try{ thumbsWrap.innerHTML=''; thumbsWrap.style.display='none'; }catch(e){}
@@ -13609,10 +13658,24 @@ function setImage(){
         try{ imgEl.style.display = ''; }catch(e){}
         try{ slotNumEl.classList.remove('show'); }catch(e){}
         imgEl.src = src;
-        imgEl.alt = item.title || 'תמונה';
+        const meta2 = CRMO_lbGetMeta(item);
+        imgEl.alt = meta2.title || 'תמונה';
 
-        titleEl.textContent = item.title || '';
-        descEl.textContent  = item.desc  || '';
+        titleEl.textContent = meta2.title || '';
+        descEl.textContent  = meta2.desc  || '';
+        try{
+          if (meta2.link && !meta2.linkDisabled){
+            linkEl.style.display = 'inline-block';
+            linkEl.href = meta2.link;
+            linkEl.target = meta2.linkNewTab ? '_blank' : '_self';
+            linkEl.rel = meta2.linkNewTab ? 'noopener noreferrer' : '';
+            linkEl.textContent = displayLinkText(meta2.link);
+          } else {
+            linkEl.style.display = 'none';
+            linkEl.textContent = '';
+            linkEl.removeAttribute('href');
+          }
+        }catch(e){}
 
         // Label: show file index only when there are 2+ actual images
         const proj = item.projectIndex;
@@ -16818,6 +16881,7 @@ window.CRMO_tilesManagerSyncFromDom(currentTile);
           anchor.style.backgroundSize = 'cover';
           anchor.style.backgroundPosition = 'center center';
         }
+        try{ if (typeof CRMO_persistEditorState === 'function') CRMO_persistEditorState('upload'); }catch(e){}
       })
       .catch(function(err){
         try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(err); }catch(e){}
