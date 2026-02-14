@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1476 -->
+<!-- CRMO_v1477 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1476";
+window.CRMO_BUILD_VERSION = "1477";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -79,17 +79,39 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
   }
   function pickErr(err){
     if(!err) return {title:'שגיאה לא ידועה', body:'לא התקבל פירוט שגיאה.'};
-    var msg = err.message || err.error_description || err.error || '';
+
+    // Support ErrorEvent/unhandledrejection shapes
     var status = err.status || err.statusCode || err.code || '';
-    var details = err.details || err.hint || err.stack || '';
+    var msg = err.message || err.error_description || err.error || '';
+    var filename = err.filename || err.fileName || '';
+    var lineno = err.lineno || err.lineNumber || '';
+    var colno = err.colno || err.columnNumber || '';
+    var details = err.details || err.hint || '';
+    var stack = err.stack || '';
+
+    // If message empty but toString exists
+    if(!msg){
+      try{ msg = String(err); }catch(e){}
+    }
+
+    // Build body
     var body = '';
     if (status) body += 'קוד: ' + status + '\n';
     if (msg) body += 'הודעה: ' + msg + '\n';
-    if (details && details !== msg) body += 'פרטים: ' + (typeof details === 'string' ? details : safeStringify(details)) + '\n';
+    if (filename || lineno || colno){
+      body += 'מיקום: ' + (filename || 'unknown') + ':' + (lineno || '?') + ':' + (colno || '?') + '\n';
+    }
+    if (details) body += 'פרטים: ' + (typeof details === 'string' ? details : safeStringify(details)) + '\n';
+    if (stack){
+      try{
+        var s = String(stack).split('\n').slice(0, 8).join('\n');
+        body += 'Stack: ' + s + '\n';
+      }catch(e){}
+    }
     if (!body) body = safeStringify(err);
+
     return {title:'העלאה נכשלה', body:body.trim()};
-  }
-  function ensureBox(){
+  }function ensureBox(){
     var id = 'crmo-upload-hint-box';
     var el = document.getElementById(id);
     if(el) return el;
@@ -145,7 +167,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
       var t = document.getElementById('crmo-upload-hint-title');
       var b = document.getElementById('crmo-upload-hint-body');
       if (t) t.textContent = d.title;
-      if (b) b.textContent = d.body + "\n\nטיפ: אם אתה מחובר ועדיין יש 401/403 — זה כמעט תמיד Policy ב‑Supabase Storage (bucket assets).";
+      if (b) b.textContent = d.body + "\n\nטיפ: אם אתה רואה 401/403 זה כמעט תמיד Policy ב‑Supabase Storage (bucket assets). אם ההודעה היא SyntaxError (כמו Unexpected token) — פתח DevTools → Network, מצא בקשה ל‑storage/v1/object וראה Status/Response (לעיתים השרת מחזיר לא‑JSON בגלל CORS/Policy/Redirect).";
       box.style.display = 'block';
       try{ if(window.console && console.warn) console.warn('CRMO upload error:', err); }catch(e){}
     }catch(e){}
