@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1489 -->
+<!-- CRMO_v1490 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1489";
+window.CRMO_BUILD_VERSION = "1490";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -29637,30 +29637,58 @@ try{
 }catch(e){}
 </script>
 
-<script id="crmo_debug_helpers_v1489">
+<script id="crmo_debug_helpers_v1490">
 (function(){
   async function getSb() {
     if (typeof window.CRMO_getSbClient === 'function') return await window.CRMO_getSbClient();
     throw new Error('CRMO_getSbClient not available');
   }
 
-  function isCrmoKey(k) {
-    try {
-      return String(k||'').toLowerCase().startsWith('crmo');
-    } catch(e) {
-      return false;
-    }
+  function lower(s){ try{ return String(s||'').toLowerCase(); }catch(e){ return ''; } }
+
+  // Never persist auth/session tokens or Supabase internal keys
+  function isSensitiveKey(k) {
+    const lk = lower(k);
+    if (!lk) return true;
+    if (lk.startsWith('sb-')) return true;                    // supabase auth storage
+    if (lk.includes('supabase')) return true;                 // any supabase internal storage
+    if (lk.includes('auth')) return true;
+    if (lk.includes('token')) return true;
+    if (lk.includes('refresh')) return true;
+    if (lk.includes('access')) return true;
+    if (lk.includes('provider')) return true;
+    if (lk.includes('pkce')) return true;
+    return false;
   }
 
-  function collectLocalCrmoStorage() {
+  function isCrmoKey(k) {
+    return lower(k).startsWith('crmo');
+  }
+
+  function valueLooksLikeContent(v) {
+    const lv = lower(v);
+    // common signals of your content being stored:
+    if (lv.includes('supabase.co/storage')) return true;
+    if (lv.includes('/storage/v1/object')) return true;
+    if (lv.includes('assets/')) return true;
+    if (lv.includes('.jpg') || lv.includes('.jpeg') || lv.includes('.png') || lv.includes('.webp') || lv.includes('.mp4') || lv.includes('.mov')) return true;
+    if (lv.includes('"tiles"') || lv.includes('"galleries"') || lv.includes('"projects"') || lv.includes('"brands"')) return true;
+    return false;
+  }
+
+  function collectLocalState() {
     const out = {};
     try {
       const ls = window.localStorage;
       if (!ls) return out;
       for (let i=0;i<ls.length;i++) {
         const k = ls.key(i);
-        if (!k || !isCrmoKey(k)) continue;
-        out[k] = ls.getItem(k);
+        if (!k || isSensitiveKey(k)) continue;
+        const v = ls.getItem(k);
+        // keep: all crmo* keys, plus any key whose VALUE looks like content JSON / media refs
+        if (isCrmoKey(k) || valueLooksLikeContent(v||'')) {
+          out[k] = v;
+        }
       }
     } catch(e) {}
     return out;
@@ -29674,9 +29702,8 @@ try{
       let n=0;
       Object.keys(storage).forEach(function(k){
         try {
-          if (!k || !isCrmoKey(k)) return;
+          if (!k || isSensitiveKey(k)) return;
           const v = storage[k];
-          // value must be string for localStorage
           ls.setItem(k, (typeof v === 'string') ? v : JSON.stringify(v));
           n++;
         } catch(e) {}
@@ -29687,6 +29714,34 @@ try{
     }
   }
 
+  // Debug: list localStorage keys
+  window.CRMO_listLocalKeys = function() {
+    try {
+      const ls = window.localStorage;
+      const keys = [];
+      for (let i=0;i<ls.length;i++) keys.push(ls.key(i));
+      return keys;
+    } catch(e) { return []; }
+  };
+
+  // Debug: find keys whose values include a pattern (helps locate where "tiles" are stored)
+  window.CRMO_findLocalByValue = function(pattern) {
+    const pat = String(pattern||'').toLowerCase();
+    const hits = [];
+    try {
+      const ls = window.localStorage;
+      for (let i=0;i<ls.length;i++) {
+        const k = ls.key(i);
+        if (!k) continue;
+        const v = ls.getItem(k) || '';
+        const lv = String(v).toLowerCase();
+        if (pat && lv.includes(pat)) hits.push({ key:k, sample: v.slice(0,180) });
+      }
+    } catch(e) {}
+    return hits;
+  };
+
+  // DB helpers
   window.CRMO_dbPing = async function() {
     const sb = await getSb();
     const payload = { id: 'debug_test', storage: { ts: Date.now(), v: (window.CRMO_BUILD_VERSION||'') } };
@@ -29709,10 +29764,11 @@ try{
     }
   };
 
+  // Save current local state to the real "main" config row (filters out sensitive keys)
   window.CRMO_saveMainNow = async function() {
     try {
       const sb = await getSb();
-      const storage = collectLocalCrmoStorage();
+      const storage = collectLocalState();
       if (!Object.keys(storage).length) {
         storage['crmo__seed_marker'] = JSON.stringify({ at: new Date().toISOString(), note:'empty-local-seed' });
       }
@@ -29726,7 +29782,7 @@ try{
     }
   };
 
-  // Hydrate localStorage from DB 'main' on load (once per version) so refresh keeps uploaded content.
+  // Hydrate localStorage from DB 'main' on load (once per version)
   window.CRMO_hydrateFromDb = async function(force) {
     try {
       const cfgId = (window.CRMO_SUPABASE_CONFIG_ID || 'main');
@@ -29743,7 +29799,6 @@ try{
         if (window.localStorage) window.localStorage.setItem(flagKey, String(window.CRMO_BUILD_VERSION||''));
       } catch(e) {}
       if (applied > 0) {
-        // reload once so app reads fresh localStorage keys during init
         setTimeout(function(){ try{ location.reload(); }catch(e){} }, 50);
       }
       return { ok:true, applied: applied, cfgId };
@@ -29752,21 +29807,7 @@ try{
     }
   };
 
-  // best-effort autosave on app-level events
-  function scheduleAutoSave() {
-    try {
-      clearTimeout(window.__crmo_autosave_t);
-      window.__crmo_autosave_t = setTimeout(function(){ window.CRMO_saveMainNow(); }, 1200);
-    } catch(e) {}
-  }
-  try {
-    window.addEventListener('crmo:tile-edited', scheduleAutoSave);
-    window.addEventListener('crmo:audit-changed', scheduleAutoSave);
-    window.addEventListener('crmo:delete-requests-changed', scheduleAutoSave);
-    window.addEventListener('crmo:role-changed', scheduleAutoSave);
-  } catch(e) {}
-
-  // Auto-hydrate on load
+  // Try hydrate shortly after load
   try {
     setTimeout(function(){ window.CRMO_hydrateFromDb(false); }, 300);
   } catch(e) {}
