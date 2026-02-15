@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1516 -->
+<!-- CRMO_v1517 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1516";
+window.CRMO_BUILD_VERSION = "1517";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -12865,7 +12865,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 <div class="crmo-footer-bottom" dir="ltr">
     <img class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg" alt="Creative Monster favicon"/>
     <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span>
-    <span id="crmo-footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;">1516</span>
+    <span id="crmo-footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;">1517</span>
   </div>
 </div>
 </footer>
@@ -22672,7 +22672,7 @@ document.addEventListener("DOMContentLoaded", function(){
         }catch(_e){}
 
         if(!ok){
-          alert('השמירה לא הצליחה. בדוק חיבור/הרשאות ונסה שוב.');
+          alert('השמירה לא הצליחה.\n' + ((s && !s.ok) ? ('DB: ' + (s.via||'') + ' ' + (s.status||'') + ' ' + (s.error?JSON.stringify(s.error).slice(0,180): (s.error||''))) : '') + '\nבדוק חיבור/הרשאות ונסה שוב.');
           return;
         }
 
@@ -29902,18 +29902,115 @@ try{
     try {
       // Ensure latest edits are flushed from DOM -> galleryState -> localStorage
       try { CRMO_persistEditorState('saveMainNow'); } catch(e) {}
-      const sb = await getSb();
+
       const storage = collectLocalState();
       if (!Object.keys(storage).length) {
-        storage['crmo__seed_marker'] = JSON.stringify({ at: new Date().toISOString(), note:'empty-local-seed' });
+        storage['crmo__seed_marker'] = JSON.stringify({ at: new Date().toISOString(), note: 'empty_storage_guard' });
       }
-      const payload = { id: (window.CRMO_SUPABASE_CONFIG_ID || 'main'), storage };
-      const res = await sb.from('crmo_site_config').upsert(payload, { onConflict:'id' }).select('id, updated_at').single();
-      if (res && res.error) throw res.error;
-      return { ok:true, result:res, keys:Object.keys(storage).length };
-    } catch(e) {
-      try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_e){}
-      return { ok:false, error: String(e && e.message ? e.message : e), raw:e };
+
+      const payload = { id: 'main', storage };
+
+      // 1) Try via supabase-js client (preferred)
+      let firstErr = null;
+      try {
+        const sb = await getSb();
+        const res = await sb
+          .from('crmo_site_config')
+          .upsert(payload, { onConflict: 'id' })
+          .select('id,updated_at')
+          .single();
+
+        if (!res.error) {
+          return { ok: true, via: 'supabase-js', result: res.data, keys: Object.keys(storage).length };
+        }
+        firstErr = res.error;
+      } catch (e) {
+        firstErr = e;
+      }
+
+      // 2) Fallback: raw fetch with explicit Authorization token from localStorage (helps when client session isn't hydrated)
+      try {
+        // Try to infer Supabase URL + anon key from an existing client
+        let sbUrl = null;
+        let sbKey = null;
+        try {
+          const sb2 = await getSb();
+          sbUrl = sb2 && (sb2.supabaseUrl || sb2.url) ? (sb2.supabaseUrl || sb2.url) : null;
+          sbKey = sb2 && (sb2.supabaseKey || sb2.key) ? (sb2.supabaseKey || sb2.key) : null;
+        } catch (e) {}
+
+        // Best-effort token discovery
+        const findAccessToken = () => {
+          try {
+            for (let i = 0; i < localStorage.length; i++) {
+              const k = localStorage.key(i);
+              if (!k) continue;
+              if (k.startsWith('sb-') && k.endsWith('-auth-token')) {
+                const v = localStorage.getItem(k);
+                if (!v) continue;
+                let obj = null;
+                try { obj = JSON.parse(v); } catch (e) { obj = null; }
+                if (obj && obj.access_token) return obj.access_token;
+                if (obj && obj.currentSession && obj.currentSession.access_token) return obj.currentSession.access_token;
+              }
+            }
+          } catch (e) {}
+          return null;
+        };
+
+        const accessToken = findAccessToken();
+
+        // If we still don't have URL/key, try reading from the in-page settings (if present)
+        sbUrl = sbUrl || (window.__CRMO_SUPABASE_URL || null);
+        sbKey = sbKey || (window.__CRMO_SUPABASE_ANON_KEY || null);
+
+        if (!sbUrl || !sbKey) {
+          throw new Error('Supabase URL/anon key missing (cannot fallback-save).');
+        }
+
+        const endpoint = sbUrl.replace(/\/+$/, '') + '/rest/v1/crmo_site_config?on_conflict=id&select=id,updated_at';
+        const headers = {
+          'Content-Type': 'application/json',
+          'apikey': sbKey,
+          'Prefer': 'resolution=merge-duplicates,return=representation'
+        };
+        if (accessToken) headers['Authorization'] = 'Bearer ' + accessToken;
+
+        const resp = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        const text = await resp.text();
+        let data = null;
+        try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+
+        if (!resp.ok) {
+          return {
+            ok: false,
+            via: 'fetch',
+            status: resp.status,
+            statusText: resp.statusText,
+            error: data,
+            firstError: firstErr && (firstErr.message || String(firstErr))
+          };
+        }
+
+        const row = Array.isArray(data) ? data[0] : data;
+        return { ok: true, via: 'fetch', result: row, keys: Object.keys(storage).length };
+      } catch (fallbackErr) {
+        return {
+          ok: false,
+          via: 'both-failed',
+          error: firstErr && (firstErr.message || String(firstErr)),
+          raw: firstErr,
+          fallbackError: fallbackErr && (fallbackErr.message || String(fallbackErr)),
+          fallbackRaw: fallbackErr
+        };
+      }
+    } catch (e) {
+      return { ok: false, error: (e && e.message) ? e.message : String(e), raw: e };
     }
   };
 
