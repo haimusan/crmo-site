@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1507";
+window.CRMO_BUILD_VERSION = "1508";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -29856,6 +29856,8 @@ try{
   // Save current local state to the real "main" config row (filters out sensitive keys)
   window.CRMO_saveMainNow = async function() {
     try {
+      // Ensure latest edits are flushed from DOM -> galleryState -> localStorage
+      try { CRMO_persistEditorState('saveMainNow'); } catch(e) {}
       const sb = await getSb();
       const storage = collectLocalState();
       if (!Object.keys(storage).length) {
