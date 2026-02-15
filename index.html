@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1485 -->
+<!-- CRMO_v1486 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1485";
+window.CRMO_BUILD_VERSION = "1486";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -29637,5 +29637,38 @@ try{
 }catch(e){}
 </script>
 
+<script id="crmo_debug_helpers_v1486">
+(function(){
+  // Always define debug helpers even if internal functions are scoped.
+  async function getSb() {
+    if (typeof window.CRMO_getSbClient === 'function') return await window.CRMO_getSbClient();
+    throw new Error('CRMO_getSbClient not available');
+  }
+
+  window.CRMO_dbPing = async function() {
+    const sb = await getSb();
+    const payload = { id: 'debug_test', storage: { ts: Date.now(), v: (window.CRMO_BUILD_VERSION||'') } };
+    const res = await sb.from('crmo_site_config').upsert(payload).select('id, updated_at').single();
+    return res;
+  };
+
+  window.CRMO_dbRead = async function(id) {
+    const sb = await getSb();
+    return await sb.from('crmo_site_config').select('id, storage, updated_at').eq('id', id).single();
+  };
+
+  // Force a save of *something* to DB to validate policies/network (doesn't touch your main content).
+  window.CRMO_forceDbPush = async function() {
+    try {
+      const r = await window.CRMO_dbPing();
+      if (r && r.error) throw r.error;
+      return { ok:true, result:r };
+    } catch(e) {
+      try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_e){}
+      return { ok:false, error: String(e && e.message ? e.message : e), raw:e };
+    }
+  };
+})();
+</script>
 </body>
 </html>
