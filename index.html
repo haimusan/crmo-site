@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1508";
+window.CRMO_BUILD_VERSION = "1509";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -29882,7 +29882,7 @@ try{
       const storage = r.data && r.data.storage ? r.data.storage : null;
       const flagKey = 'CRMO_HYDRATED_FROM_DB_v1';
       const already = window.localStorage && window.localStorage.getItem(flagKey);
-      if (!force && already === String(window.CRMO_BUILD_VERSION||'')) {
+      if (!force && already === String(window.CRMO_BUILD_VERSION||'') && window.localStorage && window.localStorage.getItem('crmo_gallery_state_v1')) {
         return { ok:true, applied:false, reason:'already_hydrated', cfgId };
       }
       const applied = applyStorageToLocal(storage);
