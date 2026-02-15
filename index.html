@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1509";
+window.CRMO_BUILD_VERSION = "1510";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -19154,7 +19154,8 @@ function firstTileTemplate(){
       main.appendChild(sec);
     }
     try{ registerInTilesManager(def); }catch(e){}
-    try{ if (window.CRMO_stampAllGalleryGrids) window.CRMO_stampAllGalleryGrids(); }catch(e){}
+    try{ if (window.CRMO_stampAllGalleryGrids) window.CRMO_stampAllGalleryGrids();
+    try{ if (window.CRMO_syncAllGalleryTiles) window.CRMO_syncAllGalleryTiles(); }catch(e){} }catch(e){}
     return sec;
   }
   function updateDef(id, patch){
@@ -22535,6 +22536,29 @@ var a = tiles[i].querySelector && tiles[i].querySelector('a.ph');
       tmApplyMetaToSection(currentGalleryKey);
     }catch(e){}
   }
+
+  // Sync gallery tiles from current galleryState into the page grids (run after hydrate or on load)
+  function CRMO_syncAllGalleryTiles(){
+    try{
+      if (!GALLERIES) return;
+      for (var k in GALLERIES){
+        if (!Object.prototype.hasOwnProperty.call(GALLERIES, k)) continue;
+        var cfg = GALLERIES[k];
+        if (!cfg || !cfg.sectionId) continue;
+        var gKey = cfg.key || k;
+        var section = document.getElementById(cfg.sectionId);
+        if (!section) continue;
+        var wrappers = section.querySelectorAll('.tile-edit-wrapper');
+        if (!wrappers || !wrappers.length) continue;
+        ensureGalleryState(gKey);
+        var max = Math.min(6, wrappers.length);
+        for (var i=0;i<max;i++){
+          try{ syncTileToDom(gKey, i); }catch(e){}
+        }
+      }
+    }catch(e){}
+  }
+  try{ window.CRMO_syncAllGalleryTiles = CRMO_syncAllGalleryTiles; }catch(e){}
 document.addEventListener("DOMContentLoaded", function(){
     overlay        = document.getElementById("tiles-manager-overlay");
     CRMO_stampAllGalleryGrids();
@@ -29886,6 +29910,7 @@ try{
         return { ok:true, applied:false, reason:'already_hydrated', cfgId };
       }
       const applied = applyStorageToLocal(storage);
+      try{ if (window.CRMO_syncAllGalleryTiles) window.CRMO_syncAllGalleryTiles(); }catch(e){}
       try {
         if (window.localStorage) window.localStorage.setItem(flagKey, String(window.CRMO_BUILD_VERSION||''));
       } catch(e) {}
