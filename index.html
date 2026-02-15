@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1483 -->
+<!-- CRMO_v1484 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1483";
+window.CRMO_BUILD_VERSION = "1484";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -40,6 +40,8 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       }
       var vEl = document.getElementById("crmo-footer-version");
       if (vEl) vEl.textContent = window.CRMO_BUILD_VERSION || "";
+      var vTop = document.getElementById("crmo-top-version");
+      if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
       var vTop = document.getElementById("crmo-top-version");
       if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
       var vTop = document.getElementById("crmo-top-version");
@@ -28393,6 +28395,33 @@ var ok = await isAdminAllowed();
       };
       wrapped.__crmo_wrapped = true;
       window.safeSet = wrapped;
+      // Auto-sync when localStorage keys under crmo_* change (upload UI uses localStorage.setItem directly).
+      function __crmoMaybeAutoSync(key){
+        try{
+          if(!window.CRMO_SUPABASE_AUTO_SYNC) return;
+          try{ if(document.body && document.body.classList && document.body.classList.contains('role-ux')) return; }catch(e){}
+          if(!_isConfigured()) return;
+          if(!key) return;
+          var lk = String(key).toLowerCase();
+          if(lk.indexOf('crmo_') !== 0) return;
+          isAdminAllowed().then(function(ok){
+            if(ok) schedulePush();
+          }).catch(function(){});
+        }catch(e){}
+      }
+      try{
+        var _ls = window.localStorage;
+        if (_ls && !_ls.__crmo_wrapped){
+          var _setItem = _ls.setItem.bind(_ls);
+          var _removeItem = _ls.removeItem.bind(_ls);
+          var _clear = _ls.clear.bind(_ls);
+          _ls.setItem = function(k,v){ _setItem(k,v); __crmoMaybeAutoSync(k); };
+          _ls.removeItem = function(k){ _removeItem(k); __crmoMaybeAutoSync(k); };
+          _ls.clear = function(){ _clear(); __crmoMaybeAutoSync('crmo_'); };
+          _ls.__crmo_wrapped = true;
+        }
+      }catch(e){}
+
     }
   }catch(e){}
   function autoPullOnce(){
