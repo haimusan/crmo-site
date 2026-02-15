@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1484 -->
+<!-- CRMO_v1485 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1484";
+window.CRMO_BUILD_VERSION = "1485";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -28376,6 +28376,18 @@ var ok = await isAdminAllowed();
       });
     }, 1500);
   }
+
+  // Debug helper: force a DB push now (shows errors instead of silently failing)
+  window.CRMO_forceDbPush = async function(){
+    try{
+      if(!_isConfigured()) throw new Error('Supabase not configured');
+      await pushToDb();
+      return { ok:true };
+    }catch(e){
+      try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_){}
+      return { ok:false, error: String(e && e.message ? e.message : e) };
+    }
+  };
   try{
     var _origSafeSet = window.safeSet;
     if (_origSafeSet && !_origSafeSet.__crmo_wrapped){
@@ -28388,9 +28400,7 @@ var ok = await isAdminAllowed();
           if(!key) return;
           var lk = String(key).toLowerCase();
           if(lk.indexOf('crmo_') !== 0) return;
-          isAdminAllowed().then(function(ok){
-            if(ok) schedulePush();
-          }).catch(function(){});
+          try{ schedulePush(); }catch(e){}
         }catch(e){}
       };
       wrapped.__crmo_wrapped = true;
@@ -28404,9 +28414,7 @@ var ok = await isAdminAllowed();
           if(!key) return;
           var lk = String(key).toLowerCase();
           if(lk.indexOf('crmo_') !== 0) return;
-          isAdminAllowed().then(function(ok){
-            if(ok) schedulePush();
-          }).catch(function(){});
+          try{ schedulePush(); }catch(e){}
         }catch(e){}
       }
       try{
