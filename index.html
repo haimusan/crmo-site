@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1505 -->
+<!-- CRMO_v1511 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1510";
+window.CRMO_BUILD_VERSION = "1511";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -29742,11 +29742,22 @@ function boot(){
   }
 })();
 
-// Restore gallery tiles from persisted state on load
+// Restore gallery tiles from persisted state on load (deferred until gallery wrappers are ready)
 try{
-  window.addEventListener('DOMContentLoaded', function(){
-    try{ if(window.CRMO_restoreGalleriesFromStorage) window.CRMO_restoreGalleriesFromStorage(); }catch(e){}
-  });
+  (function(){
+    function attempt(n){
+      try{
+        if(window.CRMO_restoreGalleriesFromStorage) window.CRMO_restoreGalleriesFromStorage();
+      }catch(e){}
+      try{
+        var tagged = document.querySelector('.tile-edit-wrapper[data-crmo-owner-key]') ? true : false;
+        if(!tagged && n < 24){
+          setTimeout(function(){ attempt(n+1); }, 250);
+        }
+      }catch(e){}
+    }
+    window.addEventListener('load', function(){ attempt(0); });
+  })();
 }catch(e){}
 </script>
 
