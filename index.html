@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1488 -->
+<!-- CRMO_v1489 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1488";
+window.CRMO_BUILD_VERSION = "1489";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -28399,7 +28399,7 @@ var ok = await isAdminAllowed();
           if(!_isConfigured()) return;
           if(!key) return;
           var lk = String(key).toLowerCase();
-          if(!(lk.indexOf('crmo_')===0 || lk.indexOf('crmo:')===0)) return;
+          if(lk.indexOf('crmo') !== 0) return;
           try{ schedulePush(); }catch(e){}
         }catch(e){}
       };
@@ -28413,7 +28413,7 @@ var ok = await isAdminAllowed();
           if(!_isConfigured()) return;
           if(!key) return;
           var lk = String(key).toLowerCase();
-          if(!(lk.indexOf('crmo_')===0 || lk.indexOf('crmo:')===0)) return;
+          if(lk.indexOf('crmo') !== 0) return;
           try{ schedulePush(); }catch(e){}
         }catch(e){}
       }
@@ -29637,11 +29637,19 @@ try{
 }catch(e){}
 </script>
 
-<script id="crmo_debug_helpers_v1487">
+<script id="crmo_debug_helpers_v1489">
 (function(){
   async function getSb() {
     if (typeof window.CRMO_getSbClient === 'function') return await window.CRMO_getSbClient();
     throw new Error('CRMO_getSbClient not available');
+  }
+
+  function isCrmoKey(k) {
+    try {
+      return String(k||'').toLowerCase().startsWith('crmo');
+    } catch(e) {
+      return false;
+    }
   }
 
   function collectLocalCrmoStorage() {
@@ -29651,20 +29659,38 @@ try{
       if (!ls) return out;
       for (let i=0;i<ls.length;i++) {
         const k = ls.key(i);
-        if (!k) continue;
-        const lk = String(k).toLowerCase();
-        if (!(lk.startsWith('crmo_') || lk.startsWith('crmo:'))) continue;
+        if (!k || !isCrmoKey(k)) continue;
         out[k] = ls.getItem(k);
       }
     } catch(e) {}
     return out;
   }
 
+  function applyStorageToLocal(storage) {
+    try {
+      if (!storage || typeof storage !== 'object') return 0;
+      const ls = window.localStorage;
+      if (!ls) return 0;
+      let n=0;
+      Object.keys(storage).forEach(function(k){
+        try {
+          if (!k || !isCrmoKey(k)) return;
+          const v = storage[k];
+          // value must be string for localStorage
+          ls.setItem(k, (typeof v === 'string') ? v : JSON.stringify(v));
+          n++;
+        } catch(e) {}
+      });
+      return n;
+    } catch(e) {
+      return 0;
+    }
+  }
+
   window.CRMO_dbPing = async function() {
     const sb = await getSb();
     const payload = { id: 'debug_test', storage: { ts: Date.now(), v: (window.CRMO_BUILD_VERSION||'') } };
-    const res = await sb.from('crmo_site_config').upsert(payload).select('id, updated_at').single();
-    return res;
+    return await sb.from('crmo_site_config').upsert(payload).select('id, updated_at').single();
   };
 
   window.CRMO_dbRead = async function(id) {
@@ -29683,7 +29709,6 @@ try{
     }
   };
 
-  // Save current local CRMO state to the real "main" config row
   window.CRMO_saveMainNow = async function() {
     try {
       const sb = await getSb();
@@ -29694,14 +29719,40 @@ try{
       const payload = { id: (window.CRMO_SUPABASE_CONFIG_ID || 'main'), storage };
       const res = await sb.from('crmo_site_config').upsert(payload, { onConflict:'id' }).select('id, updated_at').single();
       if (res && res.error) throw res.error;
-      return { ok:true, result:res };
+      return { ok:true, result:res, keys:Object.keys(storage).length };
     } catch(e) {
       try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_e){}
       return { ok:false, error: String(e && e.message ? e.message : e), raw:e };
     }
   };
 
-  // Listen for app-level events and trigger save (best-effort)
+  // Hydrate localStorage from DB 'main' on load (once per version) so refresh keeps uploaded content.
+  window.CRMO_hydrateFromDb = async function(force) {
+    try {
+      const cfgId = (window.CRMO_SUPABASE_CONFIG_ID || 'main');
+      const r = await window.CRMO_dbRead(cfgId);
+      if (r.error) throw r.error;
+      const storage = r.data && r.data.storage ? r.data.storage : null;
+      const flagKey = 'CRMO_HYDRATED_FROM_DB_v1';
+      const already = window.localStorage && window.localStorage.getItem(flagKey);
+      if (!force && already === String(window.CRMO_BUILD_VERSION||'')) {
+        return { ok:true, applied:false, reason:'already_hydrated', cfgId };
+      }
+      const applied = applyStorageToLocal(storage);
+      try {
+        if (window.localStorage) window.localStorage.setItem(flagKey, String(window.CRMO_BUILD_VERSION||''));
+      } catch(e) {}
+      if (applied > 0) {
+        // reload once so app reads fresh localStorage keys during init
+        setTimeout(function(){ try{ location.reload(); }catch(e){} }, 50);
+      }
+      return { ok:true, applied: applied, cfgId };
+    } catch(e) {
+      return { ok:false, error: String(e && e.message ? e.message : e), raw:e };
+    }
+  };
+
+  // best-effort autosave on app-level events
   function scheduleAutoSave() {
     try {
       clearTimeout(window.__crmo_autosave_t);
@@ -29713,6 +29764,11 @@ try{
     window.addEventListener('crmo:audit-changed', scheduleAutoSave);
     window.addEventListener('crmo:delete-requests-changed', scheduleAutoSave);
     window.addEventListener('crmo:role-changed', scheduleAutoSave);
+  } catch(e) {}
+
+  // Auto-hydrate on load
+  try {
+    setTimeout(function(){ window.CRMO_hydrateFromDb(false); }, 300);
   } catch(e) {}
 })();
 </script>
