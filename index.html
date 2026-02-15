@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1515 -->
+<!-- CRMO_v1516 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1515";
+window.CRMO_BUILD_VERSION = "1516";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -3957,7 +3957,7 @@ mpRows.appendChild(row);
           }
         }catch(e){}
         try{
-          (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, 'multi') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, 'multi') : Promise.reject(new Error('no-uploader'))))
+          (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, window.CRMO_getTileUploadFolder?window.CRMO_getTileUploadFolder():'multi') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, window.CRMO_getTileUploadFolder?window.CRMO_getTileUploadFolder():'multi') : Promise.reject(new Error('no-uploader'))))
             .then(function(url2){
               if(url2){
                 mpThumbs[file.name] = url2;
@@ -3992,7 +3992,7 @@ mpRows.appendChild(row);
                 readerMain.readAsDataURL(file);
               }
             }catch(e){}
-            (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, 'multi') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, 'multi') : Promise.reject(new Error('no-uploader'))))
+            (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, window.CRMO_getTileUploadFolder?window.CRMO_getTileUploadFolder():'multi') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, window.CRMO_getTileUploadFolder?window.CRMO_getTileUploadFolder():'multi') : Promise.reject(new Error('no-uploader'))))
               .then(function(url){
                 if (!url) return;
                 var img = currentAnchor.querySelector('img');
@@ -12865,7 +12865,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 <div class="crmo-footer-bottom" dir="ltr">
     <img class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg" alt="Creative Monster favicon"/>
     <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span>
-    <span id="crmo-footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;">1515</span>
+    <span id="crmo-footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;">1516</span>
   </div>
 </div>
 </footer>
