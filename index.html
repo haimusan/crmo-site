@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1486 -->
+<!-- CRMO_v1487 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1486";
+window.CRMO_BUILD_VERSION = "1487";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -28399,7 +28399,7 @@ var ok = await isAdminAllowed();
           if(!_isConfigured()) return;
           if(!key) return;
           var lk = String(key).toLowerCase();
-          if(lk.indexOf('crmo_') !== 0) return;
+          if(!(lk.indexOf('crmo_')===0 || lk.indexOf('crmo:')===0)) return;
           try{ schedulePush(); }catch(e){}
         }catch(e){}
       };
@@ -28413,7 +28413,7 @@ var ok = await isAdminAllowed();
           if(!_isConfigured()) return;
           if(!key) return;
           var lk = String(key).toLowerCase();
-          if(lk.indexOf('crmo_') !== 0) return;
+          if(!(lk.indexOf('crmo_')===0 || lk.indexOf('crmo:')===0)) return;
           try{ schedulePush(); }catch(e){}
         }catch(e){}
       }
@@ -29637,12 +29637,27 @@ try{
 }catch(e){}
 </script>
 
-<script id="crmo_debug_helpers_v1486">
+<script id="crmo_debug_helpers_v1487">
 (function(){
-  // Always define debug helpers even if internal functions are scoped.
   async function getSb() {
     if (typeof window.CRMO_getSbClient === 'function') return await window.CRMO_getSbClient();
     throw new Error('CRMO_getSbClient not available');
+  }
+
+  function collectLocalCrmoStorage() {
+    const out = {};
+    try {
+      const ls = window.localStorage;
+      if (!ls) return out;
+      for (let i=0;i<ls.length;i++) {
+        const k = ls.key(i);
+        if (!k) continue;
+        const lk = String(k).toLowerCase();
+        if (!(lk.startsWith('crmo_') || lk.startsWith('crmo:'))) continue;
+        out[k] = ls.getItem(k);
+      }
+    } catch(e) {}
+    return out;
   }
 
   window.CRMO_dbPing = async function() {
@@ -29657,7 +29672,6 @@ try{
     return await sb.from('crmo_site_config').select('id, storage, updated_at').eq('id', id).single();
   };
 
-  // Force a save of *something* to DB to validate policies/network (doesn't touch your main content).
   window.CRMO_forceDbPush = async function() {
     try {
       const r = await window.CRMO_dbPing();
@@ -29668,6 +29682,38 @@ try{
       return { ok:false, error: String(e && e.message ? e.message : e), raw:e };
     }
   };
+
+  // Save current local CRMO state to the real "main" config row
+  window.CRMO_saveMainNow = async function() {
+    try {
+      const sb = await getSb();
+      const storage = collectLocalCrmoStorage();
+      if (!Object.keys(storage).length) {
+        storage['crmo__seed_marker'] = JSON.stringify({ at: new Date().toISOString(), note:'empty-local-seed' });
+      }
+      const payload = { id: (window.CRMO_SUPABASE_CONFIG_ID || 'main'), storage };
+      const res = await sb.from('crmo_site_config').upsert(payload, { onConflict:'id' }).select('id, updated_at').single();
+      if (res && res.error) throw res.error;
+      return { ok:true, result:res };
+    } catch(e) {
+      try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_e){}
+      return { ok:false, error: String(e && e.message ? e.message : e), raw:e };
+    }
+  };
+
+  // Listen for app-level events and trigger save (best-effort)
+  function scheduleAutoSave() {
+    try {
+      clearTimeout(window.__crmo_autosave_t);
+      window.__crmo_autosave_t = setTimeout(function(){ window.CRMO_saveMainNow(); }, 1200);
+    } catch(e) {}
+  }
+  try {
+    window.addEventListener('crmo:tile-edited', scheduleAutoSave);
+    window.addEventListener('crmo:audit-changed', scheduleAutoSave);
+    window.addEventListener('crmo:delete-requests-changed', scheduleAutoSave);
+    window.addEventListener('crmo:role-changed', scheduleAutoSave);
+  } catch(e) {}
 })();
 </script>
 </body>
