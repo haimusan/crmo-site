@@ -22662,14 +22662,44 @@ document.addEventListener("DOMContentLoaded", function(){
       }, {passive:false});
     }
     if (saveBtn){
-      saveBtn.addEventListener("click", function(ev){
+      saveBtn.addEventListener("click", async function(ev){
         ev.preventDefault();
         try{ if (currentGalleryKey) tmReadMetaInputsToState(currentGalleryKey); }catch(e){}
         try{ tmCommitMetaToContentAndStores(); }catch(e){}
         try{ tmApplyMetaToAllSections(); }catch(e){}
         try{ crmoUpdateExpandButtonsForAll(); }catch(e){}
+
+        // 1) Persist the editor state locally
         var r = CRMO_persistEditorState('tiles-manager');
-        try{ if(status){ status.textContent = r.ok ? 'Saved to server' : ('Save failed: ' + r.error); } }catch(_e){}
+
+        // 2) Persist to DB (Supabase) so a refresh / another device sees it
+        var s = null;
+        try{
+          if (window.CRMO_saveMainNow) {
+            s = await window.CRMO_saveMainNow();
+          }
+        }catch(err){
+          s = { ok:false, error: (err && err.message) ? err.message : String(err) };
+        }
+
+        var ok = !!(r && r.ok) && (!s || s.ok);
+
+        try{
+          if(status){
+            status.textContent = ok
+              ? 'Saved'
+              : ('Save failed' + (s && s.error ? (': ' + s.error) : (r && r.error ? (': ' + r.error) : '')));
+          }
+        }catch(_e){}
+
+        if(!ok){
+          alert('השמירה לא הצליחה. בדוק חיבור/הרשאות ונסה שוב.');
+          return;
+        }
+
+        // 3) Update live grids immediately
+        try{ CRMO_stampAllGalleryGrids(); }catch(e){}
+
         closeOverlay();
       }, {passive:false});
     }
