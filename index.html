@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1511 -->
+<!-- CRMO_v1515 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,50 +21,29 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1511";
+window.CRMO_BUILD_VERSION = "1515";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
 <script id="crmo_title_and_footer_version">
 (function(){
   function apply(){
-    try{
-      var p = String(location.pathname || "/");
-      var parts = p.split("/").filter(Boolean);
-      var base = parts.length ? parts[parts.length-1] : "";
-      var isIndex = (!base || base.toLowerCase() === "index.html");
-      if (isIndex) {
-        document.title = window.CRMO_STUDIO_TITLE || document.title;
-      } else {
-        document.title = base.replace(/\.html?$/i, "");
-      }
-      var vEl = document.getElementById("crmo-footer-version");
-      if (vEl) vEl.textContent = window.CRMO_BUILD_VERSION || "";
-      var vTop = document.getElementById("crmo-top-version");
-      if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
-      var vTop = document.getElementById("crmo-top-version");
-      if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
-      var vTop = document.getElementById("crmo-top-version");
-      if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
-      // Cloud restore (first-run): pull saved state from Supabase into localStorage, then reload.
-      setTimeout(async function(){
-        try{
-          if (typeof CRMO_cloudRestoreOnce === "function") {
-            var pulled = false;
-            try { pulled = await CRMO_cloudPullIfNewer(); } catch(_e) { pulled = false; }
-            if (pulled) { location.reload(); return; }
-            var restored = await CRMO_cloudRestoreOnce();
-            if (restored) location.reload();
-          }
-        }catch(_e){}
-      }, 0);
-    } catch(e){}
+    try {
+      var v = (window.CRMO_BUILD_VERSION || "").toString();
+      var elFooter = document.getElementById("crmo-footer-version");
+      if (elFooter) elFooter.textContent = v;
+      var elTop = document.getElementById("crmo-top-version");
+      if (elTop) elTop.textContent = v;
+      if (window.CRMO_STUDIO_TITLE) document.title = window.CRMO_STUDIO_TITLE + (v ? " v" + v : "");
+    } catch (e) {}
   }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", apply);
-  } else {
-    apply();
-  }
+  try {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function(){ apply(); setTimeout(apply, 50); setTimeout(apply, 300); });
+    } else {
+      apply(); setTimeout(apply, 50); setTimeout(apply, 300);
+    }
+  } catch (e) { try{apply();}catch(_){} }
 })();
 </script>
 <script id="crmo_sb_defaults">
@@ -7631,7 +7610,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
 
-<span id="crmo-top-version" style="opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;">1481</span>
+<span id="crmo-top-version" style="position:absolute;left:8px;top:6px;opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;"></span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
@@ -12886,7 +12865,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 <div class="crmo-footer-bottom" dir="ltr">
     <img class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg" alt="Creative Monster favicon"/>
     <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span>
-    <span id="crmo-footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;"></span>
+    <span id="crmo-footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;">1515</span>
   </div>
 </div>
 </footer>
