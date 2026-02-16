@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1554 -->
+<!-- CRMO_v1555 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -74,7 +74,10 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1554";
+window.CRMO_BUILD_VERSION = "1555";
+window.CRMO_STUDIO_TITLE = "CRMO";
+</script>
+
 <script id="crmo_asset_paths_v1553">
 /* v1553: Asset path resolver for GitHub Pages / hosted env.
    Goal: ensure branding/logo/icons load from Supabase Storage when local /assets folder isn't deployed. */
@@ -808,7 +811,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 
 
 /* CRMO v1547: sticky admin bar + hard reset button */
-#crmo-admin-bar{ position: sticky; top: 0; z-index: 9999; }
+#crmo-admin-bar{ position: sticky; top: var(--crmo-sticky-top, 0px); z-index: 9999; }
 #crmo-admin-bar .crmo-hard-reset-btn{
   border:1px solid rgba(200,0,0,.6) !important;
   color:#b40000 !important;
@@ -5197,7 +5200,7 @@ body.role-guest .tile-like-btn{
   background:#f7f7f7;
   color:#111;
   font-size:13px;
-  border-bottom:1px solid rgba(0,0,0,.08);
+  border-bottom:0;
 }
 #crmo-role-toggle{
   display:flex;
@@ -8071,7 +8074,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
 
-<span id="crmo-top-version" style="opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;">1481</span>
+<span id="crmo-top-version" style="opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;">1555</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
