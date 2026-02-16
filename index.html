@@ -1,8 +1,61 @@
 <!DOCTYPE html>
-<!-- CRMO_v1517 -->
+<!-- CRMO_v1552 -->
 
 <html dir="rtl" lang="he">
 <head>
+
+<script id="crmo_v1534_hard_offline_guard">
+(function(){
+  // Default OFFLINE. Cloud is only allowed with ?cloud=1 explicitly.
+  var sp = new URLSearchParams(location.search||'');
+  var allowCloud = (sp.get('cloud') === '1' || sp.get('cloud') === 'true');
+  window.CRMO_ALLOW_CLOUD = allowCloud;
+  window.CRMO_OFFLINE_MODE = !allowCloud;
+  window.CRMO_USABILITY_MODE = true;
+
+  // If user just cleared, never restore from cloud this load (even if cloud=1 by mistake)
+  try{
+    if (sp.get('cleared') === '1' || sessionStorage.getItem('CRMO_SKIP_CLOUD_RESTORE') === '1') {
+      window.CRMO_ALLOW_CLOUD = false;
+      window.CRMO_OFFLINE_MODE = true;
+    }
+  }catch(e){}
+
+  // Hard-block fetch/XHR to Supabase-like endpoints unless explicitly allowed
+  try{
+    var _fetch = window.fetch;
+    window.fetch = function(input, init){
+      try{
+        var url = (typeof input === 'string') ? input : (input && input.url) ? input.url : '';
+        var u = String(url||'');
+        if(!window.CRMO_ALLOW_CLOUD && /(supabase\.co|supabase\.in|rest\/v1|storage\/v1)/i.test(u)){
+          return Promise.reject(new Error('CRMO_OFFLINE_BLOCKED_NETWORK'));
+        }
+      }catch(e){}
+      return _fetch.apply(this, arguments);
+    };
+  }catch(e){}
+
+  // Also block XHR open
+  try{
+    var _open = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(method, url){
+      try{
+        var u = String(url||'');
+        if(!window.CRMO_ALLOW_CLOUD && /(supabase\.co|supabase\.in|rest\/v1|storage\/v1)/i.test(u)){
+          throw new Error('CRMO_OFFLINE_BLOCKED_NETWORK');
+        }
+      }catch(e){
+        // rethrow to stop request
+        throw e;
+      }
+      return _open.apply(this, arguments);
+    };
+  }catch(e){}
+})();
+</script>
+
+
 
 
 <script id="crmo_ghpages_redirect_fix">
@@ -21,29 +74,72 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1517";
+window.CRMO_BUILD_VERSION = "1552";
 window.CRMO_STUDIO_TITLE = "CRMO";
+</script>
+
+<script id="crmo_offline_default">
+(function(){
+  try{
+    var sp = new URLSearchParams(location.search||'');
+    // Default: OFFLINE unless explicitly requested with ?cloud=1
+    var cloud = sp.get('cloud');
+    window.CRMO_OFFLINE_MODE = !(cloud === '1' || cloud === 'true');
+    window.CRMO_USABILITY_MODE = true;
+    // Optional: force-disable cloud restore if a previous clear flagged it
+    try{
+      if (sessionStorage.getItem('CRMO_SKIP_CLOUD_RESTORE') === '1') {
+        window.CRMO_OFFLINE_MODE = true;
+      }
+    }catch(e){}
+  }catch(e){
+    window.CRMO_OFFLINE_MODE = true;
+    window.CRMO_USABILITY_MODE = true;
+  }
+})();
 </script>
 
 <script id="crmo_title_and_footer_version">
 (function(){
   function apply(){
-    try {
-      var v = (window.CRMO_BUILD_VERSION || "").toString();
-      var elFooter = document.getElementById("crmo-footer-version");
-      if (elFooter) elFooter.textContent = v;
-      var elTop = document.getElementById("crmo-top-version");
-      if (elTop) elTop.textContent = v;
-      if (window.CRMO_STUDIO_TITLE) document.title = window.CRMO_STUDIO_TITLE + (v ? " v" + v : "");
-    } catch (e) {}
+    try{
+      var p = String(location.pathname || "/");
+      var parts = p.split("/").filter(Boolean);
+      var base = parts.length ? parts[parts.length-1] : "";
+      var isIndex = (!base || base.toLowerCase() === "index.html");
+      if (isIndex) {
+        document.title = window.CRMO_STUDIO_TITLE || document.title;
+      } else {
+        document.title = base.replace(/\.html?$/i, "");
+      }
+      var vEl = document.getElementById("crmo-footer-version");
+      if (vEl) vEl.textContent = window.CRMO_BUILD_VERSION || "";
+      var vTop = document.getElementById("crmo-top-version");
+      if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
+      var vTop = document.getElementById("crmo-top-version");
+      if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
+      var vTop = document.getElementById("crmo-top-version");
+      if (vTop) vTop.textContent = window.CRMO_BUILD_VERSION || "";
+      // Cloud restore (first-run): pull saved state from Supabase into localStorage, then reload.
+      setTimeout(async function(){
+        try{ if (window.CRMO_OFFLINE_MODE) return; }catch(e){}
+        try{
+          if (typeof CRMO_cloudRestoreOnce === "function") {
+            var pulled = false;
+            try { pulled = await CRMO_cloudPullIfNewer(); } catch(_e) { pulled = false; }
+            if (pulled) { location.reload(); return; }
+            var restored = await CRMO_cloudRestoreOnce();
+            if (restored) location.reload();
+          }
+        }catch(_e){}
+      }, 0);
+    } catch(e){}
   }
-  try {
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", function(){ apply(); setTimeout(apply, 50); setTimeout(apply, 300); });
-    } else {
-      apply(); setTimeout(apply, 50); setTimeout(apply, 300);
-    }
-  } catch (e) { try{apply();}catch(_){} }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", apply);
+  } else {
+    apply();
+  }
 })();
 </script>
 <script id="crmo_sb_defaults">
@@ -56,6 +152,256 @@ window.CRMO_SUPABASE_CONFIG_ID = "main";
 window.CRMO_SUPABASE_REQUIRE_LOGIN = true;
 window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 </script>
+
+<script id="crmo_cloud_config_v1552">
+/*
+  CRMO Cloud Config (v1552)
+  Minimal server load/save for crmo_site_config.
+  - Cloud ops only when ?cloud=1 (or cloud=true). We also accept params inside hash (/#?cloud=1) for convenience.
+  - env=staging routes to config id "main_staging", otherwise "main".
+  - UI: small panel for admins only (by email list) to Load / Save.
+*/
+(function(){
+  function getParams(){
+    var out = new URLSearchParams(location.search || '');
+    try{
+      var h = location.hash || '';
+      var qi = h.indexOf('?');
+      if(qi >= 0){
+        var q = h.slice(qi+1);
+        var hp = new URLSearchParams(q);
+        hp.forEach(function(v,k){ if(!out.has(k)) out.set(k,v); });
+      }
+    }catch(e){}
+    return out;
+  }
+  function truthy(v){
+    v = String(v||'').toLowerCase();
+    return (v === '1' || v === 'true' || v === 'yes' || v === 'on');
+  }
+  function cloudEnabled(){
+    try{
+      var sp = getParams();
+      var allow = truthy(sp.get('cloud'));
+      if(typeof window.CRMO_ALLOW_CLOUD === 'boolean') return window.CRMO_ALLOW_CLOUD || allow;
+      return allow;
+    }catch(e){}
+    return false;
+  }
+  function getEnv(){
+    try{
+      var sp = getParams();
+      return (sp.get('env') || sp.get('ENV') || '').toLowerCase() || 'prod';
+    }catch(e){}
+    return 'prod';
+  }
+  function getConfigId(){
+    var env = getEnv();
+    if(env === 'staging' || env === 'stage' || env === 'stg') return 'main_staging';
+    return (window.CRMO_SUPABASE_CONFIG_ID || 'main');
+  }
+
+  // Default admin list (safe, not a secret). You can still override via the settings UI later.
+  try{
+    if(!Array.isArray(window.CRMO_SUPABASE_ADMIN_EMAILS) || window.CRMO_SUPABASE_ADMIN_EMAILS.length === 0){
+      window.CRMO_SUPABASE_ADMIN_EMAILS = ['boochin@gmail.com','boochin@walla.co.il'];
+    }
+  }catch(e){}
+
+  function pickLocalState(){
+    var bag = {};
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        if(k.indexOf('crmo:') === 0 || k.indexOf('crmo_') === 0 || k.indexOf('CRMO_') === 0){
+          bag[k] = localStorage.getItem(k);
+        }
+      }
+    }catch(e){}
+    // Minimal metadata
+    bag['crmo:meta:build'] = String(window.CRMO_BUILD_VERSION || '');
+    bag['crmo:meta:savedAt'] = String(Date.now());
+    return bag;
+  }
+
+  function clearLocalCrmoKeys(){
+    try{
+      var kill = [];
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        if(k.indexOf('crmo:') === 0 || k.indexOf('crmo_') === 0 || k.indexOf('CRMO_') === 0){
+          kill.push(k);
+        }
+      }
+      kill.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+    }catch(e){}
+  }
+
+  async function getSbOrThrow(){
+    if(!window.CRMO_getSB) throw new Error('CRMO_getSB missing');
+    return await window.CRMO_getSB();
+  }
+
+  async function getUserEmail(){
+    try{
+      var sb = await getSbOrThrow();
+      var gu = await sb.auth.getUser();
+      var user = gu && gu.data && gu.data.user;
+      var email = user && user.email ? String(user.email).toLowerCase() : '';
+      return email;
+    }catch(e){
+      return '';
+    }
+  }
+
+  function isAdminEmail(email){
+    try{
+      var list = window.CRMO_SUPABASE_ADMIN_EMAILS || [];
+      email = String(email||'').toLowerCase();
+      return Array.isArray(list) && list.map(function(x){return String(x||'').toLowerCase();}).indexOf(email) >= 0;
+    }catch(e){}
+    return false;
+  }
+
+  async function ensureAuthed(){
+    var sb = await getSbOrThrow();
+    var ses = await sb.auth.getSession();
+    if(ses && ses.data && ses.data.session) return true;
+    // Open auth UI if present
+    try{
+      if(window.CRMO_openAuth){ window.CRMO_openAuth('admin'); }
+      else if(window.CRMO_openAuthAuto){ window.CRMO_openAuthAuto(); }
+    }catch(e){}
+    return false;
+  }
+
+  async function saveToServer(){
+    if(!cloudEnabled()) throw new Error('Cloud disabled. Use ?cloud=1');
+    var ok = await ensureAuthed();
+    if(!ok) throw new Error('Not authenticated');
+    var email = await getUserEmail();
+    if(!isAdminEmail(email)) throw new Error('Not admin: ' + email);
+    var sb = await getSbOrThrow();
+    var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
+    var id = getConfigId();
+    var payload = { id: id, storage: pickLocalState() };
+    var r = await sb.from(table).upsert(payload).select('id, updated_at').single();
+    if(r && r.error) throw r.error;
+    return r;
+  }
+
+  async function loadFromServer(){
+    if(!cloudEnabled()) throw new Error('Cloud disabled. Use ?cloud=1');
+    var ok = await ensureAuthed();
+    if(!ok) throw new Error('Not authenticated');
+    var email = await getUserEmail();
+    if(!isAdminEmail(email)) throw new Error('Not admin: ' + email);
+    var sb = await getSbOrThrow();
+    var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
+    var id = getConfigId();
+    var r = await sb.from(table).select('id, storage, updated_at').eq('id', id).single();
+    if(r && r.error) throw r.error;
+    var st = r && r.data && r.data.storage ? r.data.storage : null;
+    if(!st || typeof st !== 'object') throw new Error('No storage in row: ' + id);
+    // Apply
+    clearLocalCrmoKeys();
+    Object.keys(st).forEach(function(k){
+      try{
+        if(k === 'crmo:meta:savedAt' || k === 'crmo:meta:build'){}
+        var v = st[k];
+        if(v === null || typeof v === 'undefined') return;
+        localStorage.setItem(k, String(v));
+      }catch(e){}
+    });
+    // Mark hydration source
+    try{
+      localStorage.setItem('crmo:meta:lastHydrateFrom', 'server:' + id);
+      localStorage.setItem('crmo:meta:lastHydrateAt', String(Date.now()));
+    }catch(e){}
+    // Reload to re-hydrate UI from localStorage
+    location.reload();
+    return r;
+  }
+
+  // Expose public API
+  window.CRMO_cloudEnabled = cloudEnabled;
+  window.CRMO_getEnv = getEnv;
+  window.CRMO_getConfigId = getConfigId;
+  window.CRMO_saveServerConfig = saveToServer;
+  window.CRMO_loadServerConfig = loadFromServer;
+
+  // Minimal admin panel
+  function mountPanel(){
+    if(!cloudEnabled()) return;
+    if(document.getElementById('crmo-cloud-panel')) return;
+    var box = document.createElement('div');
+    box.id = 'crmo-cloud-panel';
+    box.style.cssText = 'position:fixed;top:10px;left:10px;z-index:999999;background:#ffffff;border:1px solid #d0d0d0;border-radius:10px;padding:8px 10px;font-family:Arial, sans-serif;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.12);display:none;gap:6px;align-items:center;';
+    box.innerHTML = '' +
+      '<div style="display:flex;flex-direction:column;gap:6px;min-width:190px;">' +
+        '<div id="crmo-cloud-panel-title" style="font-weight:700;">Cloud</div>' +
+        '<div id="crmo-cloud-panel-sub" style="opacity:.75;">...</div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+          '<button id="crmo-cloud-load" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #bbb;background:#f6f6f6;">טען מהשרת</button>' +
+          '<button id="crmo-cloud-save" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #111;background:#111;color:#fff;">שמור לשרת</button>' +
+        '</div>' +
+        '<div id="crmo-cloud-panel-msg" style="min-height:16px;"></div>' +
+      '</div>';
+    document.body.appendChild(box);
+
+    function setMsg(t, isErr){
+      var el = document.getElementById('crmo-cloud-panel-msg');
+      if(!el) return;
+      el.textContent = t || '';
+      el.style.color = isErr ? '#b00020' : '#0b6b0b';
+    }
+
+    document.getElementById('crmo-cloud-load').onclick = async function(){
+      try{
+        setMsg('טוען...', false);
+        await loadFromServer();
+      }catch(e){
+        setMsg(String((e && e.message) ? e.message : e), true);
+      }
+    };
+    document.getElementById('crmo-cloud-save').onclick = async function(){
+      try{
+        setMsg('שומר...', false);
+        var r = await saveToServer();
+        setMsg('נשמר (' + (r && r.data ? r.data.id : getConfigId()) + ')', false);
+      }catch(e){
+        setMsg(String((e && e.message) ? e.message : e), true);
+      }
+    };
+
+    // show panel only for admins
+    (async function refresh(){
+      try{
+        var email = await getUserEmail();
+        var admin = isAdminEmail(email);
+        var id = getConfigId();
+        var env = getEnv();
+        var sub = document.getElementById('crmo-cloud-panel-sub');
+        if(sub) sub.textContent = 'env=' + env + ' | id=' + id + (email ? (' | ' + email) : '');
+        box.style.display = admin ? 'flex' : 'none';
+        if(!admin && email){
+          // If logged in but not admin, keep hidden (no spam).
+        }
+      }catch(e){}
+      setTimeout(refresh, 4000);
+    })();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', mountPanel);
+  }else{
+    mountPanel();
+  }
+})();
+</script>
+
 
 <script id="crmo_upload_hint_v1472">
 (function(){
@@ -355,6 +701,32 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 })();
 </script>
 <style id="crmo_route_gallery_styles">
+
+/* v1547: disable tile clear button for usability testing stability */
+#te-clear{ display:none !important; }
+
+
+
+/* v1547: danger button style */
+#te-clear{
+  border:1px solid rgba(200,0,0,.55);
+  color:#b40000;
+  background:rgba(255,255,255,.9);
+}
+#te-clear:hover{ filter:brightness(0.96); }
+
+
+
+/* CRMO v1547: sticky admin bar + hard reset button */
+#crmo-admin-bar{ position: sticky; top: 0; z-index: 9999; }
+#crmo-admin-bar .crmo-hard-reset-btn{
+  border:1px solid rgba(200,0,0,.6) !important;
+  color:#b40000 !important;
+  background: rgba(255,255,255,.85) !important;
+}
+#crmo-admin-bar .crmo-hard-reset-btn:hover{ filter: brightness(.96); }
+
+
 body.crmo-route-gallery footer{ display:none !important; }
 body.crmo-route-gallery .tiles-manager-bar{ display:none !important; }
 body.crmo-route-gallery .tile-edit-btn,
@@ -3957,7 +4329,7 @@ mpRows.appendChild(row);
           }
         }catch(e){}
         try{
-          (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, window.CRMO_getTileUploadFolder?window.CRMO_getTileUploadFolder():'multi') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, window.CRMO_getTileUploadFolder?window.CRMO_getTileUploadFolder():'multi') : Promise.reject(new Error('no-uploader'))))
+          (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, 'multi') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, 'multi') : Promise.reject(new Error('no-uploader'))))
             .then(function(url2){
               if(url2){
                 mpThumbs[file.name] = url2;
@@ -3992,7 +4364,7 @@ mpRows.appendChild(row);
                 readerMain.readAsDataURL(file);
               }
             }catch(e){}
-            (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, window.CRMO_getTileUploadFolder?window.CRMO_getTileUploadFolder():'multi') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, window.CRMO_getTileUploadFolder?window.CRMO_getTileUploadFolder():'multi') : Promise.reject(new Error('no-uploader'))))
+            (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, 'multi') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, 'multi') : Promise.reject(new Error('no-uploader'))))
               .then(function(url){
                 if (!url) return;
                 var img = currentAnchor.querySelector('img');
@@ -4446,6 +4818,7 @@ if(!finalList.length){
           currentWrapper.removeAttribute('data-files-meta');
         }
       }catch(e){}
+      try{ if (typeof window.CRMO_syncHoverFromMeta === 'function') window.CRMO_syncHoverFromMeta(currentWrapper); }catch(e){}
       if(coverName && mpThumbs && mpThumbs[coverName]){
         try{
           var thumbUrl = mpThumbs[coverName];
@@ -4721,10 +5094,8 @@ body.role-guest .tile-like-btn{
   cursor:default;
   pointer-events:none;
 }
-/* v1455: hide the top view-mode bar for non-admin/non-owner */
-#crmo-role-toggle{ display:none !important; }
-body.role-admin #crmo-role-toggle,
-body.role-master #crmo-role-toggle{ display:flex !important; }
+/* v1551: show the top view-mode bar for all roles */
+#crmo-role-toggle{ display:flex !important; }
 
 #crmo-role-toggle{
   position:fixed;
@@ -7610,12 +7981,14 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
 
-<span id="crmo-top-version" style="position:absolute;left:8px;top:6px;opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;"></span>
+<span id="crmo-top-version" style="opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;">1481</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
         <div class="crmo-admin-bar-row crmo-admin-tabs" dir="rtl">
-      <button type="button" class="crmo-admin-bar-btn" id="crmo-adminbar-content" aria-controls="crmo-content-selector" aria-expanded="false">
+      
+      <button type="button" class="crmo-admin-bar-btn crmo-hard-reset-btn" id="crmo-adminbar-hardreset" title="ניקוי קשיח (בדיקות שמישות)" onclick="CRMO_clearLocalDataAndReload()">ניקוי קשיח</button>
+<button type="button" class="crmo-admin-bar-btn" id="crmo-adminbar-content" aria-controls="crmo-content-selector" aria-expanded="false">
         <span class="crmo-admin-bar-icon" aria-hidden="true">+</span>
         תוכן
       </button>
@@ -12865,7 +13238,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 <div class="crmo-footer-bottom" dir="ltr">
     <img class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg" alt="Creative Monster favicon"/>
     <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span>
-    <span id="crmo-footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;">1517</span>
+    <span id="crmo-footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;"></span>
   </div>
 </div>
 </footer>
@@ -13847,12 +14220,25 @@ function CRMO_lbGetMeta(item){
       const td = (item && item.tileData && typeof item.tileData === 'object') ? item.tileData : {};
 
       // Title: prefer saved state, then explicit caption, then DOM fallback
-      const title = (td && td.title) ? String(td.title)
+      let title = (td && td.title) ? String(td.title)
         : (item && item.caption ? String(item.caption) : getCaptionFor(el || document.body));
 
       // Desc: prefer saved state, then DOM attribute fallback
-      const desc = (td && td.desc) ? String(td.desc)
+      let desc = (td && td.desc) ? String(td.desc)
         : (el && el.getAttribute ? String(el.getAttribute('data-desc') || '') : '');
+
+      // v1547: per-subimage captions when "טקסט נפרד לכל תת-תמונה" enabled
+      try{
+        const fm = (item && item.filesMeta && typeof item.filesMeta === 'object') ? item.filesMeta
+          : ((td && td.filesMeta && typeof td.filesMeta === 'object') ? td.filesMeta : null);
+        if (fm && item && Array.isArray(item.files)){
+          const key = item.files[fileIdx];
+          if (key && fm[key] && (fm[key].title || fm[key].desc)){
+            if (fm[key].title) title = String(fm[key].title);
+            if (fm[key].desc)  desc  = String(fm[key].desc);
+          }
+        }
+      }catch(e){}
 
       // Link: prefer saved state, then DOM attribute fallback (matches "כוורת")
       let link = (td && (td.link || td.href || td.url)) ? String(td.link || td.href || td.url)
@@ -13867,6 +14253,30 @@ function CRMO_lbGetMeta(item){
         (td && (td.linkDisabled || td.link_disabled)) ||
         (el && el.getAttribute && (el.getAttribute('data-link-disabled') === '1'))
       );
+
+      // v1548: prevent title from duplicating desc/link (keep title line clean)
+      const __origTitle = title || '';
+      try{
+        let __t = String(title || '');
+        const __d = String(desc || '').trim();
+        if (__d && __d.length > 2){
+          __t = __t.split(__d).join(' ');
+        }
+        const __l = String(link || '').trim();
+        if (__l){
+          try{
+            const __disp = displayLinkText(__l);
+            if (__disp && __disp.length > 2) __t = __t.split(__disp).join(' ');
+          }catch(e){}
+          const __noProto = __l.replace(/^https?:\/\//i,'').replace(/\/+$/,'');
+          if (__noProto && __noProto.length > 2) __t = __t.split(__noProto).join(' ');
+          __t = __t.split(__l).join(' ');
+        }
+        __t = __t.replace(/\s+/g,' ').trim();
+        title = __t || __origTitle;
+      }catch(e){
+        title = __origTitle;
+      }
 
       link = normalizeUrl(link);
       return { title: title || '', desc: desc || '', link: link || '', linkNewTab, linkDisabled };
@@ -14124,7 +14534,7 @@ const items = ensureDataset(tempGrid);
           return;
         }
         datasets.set(brandGrid, items);
-        open(brandGrid, 0);
+        open(tempGrid, 0);
       }
       return;
     }
@@ -16636,6 +17046,7 @@ document.addEventListener('DOMContentLoaded', function () {
     + '<div id="te-image-name" class="te-image-name"></div>'
     + '<div class="buttons">'
     +   '<button type="button" class="secondary" id="te-cancel">סגירה</button>'
+    +   '<button type="button" class="danger" id="te-clear">נקה אריח</button>'
     +   '<button type="button" id="te-save">שמירה</button>'
     + '</div>';
   document.body.appendChild(panel);
@@ -16825,6 +17236,7 @@ inputEl.addEventListener('click', function(){
   var tagsInput   = document.getElementById('te-tags');
   var cancelBtn   = document.getElementById('te-cancel');
   var saveBtn     = document.getElementById('te-save');
+  var clearBtn    = document.getElementById('te-clear');
   var closeXBtn   = document.getElementById('te-close-x');
   var currentTile    = null;
   var currentProject = null;
@@ -16924,6 +17336,63 @@ inputEl.addEventListener('click', function(){
       closeEditor();
     });
   }
+
+  if (clearBtn){
+    clearBtn.addEventListener('click', function(){
+      if(!currentTile) return;
+      if(!confirm('למחוק את כל הנתונים מהאריח הזה?')) return;
+      try{
+        var anchor = currentTile.querySelector('a.ph');
+        if(anchor){
+          // Clear media/attributes
+          anchor.style.backgroundImage = '';
+          anchor.style.backgroundSize = '';
+          anchor.style.backgroundPosition = '';
+          anchor.style.backgroundRepeat = '';
+          anchor.removeAttribute('data-files');
+          anchor.removeAttribute('data-files-visible');
+          anchor.removeAttribute('data-files-meta');
+          anchor.removeAttribute('data-subcaps');
+          anchor.removeAttribute('data-filename');
+          anchor.setAttribute('href', '#');
+          // remove any imgs that are not part of captions
+          var imgs = anchor.querySelectorAll('img');
+          imgs.forEach(function(im){ try{ im.remove(); }catch(e){} });
+          // reset hover texts
+          var hover = anchor.querySelector('.hover-desc');
+          if(hover){
+            var st = hover.querySelector('strong'); var sd = hover.querySelector('div');
+            if(st) st.textContent = 'שם הפרויקט';
+            if(sd) sd.textContent = 'תיאור קצר על הפרויקט';
+          }
+          var ov = anchor.querySelector('.crmo-ov');
+          if(ov){
+            var h4 = ov.querySelector('h4'); var d = ov.querySelector('.desc') || ov.querySelector('div.desc');
+            if(h4) h4.textContent = 'שם הפרויקט';
+            if(d)  d.textContent  = 'תיאור קצר על הפרויקט';
+          }
+        }
+        // Mirror on wrapper
+        currentTile.removeAttribute('data-files');
+        currentTile.removeAttribute('data-files-visible');
+        currentTile.removeAttribute('data-files-meta');
+        currentTile.removeAttribute('data-subcaps');
+        currentTile.removeAttribute('data-filename');
+        currentTile.setAttribute('data-multi','0');
+      }catch(e){}
+      try{
+        // Clear editor inputs
+        if (nameInput) nameInput.value = '';
+        if (descInput) descInput.value = '';
+        if (linkInput) linkInput.value = '';
+        if (tagsInput) tagsInput.value = '';
+      }catch(e){}
+      try{ if (typeof window.CRMO_syncHoverFromMeta === 'function') window.CRMO_syncHoverFromMeta(currentTile); }catch(e){}
+      try{ if (typeof CRMO_persistEditorState === 'function') CRMO_persistEditorState('tile-clear'); }catch(e){}
+      // Keep editor open so user can re-upload immediately
+    });
+  }
+
 saveBtn.addEventListener('click', function () {
     try{
       if (nameInput && nameInput.getAttribute('data-crmo-hint')==='1' && nameInput.value.trim()==='שם הפרויקט'){ nameInput.value=''; }
@@ -21011,7 +21480,22 @@ function ensureGalleryState(key){
               var imageSrc = "";
               var anchor = w.querySelector('a.ph');
               if (anchor){
-                var imgEl = anchor.querySelector('img');
+                // v1547: mirror file keys to DOM attributes so lightbox can resolve sources
+        try{
+          var filesArr = (data && Array.isArray(data.files) && data.files.length) ? data.files : (data && data.imageName ? [String(data.imageName)] : ['single']);
+          var csv = filesArr.map(function(x){ return String(x||'').trim(); }).filter(function(x){return x;}).join(',');
+          if (csv){
+            anchor.setAttribute('data-files', csv);
+            anchor.setAttribute('data-files-visible', csv);
+          } else {
+            anchor.removeAttribute('data-files');
+            anchor.removeAttribute('data-files-visible');
+          }
+          if (data && data.imageName){ anchor.setAttribute('data-filename', String(data.imageName)); }
+          else { anchor.removeAttribute('data-filename'); }
+        }catch(e){}
+
+        var imgEl = anchor.querySelector('img');
                 if (imgEl){
                   imageSrc = imgEl.getAttribute('src') || '';
                 } else {
@@ -21402,7 +21886,7 @@ function createTileElement(index, tileData, galleryKey){
             if (w){
               var anchor = w.querySelector('a.ph');
               if (anchor){
-                var imgDom = anchor.querySelector('img');
+                var imgDom = anchor.querySelector(':scope > img');
                 if (imgDom){
                   imageSrc = imgDom.getAttribute('src') || "";
                 }else if (anchor.style && anchor.style.backgroundImage){
@@ -22641,44 +23125,14 @@ document.addEventListener("DOMContentLoaded", function(){
       }, {passive:false});
     }
     if (saveBtn){
-      saveBtn.addEventListener("click", async function(ev){
+      saveBtn.addEventListener("click", function(ev){
         ev.preventDefault();
         try{ if (currentGalleryKey) tmReadMetaInputsToState(currentGalleryKey); }catch(e){}
         try{ tmCommitMetaToContentAndStores(); }catch(e){}
         try{ tmApplyMetaToAllSections(); }catch(e){}
         try{ crmoUpdateExpandButtonsForAll(); }catch(e){}
-
-        // 1) Persist the editor state locally
         var r = CRMO_persistEditorState('tiles-manager');
-
-        // 2) Persist to DB (Supabase) so a refresh / another device sees it
-        var s = null;
-        try{
-          if (window.CRMO_saveMainNow) {
-            s = await window.CRMO_saveMainNow();
-          }
-        }catch(err){
-          s = { ok:false, error: (err && err.message) ? err.message : String(err) };
-        }
-
-        var ok = !!(r && r.ok) && (!s || s.ok);
-
-        try{
-          if(status){
-            status.textContent = ok
-              ? 'Saved'
-              : ('Save failed' + (s && s.error ? (': ' + s.error) : (r && r.error ? (': ' + r.error) : '')));
-          }
-        }catch(_e){}
-
-        if(!ok){
-          alert('השמירה לא הצליחה.\n' + ((s && !s.ok) ? ('DB: ' + (s.via||'') + ' ' + (s.status||'') + ' ' + (s.error?JSON.stringify(s.error).slice(0,180): (s.error||''))) : '') + '\nבדוק חיבור/הרשאות ונסה שוב.');
-          return;
-        }
-
-        // 3) Update live grids immediately
-        try{ CRMO_stampAllGalleryGrids(); }catch(e){}
-
+        try{ if(status){ status.textContent = r.ok ? 'Saved to server' : ('Save failed: ' + r.error); } }catch(_e){}
         closeOverlay();
       }, {passive:false});
     }
@@ -22884,6 +23338,10 @@ document.addEventListener("DOMContentLoaded", function(){
       d.imageName = (file && file.name) ? file.name : "";
       d.extraImages = [];
       d.multi = false;
+      // v1547: ensure lightbox knows about the file key
+      d.files = (d.imageName ? [String(d.imageName)] : ['single']);
+      d.filesMeta = d.filesMeta && typeof d.filesMeta === 'object' ? d.filesMeta : {};
+
       try{
         window.CRMO_mpThumbs = window.CRMO_mpThumbs || {};
         if (d.imageName && src){ window.CRMO_mpThumbs[d.imageName] = src; }
@@ -22898,10 +23356,16 @@ document.addEventListener("DOMContentLoaded", function(){
       d.imageSrc = first && first.src ? first.src : "";
       d.imageName = first && first.file && first.file.name ? first.file.name : "";
       d.extraImages = [];
+      // v1547: populate files keys for lightbox thumbs
+      d.files = [];
+      d.filesMeta = d.filesMeta && typeof d.filesMeta === 'object' ? d.filesMeta : {};
+      if (d.imageName) d.files.push(String(d.imageName));
+
       for (var j=1;j<(items||[]).length;j++){
         var it = items[j];
         if (!it || !it.file) continue;
         d.extraImages.push({ name: it.file.name, src: it.src || "" });
+        try{ d.files.push(String(it.file.name)); }catch(e){}
       }
       d.multi = ((items||[]).length > 1);
       try{
@@ -22974,6 +23438,8 @@ document.addEventListener("DOMContentLoaded", function(){
         }
         try{ renderCurrentGallery(); }catch(e){}
         try{ updateCount(); }catch(e){}
+        try{ if (typeof CRMO_persistEditorState === 'function') CRMO_persistEditorState('tm-bulk'); }catch(e){}
+        try{ if (typeof persistGalleryState === 'function') persistGalleryState(); }catch(e){}
         if (used < (list||[]).length){
           try{ window.alert("אין מספיק מקום באריחים: " + ((list||[]).length - used) + " תמונות לא שובצו."); }catch(e){}
         }
@@ -26471,7 +26937,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var btnBuild = document.getElementById('crmo-usability-build');
     var btnCopy = document.getElementById('crmo-usability-copy');
     var btnDown = document.getElementById('crmo-usability-download');
-    if(fab) fab.hidden = false;
+    // v1551: usability feedback FAB only in UX review role
     var START_KEY = 'CRMO_USABILITY_START_v1';
     var CHANGES_KEY = 'CRMO_USABILITY_CHANGED_KEYS_v1';
     function now(){ return Date.now(); }
@@ -26600,6 +27066,30 @@ document.addEventListener('DOMContentLoaded', function(){
       modal.hidden = true;
       modal.setAttribute('aria-hidden','true');
     }
+    function isUxRole(){
+      try{ return document.body && document.body.classList && document.body.classList.contains('role-ux'); }catch(e){ return false; }
+    }
+    function updateFabVisibility(){
+      try{
+        if(!fab) return;
+        var ok = isUxRole();
+        fab.hidden = !ok;
+        if(!ok) closeModal();
+      }catch(e){}
+    }
+    updateFabVisibility();
+    try{
+      window.addEventListener('crmo:role-changed', function(){ updateFabVisibility(); });
+      var rt = document.getElementById('crmo-role-toggle');
+      if(rt){
+        rt.addEventListener('click', function(ev){
+          var t = ev.target;
+          if(t && t.classList && t.classList.contains('crmo-role-tab')){
+            setTimeout(updateFabVisibility, 0);
+          }
+        });
+      }
+    }catch(e){}
     if(fab){
       fab.addEventListener('click', openModal);
     }
@@ -27885,6 +28375,25 @@ try{
     : true;
   window.CRMO_SUPABASE_ADMIN_EMAILS = window.CRMO_SUPABASE_ADMIN_EMAILS || [];
   window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK = false;
+
+<script>
+/* CRMO v1547: usability offline guard (prevents auto cloud pull) */
+(function(){
+  try{
+    // Default: offline usability. To allow cloud, open with ?cloud=1
+    var allowCloud = /(?:\?|&)cloud=1(?:&|$)/.test(location.search);
+    if(!allowCloud){
+      sessionStorage.setItem('CRMO_FORCE_OFFLINE','1');
+      sessionStorage.setItem('crmo_remote_pulled','1'); // blocks auto pull in v1547 logic
+      window.CRMO_FORCE_OFFLINE = true;
+    }else{
+      sessionStorage.removeItem('CRMO_FORCE_OFFLINE');
+      window.CRMO_FORCE_OFFLINE = false;
+    }
+  }catch(e){}
+})();
+</script>
+
 </script>
 
 <script>
@@ -28065,7 +28574,20 @@ if (window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK){
     return s;
   }
   window.CRMO_galleryFolderForId = function(galleryId){
-    var gid = _crmoSanitizeId(galleryId);
+    var raw = (galleryId == null) ? '' : (''+galleryId);
+    raw = raw.trim().toLowerCase();
+
+    // Special: group stands_* under a single parent folder
+    // stands_all  -> galleries/stands/all
+    // stands_pos  -> galleries/stands/pos
+    // ...
+    if(raw.indexOf('stands_') === 0){
+      var sub = raw.slice('stands_'.length);
+      sub = _crmoSanitizeId(sub);
+      return 'galleries/stands/' + sub;
+    }
+
+    var gid = _crmoSanitizeId(raw);
     return 'galleries/' + gid;
   };
   // ---- Cloud persistence (Supabase) -----------------------------------------
@@ -28132,6 +28654,10 @@ function CRMO_scheduleCloudSave(reason = "autosave") {
 }
 
 async function CRMO_cloudRestoreOnce() {
+  try{ if (window.CRMO_OFFLINE_MODE) return false; }catch(e){}
+
+  try{ if (window.CRMO_OFFLINE_MODE) return false; }catch(e){}
+
   // Do not auto-restore if we already restored for this namespace in this browser session
   if (sessionStorage.getItem(CRMO_CLOUD_RESTORED_FLAG_KEY) === "1") return false;
 
@@ -28169,6 +28695,10 @@ async function CRMO_cloudRestoreOnce() {
 }
 
 async function CRMO_cloudPullIfNewer() {
+  try{ if (window.CRMO_OFFLINE_MODE) return false; }catch(e){}
+
+  try{ if (window.CRMO_OFFLINE_MODE) return false; }catch(e){}
+
   // Pull server state when it's newer than what this browser last applied.
   const client = getClient();
   const { data: sess } = await client.auth.getSession();
@@ -28314,6 +28844,131 @@ var ok = await isAdminAllowed();
     }
     return { ok:true, total:created, created:created, existed:existed, failed:failed, skipped:skipped };
   };
+  // ---- Multi-layer galleries: ensure per-gallery folders under "multi/" --------
+  // We keep a parallel folder tree for multi-layer assets, so each gallery can have its own multi prefix.
+  window.CRMO_multiFolderForGalleryId = function(galleryId){
+    var raw = (galleryId == null) ? '' : (''+galleryId);
+    raw = raw.trim().toLowerCase();
+
+    // Keep the same stands_* grouping logic
+    if(raw.indexOf('stands_') === 0){
+      var sub = raw.slice('stands_'.length);
+      sub = _crmoSanitizeId(sub);
+      return 'multi/stands/' + sub;
+    }
+    var gid = _crmoSanitizeId(raw);
+    return 'multi/' + gid;
+  };
+
+  async function ensureFolderPrefix(prefix){
+    var sb = await getClient();
+    try{
+      var ses = await sb.auth.getSession();
+      if(!(ses && ses.data && ses.data.session)){
+        return { prefix: prefix, path: null, skipped: true, reason: 'no-session' };
+      }
+    }catch(e){}
+
+    var ok = await isAdminAllowed();
+    if(!ok) throw new Error('not-auth');
+    var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
+    var pfx = (prefix||'').toString().replace(/[^a-zA-Z0-9_\-\/]/g,'').replace(/^\//,'').replace(/\/$/,'');
+    if(!pfx) return { prefix: prefix, path: null, skipped:true, reason:'empty-prefix' };
+    var keepPath = pfx + '/_keep.txt';
+
+    // If the prefix already has any object, we consider it existing
+    try{
+      var lst = await sb.storage.from(bucket).list(pfx, { limit: 1 });
+      if (lst && !lst.error && lst.data && lst.data.length > 0){
+        return { ok:true, prefix: pfx, path: keepPath, existed:true, reason:'nonempty' };
+      }
+    }catch(_e){}
+
+    try{
+      var blob = new Blob(['keep'], { type:'text/plain' });
+      var up = await sb.storage.from(bucket).upload(keepPath, blob, { upsert: true, contentType: 'text/plain' });
+
+      if (up && up.error){
+        var err = up.error;
+        var code = (err.statusCode || err.status || err.code || '');
+        var msg = (err.message || err.error_description || String(err));
+        if (code == 409 || /duplicate|already exists|resource already exists/i.test(String(msg))){
+          return { ok:true, prefix: pfx, path: keepPath, existed:true };
+        }
+        return { ok:false, prefix: pfx, path: keepPath, error: String(msg), code: code, raw: err };
+      }
+      return { ok:true, prefix: pfx, path: keepPath, existed:false };
+    }catch(e){
+      try{
+        var msg2 = (e && (e.message || e.error_description || '')) ? (''+(e.message || e.error_description)) : '';
+        if (/409|exist/i.test(msg2)) return { ok:true, prefix: pfx, path: keepPath, existed:true };
+      }catch(_){}
+      throw e;
+    }
+  }
+  window.CRMO_ensureFolderPrefix = ensureFolderPrefix;
+
+  window.CRMO_syncSystemFolders = async function(){
+    // folders used by the regular + multi-layer upload flows
+    var ok = await isAdminAllowed();
+    if(!ok) return { ok:false, reason:'not-auth' };
+    var created = 0;
+    var targets = ['galleries','drop','multi','gallery-main','gallery-extra'];
+    for (var i=0;i<targets.length;i++){
+      try{ await ensureFolderPrefix(targets[i]); created++; }catch(e){}
+    }
+    return { ok:true, total:created };
+  };
+
+  window.CRMO_syncMultiGalleryFolders = async function(){
+    // Ensure per-gallery prefixes under "multi/" so multi-layer galleries can be organized.
+    // Note: folders are virtual; we create a _keep.txt under each prefix.
+    // Wait for an auth session (up to ~5s) to avoid Storage RLS errors before login is ready.
+    try{
+      var sb0 = await getClient();
+      for (var i=0;i<25;i++){
+        var s0 = await sb0.auth.getSession();
+        if (s0 && s0.data && s0.data.session) break;
+        await new Promise(function(r){ setTimeout(r, 200); });
+      }
+    }catch(e){}
+    var ok = await isAdminAllowed();
+    if(!ok) return { ok:false, reason:'not-auth' };
+
+    var ids = [];
+    try{
+      if (window.CRMO_GALLERIES_MAP){
+        for (var k in window.CRMO_GALLERIES_MAP){
+          if (Object.prototype.hasOwnProperty.call(window.CRMO_GALLERIES_MAP, k)) ids.push(k);
+        }
+      }
+    }catch(e){}
+    try{
+      if (window.CRMO_CustomGalleries && typeof window.CRMO_CustomGalleries.loadDefs === 'function'){
+        var defs = window.CRMO_CustomGalleries.loadDefs() || [];
+        for (var j=0;j<defs.length;j++){
+          if (defs[j] && defs[j].id) ids.push(defs[j].id);
+        }
+      }
+    }catch(e){}
+
+    var seen = {};
+    var total = 0;
+    // Ensure the root "multi" exists
+    try{ await ensureFolderPrefix('multi'); }catch(e){}
+    for (var n=0;n<ids.length;n++){
+      var id = ids[n];
+      if(!id) continue;
+      if(seen[id]) continue;
+      seen[id]=1;
+      try{
+        await ensureFolderPrefix(window.CRMO_multiFolderForGalleryId(id));
+        total++;
+      }catch(e){}
+    }
+    return { ok:true, total:total };
+  };
+
   function installGalleryFolderHooks(){
     try{
       if (window.CRMO_CustomGalleries && !window.CRMO_CustomGalleries.__crmoFolderHooked){
@@ -28352,6 +29007,8 @@ var ok = await isAdminAllowed();
       if (tries > 60 || (window.CRMO_CustomGalleries && window.CRMO_CustomGalleries.__crmoFolderHooked)){
         clearInterval(t);
         try{ window.CRMO_syncGalleryFolders().catch(function(){}); }catch(e){}
+        try{ window.CRMO_syncSystemFolders().catch(function(){}); }catch(e){}
+        try{ window.CRMO_syncMultiGalleryFolders().catch(function(){}); }catch(e){}
       }
     }, 250);
   });
@@ -28518,7 +29175,8 @@ var ok = await isAdminAllowed();
         try{
           if(!window.CRMO_SUPABASE_AUTO_SYNC) return;
           try{ if(document.body && document.body.classList && document.body.classList.contains('role-ux')) return; }catch(e){}
-          if(!_isConfigured()) return;
+          if(window.CRMO_FORCE_OFFLINE || sessionStorage.getItem('CRMO_FORCE_OFFLINE')==='1') return;
+      if(!_isConfigured()) return;
           if(!key) return;
           var lk = String(key).toLowerCase();
           if(lk.indexOf('crmo') !== 0) return;
@@ -28532,7 +29190,8 @@ var ok = await isAdminAllowed();
         try{
           if(!window.CRMO_SUPABASE_AUTO_SYNC) return;
           try{ if(document.body && document.body.classList && document.body.classList.contains('role-ux')) return; }catch(e){}
-          if(!_isConfigured()) return;
+          if(window.CRMO_FORCE_OFFLINE || sessionStorage.getItem('CRMO_FORCE_OFFLINE')==='1') return;
+      if(!_isConfigured()) return;
           if(!key) return;
           var lk = String(key).toLowerCase();
           if(lk.indexOf('crmo') !== 0) return;
@@ -28556,6 +29215,7 @@ var ok = await isAdminAllowed();
   }catch(e){}
   function autoPullOnce(){
     try{
+      if(window.CRMO_FORCE_OFFLINE || sessionStorage.getItem('CRMO_FORCE_OFFLINE')==='1') return;
       if(!_isConfigured()) return;
       if(sessionStorage.getItem('crmo_remote_pulled')) return;
       pullFromDb(true).catch(function(err){
@@ -29902,115 +30562,18 @@ try{
     try {
       // Ensure latest edits are flushed from DOM -> galleryState -> localStorage
       try { CRMO_persistEditorState('saveMainNow'); } catch(e) {}
-
+      const sb = await getSb();
       const storage = collectLocalState();
       if (!Object.keys(storage).length) {
-        storage['crmo__seed_marker'] = JSON.stringify({ at: new Date().toISOString(), note: 'empty_storage_guard' });
+        storage['crmo__seed_marker'] = JSON.stringify({ at: new Date().toISOString(), note:'empty-local-seed' });
       }
-
-      const payload = { id: 'main', storage };
-
-      // 1) Try via supabase-js client (preferred)
-      let firstErr = null;
-      try {
-        const sb = await getSb();
-        const res = await sb
-          .from('crmo_site_config')
-          .upsert(payload, { onConflict: 'id' })
-          .select('id,updated_at')
-          .single();
-
-        if (!res.error) {
-          return { ok: true, via: 'supabase-js', result: res.data, keys: Object.keys(storage).length };
-        }
-        firstErr = res.error;
-      } catch (e) {
-        firstErr = e;
-      }
-
-      // 2) Fallback: raw fetch with explicit Authorization token from localStorage (helps when client session isn't hydrated)
-      try {
-        // Try to infer Supabase URL + anon key from an existing client
-        let sbUrl = null;
-        let sbKey = null;
-        try {
-          const sb2 = await getSb();
-          sbUrl = sb2 && (sb2.supabaseUrl || sb2.url) ? (sb2.supabaseUrl || sb2.url) : null;
-          sbKey = sb2 && (sb2.supabaseKey || sb2.key) ? (sb2.supabaseKey || sb2.key) : null;
-        } catch (e) {}
-
-        // Best-effort token discovery
-        const findAccessToken = () => {
-          try {
-            for (let i = 0; i < localStorage.length; i++) {
-              const k = localStorage.key(i);
-              if (!k) continue;
-              if (k.startsWith('sb-') && k.endsWith('-auth-token')) {
-                const v = localStorage.getItem(k);
-                if (!v) continue;
-                let obj = null;
-                try { obj = JSON.parse(v); } catch (e) { obj = null; }
-                if (obj && obj.access_token) return obj.access_token;
-                if (obj && obj.currentSession && obj.currentSession.access_token) return obj.currentSession.access_token;
-              }
-            }
-          } catch (e) {}
-          return null;
-        };
-
-        const accessToken = findAccessToken();
-
-        // If we still don't have URL/key, try reading from the in-page settings (if present)
-        sbUrl = sbUrl || (window.__CRMO_SUPABASE_URL || null);
-        sbKey = sbKey || (window.__CRMO_SUPABASE_ANON_KEY || null);
-
-        if (!sbUrl || !sbKey) {
-          throw new Error('Supabase URL/anon key missing (cannot fallback-save).');
-        }
-
-        const endpoint = sbUrl.replace(/\/+$/, '') + '/rest/v1/crmo_site_config?on_conflict=id&select=id,updated_at';
-        const headers = {
-          'Content-Type': 'application/json',
-          'apikey': sbKey,
-          'Prefer': 'resolution=merge-duplicates,return=representation'
-        };
-        if (accessToken) headers['Authorization'] = 'Bearer ' + accessToken;
-
-        const resp = await fetch(endpoint, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(payload)
-        });
-
-        const text = await resp.text();
-        let data = null;
-        try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
-
-        if (!resp.ok) {
-          return {
-            ok: false,
-            via: 'fetch',
-            status: resp.status,
-            statusText: resp.statusText,
-            error: data,
-            firstError: firstErr && (firstErr.message || String(firstErr))
-          };
-        }
-
-        const row = Array.isArray(data) ? data[0] : data;
-        return { ok: true, via: 'fetch', result: row, keys: Object.keys(storage).length };
-      } catch (fallbackErr) {
-        return {
-          ok: false,
-          via: 'both-failed',
-          error: firstErr && (firstErr.message || String(firstErr)),
-          raw: firstErr,
-          fallbackError: fallbackErr && (fallbackErr.message || String(fallbackErr)),
-          fallbackRaw: fallbackErr
-        };
-      }
-    } catch (e) {
-      return { ok: false, error: (e && e.message) ? e.message : String(e), raw: e };
+      const payload = { id: (window.CRMO_SUPABASE_CONFIG_ID || 'main'), storage };
+      const res = await sb.from('crmo_site_config').upsert(payload, { onConflict:'id' }).select('id, updated_at').single();
+      if (res && res.error) throw res.error;
+      return { ok:true, result:res, keys:Object.keys(storage).length };
+    } catch(e) {
+      try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_e){}
+      return { ok:false, error: String(e && e.message ? e.message : e), raw:e };
     }
   };
 
@@ -30188,5 +30751,1033 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
   }, 500);
 })();
 </script>
+
+<script>
+/* CRMO v1547: Hard reset (Local only) */
+function CRMO_clearLocalDataAndReload(){
+  try{
+    // Clear LocalStorage keys that may affect CRMO (including legacy preview keys)
+    var keys = Object.keys(localStorage);
+    for(var i=0;i<keys.length;i++){
+      var k = keys[i];
+      if(/^crmo/i.test(k) || /^CRMO/i.test(k) || /^USABILITY_PREVIEW/i.test(k)){
+        try{ localStorage.removeItem(k); }catch(e){}
+      }
+    }
+  }catch(e){}
+  try{
+    // Clear session flags too
+    for (var j=0;j<Object.keys(sessionStorage).length;j++){
+      var sk = Object.keys(sessionStorage)[j];
+      if(/^crmo/i.test(sk) || /^CRMO/i.test(sk) || /^USABILITY_PREVIEW/i.test(sk)){
+        try{ sessionStorage.removeItem(sk); }catch(e){}
+      }
+    }
+    // Force offline on next boot so nothing re-pulls from cloud
+    try{ sessionStorage.setItem('CRMO_FORCE_OFFLINE','1'); }catch(e){}
+    try{ sessionStorage.setItem('crmo_remote_pulled','1'); }catch(e){}
+  }catch(e){}
+  (async function(){
+    try{
+      if(window.caches && caches.keys){
+        var ckeys = await caches.keys();
+        await Promise.all(ckeys.map(function(x){ return caches.delete(x); }));
+      }
+    }catch(e){}
+    try{
+      if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){
+        var regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(function(r){ return r.unregister(); }));
+      }
+    }catch(e){}
+    // Reload with a cache-busting query so browsers don't reuse a cached HTML
+    try{
+      var u = new URL(location.href);
+      u.searchParams.set('r', Date.now().toString());
+      location.replace(u.toString());
+    }catch(e){
+      location.reload();
+    }
+  })();
+}
+</script>
+
+
+<script id="crmo_clear_wrapper_v1533">
+(function(){
+  if (typeof window.CRMO_clearLocalDataAndReload !== 'function') return;
+  var _orig = window.CRMO_clearLocalDataAndReload;
+  window.CRMO_clearLocalDataAndReload = function(){
+    try{ sessionStorage.setItem('CRMO_SKIP_CLOUD_RESTORE','1'); }catch(e){}
+    try{
+      var url = new URL(location.href);
+      url.searchParams.delete('cloud');
+      url.searchParams.delete('redirect');
+      url.searchParams.delete('p');
+      // Mark cleared to avoid accidental restore loops
+      url.searchParams.set('cleared','1');
+      history.replaceState(null,'',url.toString());
+    }catch(e){}
+    return _orig.apply(this, arguments);
+  };
+})();
+</script>
+
+
+<script id="crmo_v1534_banner">
+(function(){
+  function addBanner(){
+    try{
+      var bar = document.getElementById('crmo-admin-bar');
+      if(!bar) return;
+      var tag = document.createElement('div');
+      tag.id = 'crmo-mode-tag';
+      tag.style.marginInlineStart = '8px';
+      tag.style.padding = '4px 8px';
+      tag.style.borderRadius = '999px';
+      tag.style.fontSize = '12px';
+      tag.style.border = '1px solid rgba(0,0,0,.15)';
+      tag.style.opacity = '0.85';
+      tag.style.userSelect = 'none';
+      var sp = new URLSearchParams(location.search||'');
+      var cleared = (sp.get('cleared') === '1');
+      if(window.CRMO_ALLOW_CLOUD){
+        tag.textContent = cleared ? 'CLOUD (cleared=1) – blocked' : 'CLOUD';
+      } else {
+        tag.textContent = cleared ? 'OFFLINE (cleared=1)' : 'OFFLINE';
+      }
+      bar.querySelector('.crmo-admin-bar-row.crmo-admin-tabs')?.appendChild(tag);
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', addBanner);
+  else addBanner();
+})();
+</script>
+
+
+<script id="crmo_clear_wrapper_v1534">
+(function(){
+  function hardWipe(){
+    try{
+      sessionStorage.clear();
+      sessionStorage.setItem('CRMO_SKIP_CLOUD_RESTORE','1');
+    }catch(e){}
+    try{
+      localStorage.setItem('CRMO_CLEARED_V1','1');
+    }catch(e){}
+  }
+  if (typeof window.CRMO_clearLocalDataAndReload === 'function') {
+    var _orig = window.CRMO_clearLocalDataAndReload;
+    window.CRMO_clearLocalDataAndReload = function(){
+      hardWipe();
+      try{
+        var url = new URL(location.href);
+        url.searchParams.delete('cloud');
+        url.searchParams.set('cleared','1');
+        history.replaceState(null,'',url.toString());
+      }catch(e){}
+      return _orig.apply(this, arguments);
+    };
+  } else {
+    window.CRMO_clearLocalDataAndReload = function(){
+      hardWipe();
+      try{
+        for(const k of Object.keys(localStorage)){
+          if(/^crmo/i.test(k) || /^CRMO/i.test(k)){
+            try{ localStorage.removeItem(k); }catch(e){}
+          }
+        }
+      }catch(e){}
+      location.reload();
+    };
+  }
+})();
+</script>
+
+
+<script id="crmo_v1534_no_seed_after_clear">
+(function(){
+  try{
+    var sp = new URLSearchParams(location.search||'');
+    var cleared = (sp.get('cleared') === '1') || (localStorage.getItem('CRMO_CLEARED_V1') === '1');
+    if(!cleared) return;
+    window.CRMO_NO_SEED = true;
+
+    // Best-effort: override known seed/hydrate functions to no-op on this load
+    var names = ['CRMO_cloudRestoreOnce','CRMO_cloudPullIfNewer','CRMO_cloudRestore','CRMO_cloudPull','CRMO_cloudHydrate'];
+    names.forEach(function(n){
+      if(typeof window[n]==='function'){
+        window[n]=function(){ return false; };
+      }
+    });
+  }catch(e){}
+})();
+</script>
+
+
+<script id="crmo_v1537_hover_and_multicheck_patch">
+(function(){
+  function safeJSON(s){ try{ return JSON.parse(s);}catch(e){ return null; } }
+
+  function getTileKey(el){
+    return el?.dataset?.crmoOwnerKey ? (el.dataset.crmoOwnerKey + ':' + (el.dataset.crmoIdx||'')) : null;
+  }
+
+  function getState(){
+    // Try common keys; prefer hydrated state if present
+    const keys = Object.keys(localStorage||{});
+    const k = keys.find(x => /^crmo_gallery_state_v1$/i.test(x)) || keys.find(x => /gallery_state/i.test(x));
+    if(!k) return null;
+    return safeJSON(localStorage.getItem(k));
+  }
+
+  function findOverlay(el){
+    // try common overlay containers
+    return el.querySelector('.tile-overlay, .crmo-tile-overlay, .tile-hover, .hover-overlay, .tile-caption, .crmo-hover, .tile-meta') || null;
+  }
+
+  function setOverlayText(tileEl, title, desc){
+    const ov = findOverlay(tileEl);
+    if(!ov) return;
+    // If overlay has dedicated title/desc nodes
+    const t = ov.querySelector('.title, .tile-title, .crmo-title') || ov.querySelector('[data-role="title"]');
+    const d = ov.querySelector('.desc, .tile-desc, .crmo-desc') || ov.querySelector('[data-role="desc"]');
+    if(t) t.textContent = title || '';
+    if(d) d.textContent = desc || '';
+    if(!t && !d){
+      // fallback: write both
+      ov.textContent = (title||'') + (desc?('\n'+desc):'');
+    }
+  }
+
+  function resolvePerImageMeta(tileEl){
+    // Determine active/cover filename
+    const cover = tileEl.dataset.filename || tileEl.dataset.fileName || tileEl.dataset.coverName || tileEl.getAttribute('data-filename') || '';
+    // Try to pull per-image meta from dataset
+    const metaStr = tileEl.dataset.filesMeta || tileEl.getAttribute('data-files-meta') || '';
+    let filesMeta = metaStr ? safeJSON(metaStr) : null;
+
+    // Try data-files-visible list; if no cover use first
+    const filesStr = tileEl.dataset.filesVisible || tileEl.getAttribute('data-files-visible') || tileEl.dataset.files || '';
+    const files = filesStr ? safeJSON(filesStr) : null;
+
+    let activeName = cover;
+    if(!activeName && Array.isArray(files) && files.length){
+      const f0 = files[0];
+      activeName = (typeof f0 === 'string') ? f0 : (f0.name || f0.filename || '');
+    }
+
+    if(filesMeta && activeName && filesMeta[activeName]){
+      return { title: filesMeta[activeName].title || filesMeta[activeName].name || '', desc: filesMeta[activeName].desc || filesMeta[activeName].description || '' };
+    }
+    return null;
+  }
+
+  function refreshTileOverlay(tileEl){
+    // priority: per-image meta (if any), else fall back to existing tile title/desc fields rendered in DOM dataset
+    const per = resolvePerImageMeta(tileEl);
+    if(per){
+      setOverlayText(tileEl, per.title, per.desc);
+      return;
+    }
+    const t = tileEl.dataset.title || tileEl.getAttribute('data-title') || '';
+    const d = tileEl.dataset.desc || tileEl.getAttribute('data-desc') || '';
+    if(t || d) setOverlayText(tileEl, t, d);
+  }
+
+  // Auto-check multi checkbox when >1 images in tile editor
+  function enforceMultiCheckboxInTileEditor(){
+    try{
+      const modal = document.querySelector('.tile-editor-modal, #tileEditorModal, .crmo-tile-editor-modal');
+      if(!modal) return;
+      const multiCb = modal.querySelector('input[type="checkbox"][name="isMulti"], input[type="checkbox"]#isMulti, input[type="checkbox"]#tileIsMulti');
+      if(!multiCb) return;
+
+      const list = modal.querySelector('.multi-list, .thumb-list, .tile-files-list, .crmo-files-list');
+      const countEl = modal.querySelector('[data-files-count], .files-count');
+      let count = 0;
+      if(countEl && countEl.textContent) {
+        const m = countEl.textContent.match(/\d+/);
+        if(m) count = parseInt(m[0],10) || 0;
+      }
+      // fallback: count thumbnails
+      const thumbs = modal.querySelectorAll('img, .thumb, .thumbnail');
+      if(count < 2) count = Math.max(count, thumbs.length);
+
+      if(count >= 2 && !multiCb.checked){
+        multiCb.checked = true;
+        multiCb.dispatchEvent(new Event('change', {bubbles:true}));
+      }
+    }catch(e){}
+  }
+
+  // Delegate hover updates
+  document.addEventListener('mouseenter', function(e){
+    const tile = e.target.closest('.tile, .crmo-tile, .grid-tile, [data-crmo-idx]');
+    if(tile) refreshTileOverlay(tile);
+  }, true);
+
+  // Also refresh after any click that might change active thumbnail
+  document.addEventListener('click', function(e){
+    const tile = e.target.closest('.tile, .crmo-tile, .grid-tile, [data-crmo-idx]');
+    if(tile) setTimeout(()=>refreshTileOverlay(tile), 0);
+    setTimeout(enforceMultiCheckboxInTileEditor, 0);
+  }, true);
+
+  // On load, refresh all visible tiles once
+  function refreshAll(){
+    document.querySelectorAll('.tile, .crmo-tile, .grid-tile, [data-crmo-idx]').forEach(refreshTileOverlay);
+    enforceMultiCheckboxInTileEditor();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refreshAll);
+  else refreshAll();
+
+  // Observe DOM changes to keep overlays in sync
+  try{
+    const obs = new MutationObserver(()=>refreshAll());
+    obs.observe(document.body, {subtree:true, childList:true});
+  }catch(e){}
+})();
+</script>
+
+
+<script id="crmo_v1538_hover_sync">
+(function(){
+  function pickCoverName(anchor, wrapper){
+    try{
+      var dv = (anchor && anchor.getAttribute) ? (anchor.getAttribute('data-files-visible') || '') : '';
+      var df = (anchor && anchor.getAttribute) ? (anchor.getAttribute('data-files') || '') : '';
+      var fn = (anchor && anchor.getAttribute) ? (anchor.getAttribute('data-filename') || '') : '';
+      var list = (dv || df || '').split(',').map(function(s){ return (s||'').trim(); })
+        .filter(function(s){ return s && s.toLowerCase() !== 'single'; });
+      if (fn && fn.toLowerCase() !== 'single') return fn;
+      if (list && list.length) return list[0];
+    }catch(e){}
+    return '';
+  }
+
+  window.CRMO_syncHoverFromMeta = function(wrapper){
+    try{
+      if(!wrapper) return;
+      var anchor = wrapper.querySelector('a.ph') || wrapper;
+      if(!anchor) return;
+      var hover = anchor.querySelector('.hover-desc');
+      var ov = anchor.querySelector('.crmo-ov');
+      if(!hover && !ov) return;
+
+      var cover = pickCoverName(anchor, wrapper);
+      var useSub = (anchor.getAttribute('data-subcaps') === '1' || wrapper.getAttribute('data-subcaps') === '1');
+      var metaRaw = (anchor.getAttribute('data-files-meta') || wrapper.getAttribute('data-files-meta') || '').trim();
+      var meta = null;
+      if (useSub && metaRaw){
+        try{ meta = JSON.parse(metaRaw); }catch(e){ meta = null; }
+      }
+
+      var title = '';
+      var desc  = '';
+      if (useSub && meta && cover && meta[cover]){
+        title = (meta[cover].title || '').trim();
+        desc  = (meta[cover].desc  || '').trim();
+      }
+
+      // fallback to existing hover text
+      if(!title || !desc){
+        try{
+          if(!title && hover){
+            var st = hover.querySelector('strong');
+            if(st) title = (st.textContent||'').trim();
+          }
+          if(!desc && hover){
+            var sd = hover.querySelector('div');
+            if(sd) desc = (sd.textContent||'').trim();
+          }
+        }catch(e){}
+      }
+
+      // Apply to hover-desc
+      if(hover){
+        var tNode = hover.querySelector('strong');
+        var dNode = hover.querySelector('div');
+        if(!tNode){ tNode = document.createElement('strong'); hover.insertBefore(tNode, hover.firstChild); }
+        if(!dNode){ dNode = document.createElement('div'); hover.appendChild(dNode); }
+        if(title) tNode.textContent = title;
+        if(desc)  dNode.textContent = desc;
+      }
+
+      // Apply to overlay
+      if(ov){
+        var h4 = ov.querySelector('h4');
+        var d  = ov.querySelector('.desc') || ov.querySelector('div.desc');
+        if(h4 && title) h4.textContent = title;
+        if(d && desc)   d.textContent  = desc;
+      }
+    }catch(e){}
+  };
+
+  // Observe changes to relevant attributes and sync immediately
+  function attachObserver(){
+    try{
+      var grid = document.querySelector('.gallery-grid');
+      if(!grid) return;
+      var obs = new MutationObserver(function(muts){
+        muts.forEach(function(mu){
+          if(mu.type !== 'attributes') return;
+          var el = mu.target;
+          var wrapper = el.closest ? el.closest('.tile-edit-wrapper') : null;
+          if(!wrapper && el.classList && el.classList.contains('tile-edit-wrapper')) wrapper = el;
+          if(wrapper) window.CRMO_syncHoverFromMeta(wrapper);
+        });
+      });
+      obs.observe(grid, {subtree:true, attributes:true, attributeFilter:['data-files','data-files-visible','data-files-meta','data-subcaps','data-filename']});
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', attachObserver);
+  else attachObserver();
+})();
+</script>
+
+
+<script id="crmo_v1539_tile_editor_fixes">
+(function(){
+  function getWrapperFromAny(node){
+    if(!node) return null;
+    if(node.classList && node.classList.contains('tile-edit-wrapper')) return node;
+    return node.closest ? node.closest('.tile-edit-wrapper') : null;
+  }
+  function getGalleryKey(wrapper){
+    if(!wrapper) return null;
+    // Prefer nearest section with id (gallery sections)
+    var sec = wrapper.closest ? wrapper.closest('section[id]') : null;
+    if(sec && sec.id) return sec.id;
+    // Fallback: nearest ancestor with id that looks like gallery
+    var el = wrapper.closest ? wrapper.closest('[id]') : null;
+    if(el && el.id && el.id !== 'crmo-admin-bar' && el.id !== 'tile-editor') return el.id;
+    return null;
+  }
+  function getIndexInSection(wrapper, gKey){
+    try{
+      var sec = document.getElementById(gKey);
+      if(!sec) return -1;
+      var list = Array.from(sec.querySelectorAll('.tile-edit-wrapper'));
+      return list.indexOf(wrapper);
+    }catch(e){ return -1; }
+  }
+  function emptyTileData(){
+    return {
+      client:'', title:'שם הפרויקט', desc:'תיאור קצר על הפרויקט', tag:'',
+      imageName:'', imageSrc:'', files:[], filesMeta:{}, extraImages:[], multi:false,
+      link:'', linkActive:false, linkNewTab:true
+    };
+  }
+
+  // Force DOM+state sync for a single tile (fixes "updates only after another action")
+  window.CRMO_forceTileSync = function(wrapper){
+    try{
+      wrapper = getWrapperFromAny(wrapper);
+      if(!wrapper) return false;
+      var gKey = getGalleryKey(wrapper);
+      if(!gKey) return false;
+      var idx = getIndexInSection(wrapper, gKey);
+      if(idx < 0) return false;
+      if(typeof ensureGalleryState === 'function') ensureGalleryState(gKey);
+      if(typeof syncTileToDom === 'function') syncTileToDom(gKey, idx);
+      if(typeof window.CRMO_syncHoverFromMeta === 'function') window.CRMO_syncHoverFromMeta(wrapper);
+      return true;
+    }catch(e){ return false; }
+  };
+
+  function scheduleHoverSync(wrapper){
+    try{
+      wrapper = getWrapperFromAny(wrapper);
+      if(!wrapper) return;
+      if(typeof window.CRMO_syncHoverFromMeta === 'function'){
+        window.CRMO_syncHoverFromMeta(wrapper);
+        requestAnimationFrame(function(){ try{ window.CRMO_syncHoverFromMeta(wrapper); }catch(e){} });
+        setTimeout(function(){ try{ window.CRMO_syncHoverFromMeta(wrapper); }catch(e){} }, 80);
+        setTimeout(function(){ try{ window.CRMO_syncHoverFromMeta(wrapper); }catch(e){} }, 250);
+      }
+    }catch(e){}
+  }
+
+  // Intercept "Clear tile" so it clears STATE (not only DOM)
+  function improvedClear(){
+    try{
+      var ct = window.currentTile || null;
+      var wrapper = getWrapperFromAny(ct) || ct;
+      if(!wrapper) return;
+      if(!confirm('למחוק את כל הנתונים מהאריח הזה?')) return;
+
+      var gKey = getGalleryKey(wrapper);
+      var idx = gKey ? getIndexInSection(wrapper, gKey) : -1;
+
+      // Clear state
+      try{
+        if(gKey && idx >= 0 && typeof ensureGalleryState === 'function'){
+          ensureGalleryState(gKey);
+          if(window.galleryState && Array.isArray(window.galleryState[gKey])){
+            window.galleryState[gKey][idx] = emptyTileData();
+          }
+        }
+      }catch(e){}
+
+      // Clear DOM quickly (so user sees immediate change)
+      try{
+        var anchor = wrapper.querySelector('a.ph');
+        if(anchor){
+          anchor.style.backgroundImage = '';
+          anchor.removeAttribute('data-files');
+          anchor.removeAttribute('data-files-visible');
+          anchor.removeAttribute('data-files-meta');
+          anchor.removeAttribute('data-subcaps');
+          anchor.removeAttribute('data-filename');
+          anchor.setAttribute('href','#');
+        }
+      }catch(e){}
+
+      // Re-render tile from empty state (authoritative)
+      try{
+        if(gKey && idx >= 0 && typeof syncTileToDom === 'function'){
+          syncTileToDom(gKey, idx);
+        }
+      }catch(e){}
+
+      // Persist + refresh hover (multiple passes)
+      scheduleHoverSync(wrapper);
+      try{
+        if(typeof CRMO_persistEditorState === 'function') CRMO_persistEditorState('tile-clear');
+      }catch(e){}
+
+    }catch(e){}
+  }
+
+  // Capture clicks to override old handler (stopImmediatePropagation)
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    if(!t) return;
+    if(t.id === 'te-clear'){
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      improvedClear();
+      return;
+    }
+    // After save in tile editor, force immediate tile sync (fix hover delay)
+    if(t.id === 'te-save'){
+      try{
+        var ct = window.currentTile || null;
+        var wrapper = getWrapperFromAny(ct) || ct;
+        setTimeout(function(){
+          try{ window.CRMO_forceTileSync(wrapper); }catch(e){}
+          scheduleHoverSync(wrapper);
+        }, 0);
+      }catch(e){}
+    }
+  }, true);
+
+  // Also, when multi-project editor applies changes, force sync (if function exists)
+  try{
+    if(typeof window.mpApplyMultiProjectChanges === 'function' && !window.mpApplyMultiProjectChanges.__crmoWrapped){
+      var _orig = window.mpApplyMultiProjectChanges;
+      var wrapped = function(){
+        var r = _orig.apply(this, arguments);
+        try{
+          var cw = window.currentWrapper || window.currentTile || null;
+          window.CRMO_forceTileSync(cw);
+          scheduleHoverSync(cw);
+        }catch(e){}
+        return r;
+      };
+      wrapped.__crmoWrapped = true;
+      window.mpApplyMultiProjectChanges = wrapped;
+    }
+  }catch(e){}
+})();
+</script>
+
+
+<script id="crmo_v1540_gate_logic">
+(function(){
+  // In grid (hover/overlay) always show the tile's general title/desc (the "gate").
+  // Per-thumbnail captions remain for Lightbox only.
+  window.CRMO_syncGateText = function(wrapper){
+    try{
+      if(!wrapper) return;
+      var anchor = wrapper.querySelector ? (wrapper.querySelector('a.ph') || wrapper) : wrapper;
+      if(!anchor) return;
+      var hover = anchor.querySelector('.hover-desc');
+      var ov = anchor.querySelector('.crmo-ov');
+      // Read current main title/desc from hover-desc if present, else from overlay
+      var title = '';
+      var desc = '';
+      if(hover){
+        var st = hover.querySelector('strong');
+        var sd = hover.querySelector('div');
+        if(st) title = (st.textContent||'').trim();
+        if(sd) desc  = (sd.textContent||'').trim();
+      }
+      if((!title || !desc) && ov){
+        var h4 = ov.querySelector('h4');
+        var d  = ov.querySelector('.desc') || ov.querySelector('div.desc');
+        if(!title && h4) title = (h4.textContent||'').trim();
+        if(!desc && d)   desc  = (d.textContent||'').trim();
+      }
+      // Normalize placeholders
+      if(!title) title = 'שם הפרויקט';
+      if(!desc)  desc  = 'תיאור קצר על הפרויקט';
+
+      // Apply to hover-desc
+      if(hover){
+        var st2 = hover.querySelector('strong');
+        var sd2 = hover.querySelector('div');
+        if(!st2){ st2 = document.createElement('strong'); hover.insertBefore(st2, hover.firstChild); }
+        if(!sd2){ sd2 = document.createElement('div'); hover.appendChild(sd2); }
+        st2.textContent = title;
+        sd2.textContent = desc;
+      }
+      // Apply to overlay
+      if(ov){
+        var h42 = ov.querySelector('h4');
+        var d2  = ov.querySelector('.desc') || ov.querySelector('div.desc');
+        if(h42) h42.textContent = title;
+        if(d2)  d2.textContent  = desc;
+      }
+    }catch(e){}
+  };
+
+  // Back-compat: if earlier helpers exist, redirect them to gate text.
+  var old = window.CRMO_syncHoverFromMeta;
+  window.CRMO_syncHoverFromMeta = function(wrapper){
+    try{ window.CRMO_syncGateText(wrapper); }catch(e){}
+    // Do not use per-thumbnail meta in grid anymore.
+  };
+})();
+</script>
+
+
+<script id="crmo_v1540_clear_tile_fix">
+(function(){
+  function getTileIndex(tileEl){
+    try{
+      // Most tiles have data-tile-idx or data-idx
+      var idx = tileEl.getAttribute('data-tile-idx') || tileEl.getAttribute('data-idx');
+      if(idx!==null && idx!==undefined && idx!=='') return parseInt(idx,10);
+      // fallback: parse aria label "אריח X"
+      var label = tileEl.getAttribute('aria-label') || '';
+      var m = /(\d+)/.exec(label);
+      if(m) return parseInt(m[1],10)-1;
+    }catch(e){}
+    return null;
+  }
+
+  window.CRMO_clearTileFully = function(tileEl){
+    if(!tileEl) return;
+    try{
+      var anchor = tileEl.querySelector('a.ph');
+      if(anchor){
+        anchor.style.backgroundImage = '';
+        anchor.removeAttribute('data-files');
+        anchor.removeAttribute('data-files-visible');
+        anchor.removeAttribute('data-files-meta');
+        anchor.removeAttribute('data-subcaps');
+        anchor.removeAttribute('data-filename');
+        anchor.setAttribute('href','#');
+        anchor.querySelectorAll('img').forEach(function(im){ try{ im.remove(); }catch(e){} });
+        // Reset hover/overlay text placeholders
+        var hover = anchor.querySelector('.hover-desc');
+        if(hover){
+          var st = hover.querySelector('strong'); var sd = hover.querySelector('div');
+          if(st) st.textContent = 'שם הפרויקט';
+          if(sd) sd.textContent = 'תיאור קצר על הפרויקט';
+        }
+        var ov = anchor.querySelector('.crmo-ov');
+        if(ov){
+          var h4 = ov.querySelector('h4'); var d = ov.querySelector('.desc') || ov.querySelector('div.desc');
+          if(h4) h4.textContent = 'שם הפרויקט';
+          if(d)  d.textContent  = 'תיאור קצר על הפרויקט';
+        }
+      }
+      // wrapper attrs
+      tileEl.setAttribute('data-multi','0');
+      tileEl.removeAttribute('data-files');
+      tileEl.removeAttribute('data-files-visible');
+      tileEl.removeAttribute('data-files-meta');
+      tileEl.removeAttribute('data-subcaps');
+      tileEl.removeAttribute('data-filename');
+
+      // STATE: attempt clear current gallery state if globals exist
+      var idx = getTileIndex(tileEl);
+      // try known globals
+      var gs = window.CRMO_galleryState || window.galleryState || window.CRMO_STATE || null;
+      if(gs && idx!==null && idx>=0){
+        // if state is per-section: gs[sectionId].tiles[idx]
+        try{
+          if(gs.tiles && Array.isArray(gs.tiles)) gs.tiles[idx] = null;
+        }catch(e){}
+        try{
+          if(Array.isArray(gs) ) gs[idx]=null;
+        }catch(e){}
+        try{
+          // scan sections
+          if(gs && typeof gs==='object'){
+            Object.keys(gs).forEach(function(k){
+              var sec = gs[k];
+              if(sec && sec.tiles && Array.isArray(sec.tiles) && idx < sec.tiles.length){
+                sec.tiles[idx] = null;
+              }
+            });
+          }
+        }catch(e){}
+      }
+
+      // Persist + re-render (best-effort)
+      try{ if(typeof window.CRMO_persistEditorState==='function') window.CRMO_persistEditorState('tile-clear'); }catch(e){}
+      try{ if(typeof window.CRMO_syncGateText==='function') window.CRMO_syncGateText(tileEl); }catch(e){}
+      try{ if(typeof window.CRMO_renderGallery==='function') window.CRMO_renderGallery(); }catch(e){}
+    }catch(e){}
+  };
+
+  // Bind button after tile editor opens: use event delegation
+  document.addEventListener('click', function(ev){
+    var btn = ev.target && ev.target.closest ? ev.target.closest('#te-clear') : null;
+    if(!btn) return;
+    try{
+      var modal = document.getElementById('tileEditorModal') || document.querySelector('.tile-editor-modal') || document.body;
+      // Find currently edited tile marker
+      var tile = window.currentTile || window.CRMO_currentTile || null;
+      if(!tile){
+        // fallback: modal has data-current-tile-id
+        var tid = modal.getAttribute('data-current-tile-id');
+        if(tid) tile = document.getElementById(tid);
+      }
+      if(!tile) return;
+      if(!confirm('למחוק את כל הנתונים מהאריח הזה?')) return;
+      window.CRMO_clearTileFully(tile);
+    }catch(e){}
+  }, true);
+})();
+</script>
+
+
+<script id="crmo_v1543_unified_tile_editor">
+/*
+  v1547: Unify tile editing paths (hive + tiles manager) to one editor (#tile-editor),
+  and make "Clear tile" authoritative by clearing both DOM and the galleryState/content sources-of-truth.
+  Keeps: Grid (hive) shows only general title/desc; per-thumbnail captions remain Lightbox-only (as per v1540 decision).
+*/
+(function(){
+  function findEditingWrapper(){
+    try{
+      return document.querySelector('.tile-edit-wrapper.editing') || null;
+    }catch(e){ return null; }
+  }
+
+  function getActiveSubForMasterSection(sec){
+    try{
+      if (!sec) return '';
+      if (sec.getAttribute && sec.getAttribute('data-crmo-master') !== '1') return '';
+      if (window.CRMO_MasterGalleries && typeof window.CRMO_MasterGalleries.getActiveSub === 'function'){
+        return window.CRMO_MasterGalleries.getActiveSub(sec.id) || '';
+      }
+      var b0 = sec.querySelector && sec.querySelector('.crmo-master-subcats button.sc[aria-pressed="true"]');
+      if (b0) return (b0.getAttribute('data-cat') || '');
+    }catch(e){}
+    return '';
+  }
+
+  function computeContext(wrapper){
+    var out = { gKey:'', idx:-1, section:null };
+    try{
+      if(!wrapper) return out;
+      var sec = wrapper.closest ? wrapper.closest('section[id]') : null;
+      if(!sec){
+        // fallback: nearest ancestor with id
+        sec = wrapper.closest ? wrapper.closest('[id]') : null;
+      }
+      if(!sec || !sec.id) return out;
+
+      // master galleries: map to active sub id when needed
+      var sub = getActiveSubForMasterSection(sec);
+      var secIdForLookup = sub || sec.id;
+
+      // Find gallery key by GALLERIES config first (best)
+      var gKey = '';
+      try{
+        if (typeof window.GALLERIES === 'object' && window.GALLERIES){
+          for (var k in window.GALLERIES){
+            if(!Object.prototype.hasOwnProperty.call(window.GALLERIES,k)) continue;
+            var cfg = window.GALLERIES[k];
+            if(cfg && cfg.sectionId && String(cfg.sectionId) === secIdForLookup){
+              gKey = k; break;
+            }
+          }
+          // Sometimes key==sectionId
+          if(!gKey && window.GALLERIES[secIdForLookup]) gKey = secIdForLookup;
+        }
+      }catch(e){}
+      // fallback: treat section id as key
+      if(!gKey) gKey = secIdForLookup;
+
+      out.gKey = gKey;
+      out.section = document.getElementById((window.GALLERIES && window.GALLERIES[gKey] && window.GALLERIES[gKey].sectionId) ? window.GALLERIES[gKey].sectionId : secIdForLookup) || sec;
+
+      // index among wrappers inside actual section DOM
+      try{
+        var host = out.section || sec;
+        var list = Array.prototype.slice.call(host.querySelectorAll('.tile-edit-wrapper'));
+        out.idx = list.indexOf(wrapper);
+      }catch(e){ out.idx = -1; }
+
+      return out;
+    }catch(e){
+      return out;
+    }
+  }
+
+  function emptyTileData(){
+    return {
+      client:'', title:'שם הפרויקט', desc:'תיאור קצר על הפרויקט', tag:'',
+      imageName:'', imageSrc:'', files:[], filesMeta:{}, extraImages:[], multi:false,
+      link:'', linkNewTab:false, linkDisabled:false
+    };
+  }
+
+  function removeProjectIfUnused(pid){
+    try{
+      if(!pid) return;
+      var others = document.querySelectorAll('.tile-edit-wrapper[data-project-id="'+pid+'"]');
+      if(others && others.length > 1) return; // still referenced
+      var content = window.CREAMO_CONTENT;
+      if(!content || !Array.isArray(content.projects)) return;
+      var idx = -1;
+      for(var i=0;i<content.projects.length;i++){
+        if(content.projects[i] && content.projects[i].id === pid){ idx=i; break; }
+      }
+      if(idx>=0){
+        content.projects.splice(idx,1);
+        // persist content-data seed + localStorage
+        try{
+          var dataScript = document.getElementById('content-data');
+          if(dataScript){
+            var txt = JSON.stringify(content);
+            dataScript.textContent = txt;
+            try{ localStorage.setItem('crmo_content_data', txt); }catch(e){}
+          }
+        }catch(e){}
+      }
+    }catch(e){}
+  }
+
+  function clearWrapperDom(wrapper){
+    try{
+      wrapper.removeAttribute('data-project-id');
+      wrapper.removeAttribute('data-client');
+      wrapper.removeAttribute('data-link');
+      wrapper.removeAttribute('data-link-newtab');
+      wrapper.removeAttribute('data-link-disabled');
+      wrapper.removeAttribute('data-filename');
+      wrapper.removeAttribute('data-files');
+      wrapper.removeAttribute('data-files-visible');
+      wrapper.removeAttribute('data-files-meta');
+      wrapper.removeAttribute('data-subcaps');
+      wrapper.setAttribute('data-multi','0');
+      var a = wrapper.querySelector('a.ph');
+      if(a){
+        a.style.backgroundImage = '';
+        a.removeAttribute('data-project-id');
+        a.removeAttribute('data-client');
+        a.removeAttribute('data-link');
+        a.removeAttribute('data-link-newtab');
+        a.removeAttribute('data-link-disabled');
+        a.removeAttribute('data-filename');
+        a.removeAttribute('data-files');
+        a.removeAttribute('data-files-visible');
+        a.removeAttribute('data-files-meta');
+        a.removeAttribute('data-subcaps');
+        a.setAttribute('href','#');
+        a.removeAttribute('target');
+        a.removeAttribute('rel');
+        // keep a single placeholder img if exists
+        var imgs = a.querySelectorAll('img');
+        if(imgs && imgs.length){
+          for(var i=0;i<imgs.length;i++){
+            if(i===0){
+              // reset first img to placeholder if we have one
+              try{
+                imgs[i].src = (window.CRMO_PLACEHOLDER_DATA || imgs[i].src || '');
+              }catch(e){}
+            }else{
+              try{ imgs[i].remove(); }catch(e){}
+            }
+          }
+        }
+      }
+      // gate text placeholders
+      var hover = wrapper.querySelector('.hover-desc');
+      if(hover){
+        var st = hover.querySelector('strong');
+        var sd = hover.querySelector('div');
+        if(st) st.textContent = 'שם הפרויקט';
+        if(sd) sd.textContent = 'תיאור קצר על הפרויקט';
+      }
+      var ovTitle = wrapper.querySelector('.crmo-ov h4');
+      if(ovTitle) ovTitle.textContent = 'שם הפרויקט';
+      var ovDesc  = wrapper.querySelector('.crmo-ov .desc');
+      if(ovDesc) ovDesc.textContent = 'תיאור קצר על הפרויקט';
+    }catch(e){}
+  }
+
+  function clearTileUnified(){
+    var wrapper = findEditingWrapper();
+    if(!wrapper) return;
+    if(!confirm('למחוק את כל הנתונים מהאריח הזה?')) return;
+
+    // Ensure wrapper has a context so both open paths behave same
+    var gKey = (wrapper.getAttribute('data-crmo-owner-key') || '').trim();
+    var idxS = (wrapper.getAttribute('data-crmo-idx') || '').trim();
+    var idx = (idxS!=='' ? parseInt(idxS,10) : -1);
+
+    if(!gKey || !(idx>=0)){
+      var ctx = computeContext(wrapper);
+      gKey = ctx.gKey || gKey;
+      idx = (idx>=0 ? idx : ctx.idx);
+      try{
+        if(gKey) wrapper.setAttribute('data-crmo-owner-key', gKey);
+        if(idx>=0) wrapper.setAttribute('data-crmo-idx', String(idx));
+      }catch(e){}
+    }
+
+    // Remove content project if unused
+    var pid = (wrapper.getAttribute('data-project-id') || '').trim();
+    if(pid) removeProjectIfUnused(pid);
+
+    // Clear authoritative state for this gallery slot (tiles manager state)
+    try{
+      if(gKey && idx>=0 && window.galleryState && Array.isArray(window.galleryState[gKey])){
+        // ensure array long enough
+        while(window.galleryState[gKey].length <= idx){
+          window.galleryState[gKey].push(emptyTileData());
+        }
+        window.galleryState[gKey][idx] = emptyTileData();
+      }
+    }catch(e){}
+
+    // Clear DOM (immediate)
+    clearWrapperDom(wrapper);
+
+    // Re-apply from state to keep both sources consistent
+    try{
+      if(gKey && idx>=0 && typeof window.syncTileToDom === 'function'){
+        window.syncTileToDom(gKey, idx);
+      }
+    }catch(e){}
+
+    // Persist gallery state if helper exists
+    try{
+      if(gKey && typeof window.persistGalleryState === 'function'){
+        window.persistGalleryState(gKey);
+      }
+    }catch(e){}
+
+    // Notify manager overlay (if open)
+    try{
+      document.dispatchEvent(new CustomEvent('crmo:tile-edited', {detail:{galleryKey:gKey, index:idx}}));
+    }catch(e){
+      try{ document.dispatchEvent(new Event('crmo:tile-edited')); }catch(_){}
+    }
+
+    // Force gate text (grid) after any delayed sync
+    try{
+      if(typeof window.CRMO_syncGateText === 'function') window.CRMO_syncGateText(wrapper);
+    }catch(e){}
+    try{
+      setTimeout(function(){
+        try{ if(typeof window.CRMO_syncGateText === 'function') window.CRMO_syncGateText(wrapper); }catch(e){}
+      }, 60);
+      setTimeout(function(){
+        try{ if(typeof window.CRMO_syncGateText === 'function') window.CRMO_syncGateText(wrapper); }catch(e){}
+      }, 180);
+    }catch(e){}
+  }
+
+  // Ensure both entry points attach the same "context" markers on open:
+  // When the tile editor appears, mark the editing wrapper with owner-key + idx.
+  function markContextOnOpen(){
+    var wrapper = findEditingWrapper();
+    if(!wrapper) return;
+    var ctx = computeContext(wrapper);
+    try{
+      if(ctx.gKey) wrapper.setAttribute('data-crmo-owner-key', ctx.gKey);
+      if(ctx.idx>=0) wrapper.setAttribute('data-crmo-idx', String(ctx.idx));
+    }catch(e){}
+  }
+
+  // Watch aria-hidden on tile editor modal to detect opens
+  function attachOpenWatcher(){
+    try{
+      var modal = document.getElementById('tile-editor');
+      if(!modal) return;
+      var obs = new MutationObserver(function(muts){
+        muts.forEach(function(mu){
+          if(mu.type==='attributes' && mu.attributeName==='aria-hidden'){
+            var hidden = modal.getAttribute('aria-hidden');
+            if(hidden === 'false'){ setTimeout(markContextOnOpen, 0); }
+          }
+        });
+      });
+      obs.observe(modal, {attributes:true});
+    }catch(e){}
+  }
+
+  // Unified clear button handler (override anything else)
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    if(!t) return;
+    if(t.id === 'te-clear'){
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      clearTileUnified();
+      return;
+    }
+  }, true);
+
+  // Hide the unused tiles-manager tile editor modal (avoid confusion; editing should always use #tile-editor)
+  function hideTmModal(){
+    try{
+      var tm = document.getElementById('tm-tile-editor-modal');
+      if(tm){
+        tm.style.display = 'none';
+        tm.setAttribute('aria-hidden','true');
+      }
+    }catch(e){}
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', function(){
+      hideTmModal();
+      attachOpenWatcher();
+    });
+  }else{
+    hideTmModal();
+    attachOpenWatcher();
+  }
+})();
+</script>
+
+
+<script id="crmo_v1547_disable_te_clear">
+(function(){
+  document.addEventListener('click', function(ev){
+    try{
+      var btn = ev.target && ev.target.closest ? ev.target.closest('#te-clear') : null;
+      if(btn){
+        ev.preventDefault();
+        ev.stopPropagation();
+        ev.stopImmediatePropagation();
+        return false;
+      }
+    }catch(e){}
+  }, true);
+})();
+</script>
+
 </body>
 </html>
