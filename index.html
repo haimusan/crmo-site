@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1555 -->
+<!-- CRMO_v1556 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -78,36 +78,46 @@ window.CRMO_BUILD_VERSION = "1555";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
-<script id="crmo_asset_paths_v1553">
-/* v1553: Asset path resolver for GitHub Pages / hosted env.
-   Goal: ensure branding/logo/icons load from Supabase Storage when local /assets folder isn't deployed. */
+<script id="crmo_asset_paths_v1556">
+/* v1556: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
+   Fix: compute Supabase asset base AFTER CRMO_SUPABASE_URL defaults are set (in later script),
+   so branding/logo/icons load from Supabase Storage when local /assets folder isn't deployed. */
 (function(){
   function qp(){
     try{ return new URLSearchParams(location.search||''); }catch(e){ return {get:function(){return null;}}; }
   }
+  function trimSlash(s){ return String(s||'').replace(/\/+$/,''); }
+  function ensureSlash(s){ s=String(s||''); return s.endsWith('/')?s:(s+'/'); }
+
   var params = qp();
   var forceLocal = (params.get('assets')||'') === 'local';
   var forceCloud = (params.get('assets')||'') === 'cloud';
   var host = String(location.hostname||'');
   var isHosted = String(location.protocol||'').indexOf('http')===0;
   var likelyStaticHost = /github\.io$/i.test(host) || /crmo\.co\.il$/i.test(host);
-  var url = (window.CRMO_SUPABASE_URL && String(window.CRMO_SUPABASE_URL).indexOf('PASTE_')!==0) ? String(window.CRMO_SUPABASE_URL) : '';
-  var bucket = (window.CRMO_SUPABASE_BUCKET ? String(window.CRMO_SUPABASE_BUCKET) : 'assets');
-  function trimSlash(s){ return String(s||'').replace(/\/+$/,''); }
-  function ensureSlash(s){ s=String(s||''); return s.endsWith('/')?s:(s+'/'); }
-  var assetBase = '';
-  if(!forceLocal && url && isHosted && (forceCloud || likelyStaticHost)){
-    assetBase = ensureSlash(trimSlash(url) + '/storage/v1/object/public/' + bucket);
+
+  function getBucket(){
+    return (window.CRMO_SUPABASE_BUCKET ? String(window.CRMO_SUPABASE_BUCKET) : 'assets');
   }
-  window.CRMO_ASSET_BASE = assetBase; // '' means local assets/
+  function getAssetBase(){
+    if(forceLocal) return '';
+    var url = (window.CRMO_SUPABASE_URL && String(window.CRMO_SUPABASE_URL).indexOf('PASTE_')!==0) ? String(window.CRMO_SUPABASE_URL) : '';
+    if(!url) return '';
+    if(!isHosted) return '';
+    if(!(forceCloud || likelyStaticHost)) return '';
+    return ensureSlash(trimSlash(url) + '/storage/v1/object/public/' + getBucket());
+  }
+
   function rewriteUrl(u){
     if(!u) return u;
     if(/^https?:\/\//i.test(u) || /^data:/i.test(u) || /^blob:/i.test(u)) return u;
+    var assetBase = getAssetBase();
     if(u.indexOf('assets/')===0 && assetBase){
       return assetBase + u.substring('assets/'.length);
     }
     return u;
   }
+
   function rewriteEl(el){
     if(!el) return;
     var tag = (el.tagName||'').toUpperCase();
@@ -116,7 +126,7 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       var ns = rewriteUrl(s);
       if(ns!==s){ el.setAttribute('src', ns); }
       var srcset = el.getAttribute('srcset');
-      if(srcset && assetBase && srcset.indexOf('assets/')>=0){
+      if(srcset && srcset.indexOf('assets/')>=0){
         var parts = srcset.split(',').map(function(p){ return p.trim(); }).filter(Boolean);
         var out = parts.map(function(p){
           var seg = p.split(/\s+/);
@@ -126,46 +136,63 @@ window.CRMO_STUDIO_TITLE = "CRMO";
         el.setAttribute('srcset', out);
       }
     }else if(tag==='LINK'){
-      var rel = (el.getAttribute('rel')||'').toLowerCase();
-      if(rel.indexOf('icon')>=0 || rel.indexOf('apple-touch-icon')>=0){
-        var h = el.getAttribute('href')||'';
-        var nh = rewriteUrl(h);
-        if(nh!==h){ el.setAttribute('href', nh); }
-      }
+      var h = el.getAttribute('href')||'';
+      var nh = rewriteUrl(h);
+      if(nh!==h){ el.setAttribute('href', nh); }
     }else{
-      // handle elements with poster/background inline styles
-      var poster = el.getAttribute('poster');
-      if(poster){
-        var np = rewriteUrl(poster);
-        if(np!==poster){ el.setAttribute('poster', np); }
+      var poster = el.getAttribute && el.getAttribute('poster');
+      if(poster && String(poster).indexOf('assets/')===0){
+        el.setAttribute('poster', rewriteUrl(poster));
       }
     }
   }
-  // Catch failed loads early: swap to cloud URL if needed.
-  document.addEventListener('error', function(ev){
-    var t = ev.target;
-    if(!assetBase || !t) return;
-    var tag = (t.tagName||'').toUpperCase();
-    if(tag==='IMG'){
-      var s = t.getAttribute('src')||'';
-      if(s && s.indexOf(assetBase)===0) return; // already rewritten
-      if(s && s.indexOf('assets/')===0){
-        t.setAttribute('src', rewriteUrl(s));
-      }
-    }else if(tag==='LINK'){
-      rewriteEl(t);
-    }
-  }, true);
 
-  // Proactive rewrite once DOM is ready
-  document.addEventListener('DOMContentLoaded', function(){
+  function rewriteNow(){
+    var assetBase = getAssetBase();
+    window.CRMO_ASSET_BASE = assetBase; // '' means local assets/
     if(!assetBase) return;
     try{
       document.querySelectorAll('img[src^="assets/"]').forEach(rewriteEl);
       document.querySelectorAll('link[rel*="icon"][href^="assets/"]').forEach(rewriteEl);
       document.querySelectorAll('[poster^="assets/"]').forEach(rewriteEl);
     }catch(e){}
-  });
+  }
+
+  // Observe changes (e.g., late-rendered logo)
+  try{
+    var mo = new MutationObserver(function(muts){
+      var assetBase = getAssetBase();
+      if(!assetBase) return;
+      window.CRMO_ASSET_BASE = assetBase;
+      muts.forEach(function(m){
+        (m.addedNodes||[]).forEach(function(n){
+          if(!n || n.nodeType!==1) return;
+          rewriteEl(n);
+          try{
+            n.querySelectorAll && n.querySelectorAll('img[src^="assets/"],link[rel*="icon"][href^="assets/"],[poster^="assets/"]').forEach(rewriteEl);
+          }catch(e){}
+        });
+        if(m.type==='attributes'){
+          var t = m.target;
+          if(!t || t.nodeType!==1) return;
+          if(m.attributeName==='src' || m.attributeName==='href' || m.attributeName==='poster'){
+            if(String(t.getAttribute(m.attributeName)||'').indexOf('assets/')===0){
+              t.setAttribute(m.attributeName, rewriteUrl(t.getAttribute(m.attributeName)));
+            }
+          }
+        }
+      });
+    });
+    mo.observe(document.documentElement, {subtree:true, childList:true, attributes:true, attributeFilter:['src','href','poster']});
+  }catch(e){}
+
+  // Run after DOM ready, and retry shortly after to catch late CRMO_SUPABASE_URL assignment
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', rewriteNow);
+  }else{
+    rewriteNow();
+  }
+  setTimeout(rewriteNow, 50);
 })();
 </script>
 
@@ -8074,7 +8101,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
 
-<span id="crmo-top-version" style="opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;">1555</span>
+<span id="crmo-top-version" style="opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;">1556</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
