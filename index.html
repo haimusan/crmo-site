@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1552 -->
+<!-- CRMO_v1553 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -74,7 +74,98 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1552";
+window.CRMO_BUILD_VERSION = "1553";
+<script id="crmo_asset_paths_v1553">
+/* v1553: Asset path resolver for GitHub Pages / hosted env.
+   Goal: ensure branding/logo/icons load from Supabase Storage when local /assets folder isn't deployed. */
+(function(){
+  function qp(){
+    try{ return new URLSearchParams(location.search||''); }catch(e){ return {get:function(){return null;}}; }
+  }
+  var params = qp();
+  var forceLocal = (params.get('assets')||'') === 'local';
+  var forceCloud = (params.get('assets')||'') === 'cloud';
+  var host = String(location.hostname||'');
+  var isHosted = String(location.protocol||'').indexOf('http')===0;
+  var likelyStaticHost = /github\.io$/i.test(host) || /crmo\.co\.il$/i.test(host);
+  var url = (window.CRMO_SUPABASE_URL && String(window.CRMO_SUPABASE_URL).indexOf('PASTE_')!==0) ? String(window.CRMO_SUPABASE_URL) : '';
+  var bucket = (window.CRMO_SUPABASE_BUCKET ? String(window.CRMO_SUPABASE_BUCKET) : 'assets');
+  function trimSlash(s){ return String(s||'').replace(/\/+$/,''); }
+  function ensureSlash(s){ s=String(s||''); return s.endsWith('/')?s:(s+'/'); }
+  var assetBase = '';
+  if(!forceLocal && url && isHosted && (forceCloud || likelyStaticHost)){
+    assetBase = ensureSlash(trimSlash(url) + '/storage/v1/object/public/' + bucket);
+  }
+  window.CRMO_ASSET_BASE = assetBase; // '' means local assets/
+  function rewriteUrl(u){
+    if(!u) return u;
+    if(/^https?:\/\//i.test(u) || /^data:/i.test(u) || /^blob:/i.test(u)) return u;
+    if(u.indexOf('assets/')===0 && assetBase){
+      return assetBase + u.substring('assets/'.length);
+    }
+    return u;
+  }
+  function rewriteEl(el){
+    if(!el) return;
+    var tag = (el.tagName||'').toUpperCase();
+    if(tag==='IMG'){
+      var s = el.getAttribute('src')||'';
+      var ns = rewriteUrl(s);
+      if(ns!==s){ el.setAttribute('src', ns); }
+      var srcset = el.getAttribute('srcset');
+      if(srcset && assetBase && srcset.indexOf('assets/')>=0){
+        var parts = srcset.split(',').map(function(p){ return p.trim(); }).filter(Boolean);
+        var out = parts.map(function(p){
+          var seg = p.split(/\s+/);
+          var u0 = seg.shift();
+          return [rewriteUrl(u0)].concat(seg).join(' ');
+        }).join(', ');
+        el.setAttribute('srcset', out);
+      }
+    }else if(tag==='LINK'){
+      var rel = (el.getAttribute('rel')||'').toLowerCase();
+      if(rel.indexOf('icon')>=0 || rel.indexOf('apple-touch-icon')>=0){
+        var h = el.getAttribute('href')||'';
+        var nh = rewriteUrl(h);
+        if(nh!==h){ el.setAttribute('href', nh); }
+      }
+    }else{
+      // handle elements with poster/background inline styles
+      var poster = el.getAttribute('poster');
+      if(poster){
+        var np = rewriteUrl(poster);
+        if(np!==poster){ el.setAttribute('poster', np); }
+      }
+    }
+  }
+  // Catch failed loads early: swap to cloud URL if needed.
+  document.addEventListener('error', function(ev){
+    var t = ev.target;
+    if(!assetBase || !t) return;
+    var tag = (t.tagName||'').toUpperCase();
+    if(tag==='IMG'){
+      var s = t.getAttribute('src')||'';
+      if(s && s.indexOf(assetBase)===0) return; // already rewritten
+      if(s && s.indexOf('assets/')===0){
+        t.setAttribute('src', rewriteUrl(s));
+      }
+    }else if(tag==='LINK'){
+      rewriteEl(t);
+    }
+  }, true);
+
+  // Proactive rewrite once DOM is ready
+  document.addEventListener('DOMContentLoaded', function(){
+    if(!assetBase) return;
+    try{
+      document.querySelectorAll('img[src^="assets/"]').forEach(rewriteEl);
+      document.querySelectorAll('link[rel*="icon"][href^="assets/"]').forEach(rewriteEl);
+      document.querySelectorAll('[poster^="assets/"]').forEach(rewriteEl);
+    }catch(e){}
+  });
+})();
+</script>
+
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -153,9 +244,9 @@ window.CRMO_SUPABASE_REQUIRE_LOGIN = true;
 window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 </script>
 
-<script id="crmo_cloud_config_v1552">
+<script id="crmo_cloud_config_v1553">
 /*
-  CRMO Cloud Config (v1552)
+  CRMO Cloud Config (v1553)
   Minimal server load/save for crmo_site_config.
   - Cloud ops only when ?cloud=1 (or cloud=true). We also accept params inside hash (/#?cloud=1) for convenience.
   - env=staging routes to config id "main_staging", otherwise "main".
