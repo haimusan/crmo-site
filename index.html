@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1557 -->
+<!-- CRMO_v1558 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -74,7 +74,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1557";
+window.CRMO_BUILD_VERSION = "1558";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -446,6 +446,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
         '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
           '<button id="crmo-cloud-load" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #bbb;background:#f6f6f6;">טען מהשרת</button>' +
           '<button id="crmo-cloud-save" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #111;background:#111;color:#fff;">שמור לשרת</button>' +
+          '<button id="crmo-cloud-reset-media" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #b00020;background:#fff;color:#b00020;">איפוס מדיה</button>' +
         '</div>' +
         '<div id="crmo-cloud-panel-msg" style="min-height:16px;"></div>' +
       '</div>';
@@ -475,6 +476,67 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
         setMsg(String((e && e.message) ? e.message : e), true);
       }
     };
+
+    
+    // Media-only reset (projects/assets + brand media) for STAGING/Cloud
+    document.getElementById('crmo-cloud-reset-media').onclick = async function(){
+      try{
+        var sp = new URLSearchParams(location.search || '');
+        var env = (sp.get('env') || '').toLowerCase();
+        var isStaging = (env === 'staging');
+        var ok = window.confirm('איפוס מדיה בלבד' + (isStaging ? ' (STAGING)' : '') + '?\nזה ינקה תמונות/נכסים של עבודות ומותגים אך ישאיר מבנה, טקסטים ושיוכים.');
+        if(!ok) return;
+
+        // Get current content JSON from script (already hydrated from localStorage earlier)
+        var dataScript = document.getElementById('content-data');
+        var cur = {};
+        try{ cur = JSON.parse((dataScript && dataScript.textContent) ? dataScript.textContent : '{}'); }catch(e){ cur = {}; }
+
+        if(cur && Array.isArray(cur.projects)){
+          cur.projects = cur.projects.map(function(p){
+            if(p && typeof p === 'object'){
+              // Keep metadata, wipe media assets only
+              p.assets = [];
+            }
+            return p;
+          });
+        }
+        if(cur && Array.isArray(cur.brands)){
+          cur.brands = cur.brands.map(function(b){
+            if(b && typeof b === 'object'){
+              b.logo = null;
+              b.assets = [];
+              // keep linkedProjects as-is
+            }
+            return b;
+          });
+        }
+
+        try{
+          // Persist locally
+          localStorage.setItem('crmo_content_data', JSON.stringify(cur));
+          if(dataScript) dataScript.textContent = JSON.stringify(cur);
+          // Clear any derived gallery state/meta so UI rebuilds clean
+          try{ localStorage.removeItem('crmo_gallery_state_v1'); }catch(_e){}
+          try{ localStorage.removeItem('crmo_gallery_meta'); }catch(_e){}
+        }catch(e){}
+
+        // Save to server if cloud enabled
+        if(cloudEnabled()){
+          setMsg('שומר איפוס...', false);
+          await saveToServer();
+          setMsg('איפוס מדיה נשמר לשרת', false);
+        }else{
+          setMsg('איפוס מדיה נשמר מקומית (offline)', false);
+        }
+
+        // Reload to rehydrate UI
+        setTimeout(function(){ location.reload(); }, 150);
+      }catch(e){
+        setMsg(String((e && e.message) ? e.message : e), true);
+      }
+    };
+
 
     // show panel only for admins
     (async function refresh(){
