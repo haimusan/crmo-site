@@ -74,7 +74,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1558";
+window.CRMO_BUILD_VERSION = "1559";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -451,6 +451,79 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
         '<div id="crmo-cloud-panel-msg" style="min-height:16px;"></div>' +
       '</div>';
     document.body.appendChild(box);
+
+    // Bind the top admin bar "CLOUD" button to toggle this panel (so it's always discoverable).
+    (function bindCloudTopButton(){
+      function findTrigger(){
+        // Look for a clickable element whose visible text is exactly "CLOUD"
+        var els = Array.prototype.slice.call(document.querySelectorAll('button, a, div, span'));
+        for (var i=0;i<els.length;i++){
+          var el = els[i];
+          if(!el) continue;
+          var t = (el.textContent || '').trim();
+          if(t === 'CLOUD'){
+            // Avoid tiny template nodes
+            var r = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+            if(r && r.width > 10 && r.height > 10) return el;
+          }
+        }
+        return null;
+      }
+
+      function positionPanel(trigger){
+        try{
+          var r = trigger.getBoundingClientRect();
+          // Prefer aligning to the left edge; clamp within viewport.
+          var left = Math.max(8, Math.min(r.left, (window.innerWidth - 220)));
+          box.style.top = (r.bottom + 8) + 'px';
+          box.style.left = left + 'px';
+        }catch(e){}
+      }
+
+      function toggle(trigger){
+        if(!trigger) return;
+        if(box.style.display === 'none' || box.style.display === ''){
+          positionPanel(trigger);
+          box.style.display = 'flex';
+        }else{
+          box.style.display = 'none';
+        }
+      }
+
+      function closeIfOutside(e){
+        try{
+          if(!box || box.style.display === 'none') return;
+          var trg = window.__CRMO_CLOUD_TRIGGER;
+          if(box.contains(e.target)) return;
+          if(trg && (trg === e.target || (trg.contains && trg.contains(e.target)))) return;
+          box.style.display = 'none';
+        }catch(err){}
+      }
+
+      function attach(){
+        if(!window.CRMO_ALLOW_CLOUD) return;
+        // Only show controls for admins (same rule as the panel itself uses later).
+        var trig = findTrigger();
+        if(!trig) return false;
+        window.__CRMO_CLOUD_TRIGGER = trig;
+        trig.style.cursor = 'pointer';
+        trig.addEventListener('click', function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          toggle(trig);
+        });
+        window.addEventListener('resize', function(){ if(box.style.display !== 'none') positionPanel(trig); });
+        document.addEventListener('click', closeIfOutside, true);
+        return true;
+      }
+
+      // Try a few times because the top bar may render after this script.
+      var tries = 0;
+      var timer = setInterval(function(){
+        tries++;
+        if(attach() || tries > 40){ clearInterval(timer); }
+      }, 250);
+    })();
 
     function setMsg(t, isErr){
       var el = document.getElementById('crmo-cloud-panel-msg');
