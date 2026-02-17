@@ -13,14 +13,13 @@
   window.CRMO_OFFLINE_MODE = !allowCloud;
   window.CRMO_USABILITY_MODE = true;
 
-  // If user just cleared, never restore from cloud this load (even if cloud=1 by mistake)
+    // If user just cleared, default to OFFLINE unless cloud was explicitly requested
   try{
-    if (sp.get('cleared') === '1' || sessionStorage.getItem('CRMO_SKIP_CLOUD_RESTORE') === '1') {
+    if(!allowCloud && (sp.get('cleared') === '1' || sessionStorage.getItem('CRMO_SKIP_CLOUD_RESTORE') === '1')) {
       window.CRMO_ALLOW_CLOUD = false;
       window.CRMO_OFFLINE_MODE = true;
     }
   }catch(e){}
-
   // Hard-block fetch/XHR to Supabase-like endpoints unless explicitly allowed
   try{
     var _fetch = window.fetch;
@@ -74,7 +73,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1559";
+window.CRMO_BUILD_VERSION = "1561";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -4838,7 +4837,7 @@ if (mpRows){
     };
     document.addEventListener('click', function(ev){
       var target = ev.target;
-      if(!target.closest) return;
+      if(!target || typeof target.closest !== 'function') return;
       var btn = target.closest('.tile-edit-btn');
       if(!btn) return;
       var wrapper = btn.closest('.tile-edit-wrapper');
@@ -5085,7 +5084,7 @@ if(!finalList.length){
     }
 editor.addEventListener('click', function(ev){
       var target = ev.target;
-      if(!target.closest) return;
+      if(!target || typeof target.closest !== 'function') return;
       var btn = target.closest('button');
       if(!btn ||
  btn.id !== 'te-save') return;
@@ -14015,7 +14014,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var bar = document.getElementById('stands-filters');
   if(!badge || !bar) return;
   bar.addEventListener('click', function(ev){
-    var btn = ev.target.closest('button');
+    var btn = (ev.target && typeof ev.target.closest === 'function') ? ev.target.closest('button') : null;
     if(!btn) return;
     var t = (btn.textContent||'').trim();
     if(t) badge.textContent = t;
@@ -14045,7 +14044,7 @@ document.addEventListener('DOMContentLoaded', function(){
       gotoSubhead(true);
     }
     document.addEventListener('click', function(ev){
-      var a = ev.target.closest('a[href]');
+      var a = (ev.target && typeof ev.target.closest === 'function') ? ev.target.closest('a[href]') : null;
       if(!a) return;
       var href = a.getAttribute('href') || '';
       var idx = href.indexOf('#');
@@ -14680,7 +14679,7 @@ function open(grid, idx){
   function nextItem(){ seek(1); }
 
   document.addEventListener('click', function(ev){
-    const brandEditBtn = ev.target.closest && ev.target.closest('#brands .brandcell-icon-edit');
+    const brandEditBtn = (ev.target && typeof ev.target.closest === 'function') ? ev.target.closest('#brands .brandcell-icon-edit') : null;
     if (brandEditBtn){
       ev.preventDefault();
       const brandCell = brandEditBtn.closest('.brandcell');
@@ -14736,7 +14735,7 @@ function open(grid, idx){
       }
       return;
     }
-    const brandLogo = ev.target.closest && ev.target.closest('#brands .brandcell.brand-has-lb');
+    const brandLogo = (ev.target && typeof ev.target.closest === 'function') ? ev.target.closest('#brands .brandcell.brand-has-lb') : null;
     if (brandLogo){
       const brandGrid = document.getElementById('brandLbGrid');
       if (brandGrid){
@@ -14773,7 +14772,7 @@ const items = ensureDataset(tempGrid);
       }
       return;
     }
-    const ph = ev.target.closest && ev.target.closest('.ph');
+    const ph = (ev.target && typeof ev.target.closest === 'function') ? ev.target.closest('.ph') : null;
     if (!ph) return;
     const gridEl = ph.closest('.grid');
     if (!gridEl) return;
@@ -31008,9 +31007,7 @@ function CRMO_clearLocalDataAndReload(){
         try{ sessionStorage.removeItem(sk); }catch(e){}
       }
     }
-    // Force offline on next boot so nothing re-pulls from cloud
-    try{ sessionStorage.setItem('CRMO_FORCE_OFFLINE','1'); }catch(e){}
-    try{ sessionStorage.setItem('crmo_remote_pulled','1'); }catch(e){}
+    // Note: do not force OFFLINE after hard reset; preserve cloud mode if enabled.
   }catch(e){}
   (async function(){
     try{
@@ -31028,6 +31025,7 @@ function CRMO_clearLocalDataAndReload(){
     // Reload with a cache-busting query so browsers don't reuse a cached HTML
     try{
       var u = new URL(location.href);
+      u.searchParams.set('cleared','1');
       u.searchParams.set('r', Date.now().toString());
       location.replace(u.toString());
     }catch(e){
@@ -31046,7 +31044,7 @@ function CRMO_clearLocalDataAndReload(){
     try{ sessionStorage.setItem('CRMO_SKIP_CLOUD_RESTORE','1'); }catch(e){}
     try{
       var url = new URL(location.href);
-      url.searchParams.delete('cloud');
+      // keep cloud param (do not force offline)
       url.searchParams.delete('redirect');
       url.searchParams.delete('p');
       // Mark cleared to avoid accidental restore loops
@@ -31107,7 +31105,7 @@ function CRMO_clearLocalDataAndReload(){
       hardWipe();
       try{
         var url = new URL(location.href);
-        url.searchParams.delete('cloud');
+        // keep cloud param (do not force offline)
         url.searchParams.set('cleared','1');
         history.replaceState(null,'',url.toString());
       }catch(e){}
@@ -31248,13 +31246,17 @@ function CRMO_clearLocalDataAndReload(){
 
   // Delegate hover updates
   document.addEventListener('mouseenter', function(e){
-    const tile = e.target.closest('.tile, .crmo-tile, .grid-tile, [data-crmo-idx]');
+    const __t = e && e.target;
+    if(!(__t instanceof Element) || !__t.closest) return;
+    const tile = __t.closest('.tile, .crmo-tile, .grid-tile, [data-crmo-idx]');
     if(tile) refreshTileOverlay(tile);
   }, true);
 
   // Also refresh after any click that might change active thumbnail
   document.addEventListener('click', function(e){
-    const tile = e.target.closest('.tile, .crmo-tile, .grid-tile, [data-crmo-idx]');
+    const __t = e && e.target;
+    if(!(__t instanceof Element) || !__t.closest) return;
+    const tile = __t.closest('.tile, .crmo-tile, .grid-tile, [data-crmo-idx]');
     if(tile) setTimeout(()=>refreshTileOverlay(tile), 0);
     setTimeout(enforceMultiCheckboxInTileEditor, 0);
   }, true);
