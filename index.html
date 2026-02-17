@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1563 -->
+<!-- CRMO_v1566 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,7 +80,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1565";
+window.CRMO_BUILD_VERSION = "1566";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -627,7 +627,7 @@ document.getElementById('crmo-cloud-fix-stands-folders').onclick = async functio
     );
     if(!ok) return;
 
-    var sb = await getSb();
+    var sb = await getSbOrThrow();
     var bucket = getBucket();
     var base = 'galleries';
     var master = 'stands';
@@ -29924,7 +29924,7 @@ function boot(){
         syncTileLikeStates();
         return;
       }
-      var sb = await getSb();
+      var sb = await getSbOrThrow();
       var out = await sb.auth.getSession();
       session = out && out.data && out.data.session ? out.data.session : null;
       setPublicRole(!!session);
@@ -30783,7 +30783,7 @@ function boot(){
       var key = String(window.CRMO_SUPABASE_ANON_KEY||'');
       if(!url || !key || url.indexOf('PASTE_')===0 || key.indexOf('PASTE_')===0) return;
 
-      var sb = await getSb();
+      var sb = await getSbOrThrow();
 
       // get role from db
       var dbRole = await readProfileRole(sb);
