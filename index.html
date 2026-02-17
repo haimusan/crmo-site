@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<!-- CRMO_v1562 -->
+<!-- CRMO_v1563 -->
 
 <html dir="rtl" lang="he">
 <head>
 
 <script id="crmo_v1534_hard_offline_guard">
 (function(){
-  // Default OFFLINE. Cloud is only allowed with ?cloud=1 explicitly.
+  // Default OFFLINE for local dev. On hosted domains, Cloud is enabled automatically (unless ?offline=1).
   var sp = new URLSearchParams(location.search||'');
   var h = String(location.hash||'');
   var hasAuthInHash = /(?:^|[&#?])access_token=|(?:^|[&#?])refresh_token=|(?:^|[&#?])code=|type=magiclink/i.test(h);
-  var allowCloud = (sp.get('cloud') === '1' || sp.get('cloud') === 'true' || hasAuthInHash);
+  var allowCloud = !((sp.get('offline') === '1' || sp.get('offline') === 'true' || sp.get('cloud') === '0' || sp.get('cloud') === 'false')) && (
+    // Enable cloud by default on hosted domains (GitHub Pages / crmo.co.il). Keep OFFLINE for local file:// and localhost.
+    ((String(location.protocol||'') === 'https:' || String(location.protocol||'') === 'http:') &&
+      String(location.hostname||'') && String(location.hostname||'') !== 'localhost' && String(location.hostname||'') !== '127.0.0.1') ||
+    sp.get('cloud') === '1' || sp.get('cloud') === 'true' || hasAuthInHash
+  )
   window.CRMO_ALLOW_CLOUD = allowCloud;
   window.CRMO_OFFLINE_MODE = !allowCloud;
   window.CRMO_USABILITY_MODE = true;
@@ -75,7 +80,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1562";
+window.CRMO_BUILD_VERSION = "1563";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -28682,7 +28687,7 @@ try{
           if(!session) return;
 
           const u = new URL(location.href);
-          if(u.searchParams.get('cloud') !== '1') u.searchParams.set('cloud','1');
+          // keep URL clean; cloud is enabled automatically on hosted domains
 
           const rawHash = String(location.hash||'');
           if(/access_token=|refresh_token=|type=magiclink|token_type=|expires_in=|expires_at=|(^|[&#?])code=/i.test(rawHash)){
