@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1568 -->
+<!-- CRMO_v1563 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,7 +80,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1568";
+window.CRMO_BUILD_VERSION = "1565";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -337,36 +337,11 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
       for(var i=0;i<localStorage.length;i++){
         var k = localStorage.key(i);
         if(!k) continue;
-
-        // Only target CRMO-scoped keys
-        var isCrmoKey = (k.indexOf('crmo:') === 0 || k.indexOf('crmo_') === 0 || k.indexOf('CRMO_') === 0);
-        if(!isCrmoKey) continue;
-
-        // Preserve admin/auth/session keys so a server hydration doesn't "log out" the editor.
-        var lk = String(k).toLowerCase();
-        var preserve =
-          (lk.indexOf('crmo:auth') === 0) ||
-          (lk.indexOf('crmo_auth') === 0) ||
-          (lk.indexOf('crmo:admin') === 0) ||
-          (lk.indexOf('crmo_admin') === 0) ||
-          (lk.indexOf('crmo:profile') === 0) ||
-          (lk.indexOf('crmo_profile') === 0) ||
-          (lk.indexOf('crmo:permissions') === 0) ||
-          (lk.indexOf('crmo_permissions') === 0) ||
-          (lk.indexOf('crmo_session') === 0) ||
-          (lk.indexOf('crmo:session') === 0) ||
-          (lk.indexOf('crmo_auth_session') >= 0) ||
-          (lk.indexOf('crmo_admins') >= 0) ||
-          (lk.indexOf('admins') >= 0 && (lk.indexOf('crmo') >= 0)) ||
-          (lk.indexOf('session') >= 0 && (lk.indexOf('auth') >= 0 || lk.indexOf('admin') >= 0));
-
-        if(preserve) continue;
-
-        kill.push(k);
+        if(k.indexOf('crmo:') === 0 || k.indexOf('crmo_') === 0 || k.indexOf('CRMO_') === 0){
+          kill.push(k);
+        }
       }
       kill.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
-    }catch(e){}
-  });
     }catch(e){}
   }
 
@@ -652,7 +627,7 @@ document.getElementById('crmo-cloud-fix-stands-folders').onclick = async functio
     );
     if(!ok) return;
 
-    var sb = await getSbOrThrow();
+    var sb = await getSb();
     var bucket = getBucket();
     var base = 'galleries';
     var master = 'stands';
@@ -29949,7 +29924,7 @@ function boot(){
         syncTileLikeStates();
         return;
       }
-      var sb = await getSbOrThrow();
+      var sb = await getSb();
       var out = await sb.auth.getSession();
       session = out && out.data && out.data.session ? out.data.session : null;
       setPublicRole(!!session);
@@ -30808,7 +30783,7 @@ function boot(){
       var key = String(window.CRMO_SUPABASE_ANON_KEY||'');
       if(!url || !key || url.indexOf('PASTE_')===0 || key.indexOf('PASTE_')===0) return;
 
-      var sb = await getSbOrThrow();
+      var sb = await getSb();
 
       // get role from db
       var dbRole = await readProfileRole(sb);
