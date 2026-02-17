@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1558 -->
+<!-- CRMO_v1562 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -8,7 +8,9 @@
 (function(){
   // Default OFFLINE. Cloud is only allowed with ?cloud=1 explicitly.
   var sp = new URLSearchParams(location.search||'');
-  var allowCloud = (sp.get('cloud') === '1' || sp.get('cloud') === 'true');
+  var h = String(location.hash||'');
+  var hasAuthInHash = /(?:^|[&#?])access_token=|(?:^|[&#?])refresh_token=|(?:^|[&#?])code=|type=magiclink/i.test(h);
+  var allowCloud = (sp.get('cloud') === '1' || sp.get('cloud') === 'true' || hasAuthInHash);
   window.CRMO_ALLOW_CLOUD = allowCloud;
   window.CRMO_OFFLINE_MODE = !allowCloud;
   window.CRMO_USABILITY_MODE = true;
@@ -73,7 +75,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1561";
+window.CRMO_BUILD_VERSION = "1562";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -13827,7 +13829,7 @@ document.addEventListener('DOMContentLoaded', function(){
 <script>
 document.addEventListener('click', function(e){
   var el = e.target;
-  var ph = el.closest ? el.closest('#stores .ph') : null;
+  var ph = typeof el.closest === 'function' ? el.closest('#stores .ph') : null;
   if(ph && !ph.classList.contains('clickable')){
     e.preventDefault();
     e.stopPropagation();
@@ -20319,7 +20321,7 @@ function firstTileTemplate(){
         main.appendChild(sec);
       }
       tabs.addEventListener('click', function(ev){
-        var b = ev.target && ev.target.closest ? ev.target.closest('button.sc') : null;
+        var b = ev.target && typeof ev.target.closest === 'function' ? ev.target.closest('button.sc') : null;
         if (!b) return;
         ev.preventDefault();
         var sid = b.getAttribute('data-cat') || '';
@@ -22784,7 +22786,7 @@ data.push({
       if (!isOpen) return;
       var section = null;
       if (sectionOrId && sectionOrId.nodeType === 1){
-        section = sectionOrId.closest ? sectionOrId.closest('section') : sectionOrId;
+        section = typeof sectionOrId.closest === 'function' ? sectionOrId.closest('section') : sectionOrId;
       }else if (typeof sectionOrId === 'string' && sectionOrId){
         section = document.getElementById(sectionOrId);
       }
@@ -23613,7 +23615,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     function tmFindGalleryKeyFromTarget(target){
       try{
-        var sec = target && target.closest ? target.closest('section') : null;
+        var sec = target && typeof target.closest === 'function' ? target.closest('section') : null;
         if (sec && sec.id){
           var gk = findDefaultGalleryForSection(sec.id);
           if (!gk && GALLERIES[sec.id]) gk = sec.id;
@@ -23943,7 +23945,7 @@ document.addEventListener('DOMContentLoaded', function(){
       btn.setAttribute('aria-pressed','true');
     }
     bar.addEventListener('click', function(ev){
-      var b = ev.target && ev.target.closest ? ev.target.closest('.sc') : null;
+      var b = ev.target && typeof ev.target.closest === 'function' ? ev.target.closest('.sc') : null;
       if(!b) return;
       ev.preventDefault();
       setActive(b);
@@ -24082,9 +24084,9 @@ syncAddSub();
       listEl.__crmoSelectBound = true;
       listEl.addEventListener('click', function(ev){
         try{
-          var btn = ev.target && ev.target.closest ? ev.target.closest('button') : null;
+          var btn = ev.target && typeof ev.target.closest === 'function' ? ev.target.closest('button') : null;
           if (btn) return;
-          var row = ev.target && ev.target.closest ? ev.target.closest('.crmo-galleries-admin-row') : null;
+          var row = ev.target && typeof ev.target.closest === 'function' ? ev.target.closest('.crmo-galleries-admin-row') : null;
           if (!row) return;
           var id = row.getAttribute('data-id') || '';
           if (!id) return;
@@ -25840,7 +25842,7 @@ if (document.readyState === 'loading'){
 
 <script>
 (function(){
-  function closest(el, sel){ try{ return el && el.closest ? el.closest(sel) : null; }catch(e){ return null; } }
+  function closest(el, sel){ try{ return el && typeof el.closest === 'function' ? el.closest(sel) : null; }catch(e){ return null; } }
   function init(){
     var panel = document.getElementById('crmo-galleries-admin');
     if (!panel) return;
@@ -25891,11 +25893,11 @@ if (document.readyState === 'loading'){
       });
     });
     document.addEventListener('click', function(ev){
-      var inBrands = ev.target && (ev.target.closest ? ev.target.closest('#brands') : null);
+      var inBrands = ev.target && (typeof ev.target.closest === 'function' ? ev.target.closest('#brands') : null);
       if(!inBrands) return;
-      var btn = ev.target.closest ? ev.target.closest('.brandcell-icon-edit') : null;
+      var btn = typeof ev.target.closest === 'function' ? ev.target.closest('.brandcell-icon-edit') : null;
       if(!btn) return;
-      var cell = btn.closest ? btn.closest('.brandcell') : null;
+      var cell = typeof btn.closest === 'function' ? btn.closest('.brandcell') : null;
       if(!cell) return;
       try{
         ev.preventDefault();
@@ -27621,7 +27623,7 @@ document.addEventListener('DOMContentLoaded', function(){
       var panel = document.getElementById(h);
       if(panel && panel.classList && panel.classList.contains('crmo-master-panel')){
         var sec = null;
-        try{ sec = panel.closest ? panel.closest('section[data-crmo-master]') : null; }catch(e){}
+        try{ sec = typeof panel.closest === 'function' ? panel.closest('section[data-crmo-master]') : null; }catch(e){}
         var masterId = sec && sec.id ? sec.id : '';
         if(masterId){
           try{
@@ -28447,7 +28449,7 @@ try{
     }catch(e){}
   }
   document.addEventListener('click', function(e){
-    var btn = e.target && (e.target.closest ? e.target.closest('#brands .brand-tile-edit-btn') : null);
+    var btn = e.target && (typeof e.target.closest === 'function' ? e.target.closest('#brands .brand-tile-edit-btn') : null);
     if(!btn) return;
     e.preventDefault();
     e.stopPropagation();
@@ -28670,6 +28672,37 @@ try{
     _sb = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY, {
       auth: { autoRefreshToken:true, persistSession:true, detectSessionInUrl:true }
     });
+    // If we arrived via magic-link without ?cloud=1, allow cloud for this run and then
+    // clean sensitive token params from the URL hash once a session is detected.
+    try{
+      setTimeout(async function(){
+        try{
+          const sessRes = await _sb.auth.getSession();
+          const session = sessRes && sessRes.data && sessRes.data.session;
+          if(!session) return;
+
+          const u = new URL(location.href);
+          if(u.searchParams.get('cloud') !== '1') u.searchParams.set('cloud','1');
+
+          const rawHash = String(location.hash||'');
+          if(/access_token=|refresh_token=|type=magiclink|token_type=|expires_in=|expires_at=|(^|[&#?])code=/i.test(rawHash)){
+            const raw = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash;
+            const isQueryHash = raw.startsWith('?');
+            const qs = isQueryHash ? raw.slice(1) : raw;
+            const params = new URLSearchParams(qs);
+            ['access_token','refresh_token','expires_at','expires_in','token_type','type','sb','code'].forEach(k=>params.delete(k));
+
+            const newHash = isQueryHash
+              ? (params.toString() ? '#?' + params.toString() : '#')
+              : (params.toString() ? '#' + params.toString() : '#');
+
+            history.replaceState({}, '', u.pathname + (u.search || '') + newHash);
+          }else{
+            history.replaceState({}, '', u.pathname + (u.search || '') + (location.hash||''));
+          }
+        }catch(e){}
+      }, 0);
+    }catch(e){}
     return _sb;
   }
   window.CRMO_getSbClient = getClient;
@@ -29256,8 +29289,7 @@ var ok = await isAdminAllowed();
       return Promise.reject(e);
     }
   };
-  async
-  function _isConfigured(){
+  async function _isConfigured(){
     try{
       return !!(window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY
         && String(window.CRMO_SUPABASE_URL).indexOf('PASTE_') !== 0
@@ -29763,7 +29795,7 @@ function boot(){
   document.addEventListener('click', function(e){
     var t = e.target;
     if (!t) return;
-    var btn = t.closest ? t.closest('.tile-like-btn') : null;
+    var btn = typeof t.closest === 'function' ? t.closest('.tile-like-btn') : null;
     if (!btn) return;
     e.preventDefault();
     e.stopPropagation();
@@ -31247,7 +31279,7 @@ function CRMO_clearLocalDataAndReload(){
   // Delegate hover updates
   document.addEventListener('mouseenter', function(e){
     const __t = e && e.target;
-    if(!(__t instanceof Element) || !__t.closest) return;
+    if(!(__t instanceof Element) || typeof __t.closest !== 'function') return;
     const tile = __t.closest('.tile, .crmo-tile, .grid-tile, [data-crmo-idx]');
     if(tile) refreshTileOverlay(tile);
   }, true);
@@ -31255,7 +31287,7 @@ function CRMO_clearLocalDataAndReload(){
   // Also refresh after any click that might change active thumbnail
   document.addEventListener('click', function(e){
     const __t = e && e.target;
-    if(!(__t instanceof Element) || !__t.closest) return;
+    if(!(__t instanceof Element) || typeof __t.closest !== 'function') return;
     const tile = __t.closest('.tile, .crmo-tile, .grid-tile, [data-crmo-idx]');
     if(tile) setTimeout(()=>refreshTileOverlay(tile), 0);
     setTimeout(enforceMultiCheckboxInTileEditor, 0);
@@ -31360,7 +31392,7 @@ function CRMO_clearLocalDataAndReload(){
         muts.forEach(function(mu){
           if(mu.type !== 'attributes') return;
           var el = mu.target;
-          var wrapper = el.closest ? el.closest('.tile-edit-wrapper') : null;
+          var wrapper = typeof el.closest === 'function' ? el.closest('.tile-edit-wrapper') : null;
           if(!wrapper && el.classList && el.classList.contains('tile-edit-wrapper')) wrapper = el;
           if(wrapper) window.CRMO_syncHoverFromMeta(wrapper);
         });
@@ -31379,15 +31411,15 @@ function CRMO_clearLocalDataAndReload(){
   function getWrapperFromAny(node){
     if(!node) return null;
     if(node.classList && node.classList.contains('tile-edit-wrapper')) return node;
-    return node.closest ? node.closest('.tile-edit-wrapper') : null;
+    return typeof node.closest === 'function' ? node.closest('.tile-edit-wrapper') : null;
   }
   function getGalleryKey(wrapper){
     if(!wrapper) return null;
     // Prefer nearest section with id (gallery sections)
-    var sec = wrapper.closest ? wrapper.closest('section[id]') : null;
+    var sec = typeof wrapper.closest === 'function' ? wrapper.closest('section[id]') : null;
     if(sec && sec.id) return sec.id;
     // Fallback: nearest ancestor with id that looks like gallery
-    var el = wrapper.closest ? wrapper.closest('[id]') : null;
+    var el = typeof wrapper.closest === 'function' ? wrapper.closest('[id]') : null;
     if(el && el.id && el.id !== 'crmo-admin-bar' && el.id !== 'tile-editor') return el.id;
     return null;
   }
@@ -31674,7 +31706,7 @@ function CRMO_clearLocalDataAndReload(){
 
   // Bind button after tile editor opens: use event delegation
   document.addEventListener('click', function(ev){
-    var btn = ev.target && ev.target.closest ? ev.target.closest('#te-clear') : null;
+    var btn = ev.target && typeof ev.target.closest === 'function' ? ev.target.closest('#te-clear') : null;
     if(!btn) return;
     try{
       var modal = document.getElementById('tileEditorModal') || document.querySelector('.tile-editor-modal') || document.body;
@@ -31724,10 +31756,10 @@ function CRMO_clearLocalDataAndReload(){
     var out = { gKey:'', idx:-1, section:null };
     try{
       if(!wrapper) return out;
-      var sec = wrapper.closest ? wrapper.closest('section[id]') : null;
+      var sec = typeof wrapper.closest === 'function' ? wrapper.closest('section[id]') : null;
       if(!sec){
         // fallback: nearest ancestor with id
-        sec = wrapper.closest ? wrapper.closest('[id]') : null;
+        sec = typeof wrapper.closest === 'function' ? wrapper.closest('[id]') : null;
       }
       if(!sec || !sec.id) return out;
 
@@ -32004,7 +32036,7 @@ function CRMO_clearLocalDataAndReload(){
 (function(){
   document.addEventListener('click', function(ev){
     try{
-      var btn = ev.target && ev.target.closest ? ev.target.closest('#te-clear') : null;
+      var btn = ev.target && typeof ev.target.closest === 'function' ? ev.target.closest('#te-clear') : null;
       if(btn){
         ev.preventDefault();
         ev.stopPropagation();
