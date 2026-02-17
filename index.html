@@ -80,7 +80,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1563";
+window.CRMO_BUILD_VERSION = "1564";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -453,6 +453,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
           '<button id="crmo-cloud-load" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #bbb;background:#f6f6f6;">טען מהשרת</button>' +
           '<button id="crmo-cloud-save" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #111;background:#111;color:#fff;">שמור לשרת</button>' +
           '<button id="crmo-cloud-reset-media" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #b00020;background:#fff;color:#b00020;">איפוס מדיה</button>' +
+          '<button id="crmo-cloud-fix-stands-folders" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #1565c0;background:#fff;color:#1565c0;">סטנדים: סידור תיקיות</button>' +
         '</div>' +
         '<div id="crmo-cloud-panel-msg" style="min-height:16px;"></div>' +
       '</div>';
@@ -614,7 +615,136 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
       }catch(e){
         setMsg(String((e && e.message) ? e.message : e), true);
       }
-    };
+    };// Fix stands subfolders: create stands/<child>/ and optionally migrate legacy stands_all... folders
+document.getElementById('crmo-cloud-fix-stands-folders').onclick = async function(){
+  try{
+    var ok = window.confirm('לסדר את תיקיות STANDS?\n\nזה ייצור תיקיות בתוך stands:\nall, carts, counter, floor, pos, shelf, special, stage\n\nואפשר (אופציונלי) להעביר קבצים מהתיקיות הישנות stands_all וכו\' אל stands/<child>.');
+    if(!ok) return;
+
+    var sb = await getSb();
+    var bucket = getBucket();
+    var base = 'galleries';
+    var master = 'stands';
+
+    var map = [
+      ['stands_all','all'],
+      ['stands_carts','carts'],
+      ['stands_counter','counter'],
+      ['stands_floor','floor'],
+      ['stands_pos','pos'],
+      ['stands_shelf','shelf'],
+      ['stands_special','special'],
+      ['stands_stage','stage']
+    ];
+
+    setMsg('מכין תיקיות stands/...', false);
+
+    async function ensureKeep(child){
+      var p = base + '/' + master + '/' + child + '/.keep';
+      try{
+        var blob = new Blob(['keep'], { type: 'text/plain' });
+        var r = await sb.storage.from(bucket).upload(p, blob, { upsert: false, contentType:'text/plain', cacheControl:'3600' });
+        if(r && r.error){
+          var msg = String(r.error.message || r.error);
+          // ignore "already exists" style errors
+          if(/exist|already|duplicate|409/i.test(msg)) return { ok:true, exists:true };
+          return { ok:false, error: msg };
+        }
+        return { ok:true, created:true };
+      }catch(e){
+        return { ok:false, error: String((e && e.message) ? e.message : e) };
+      }
+    }
+
+    var created=0, exists=0, failed=0;
+    for(var i=0;i<map.length;i++){
+      var child = map[i][1];
+      var res = await ensureKeep(child);
+      if(res && res.ok){
+        if(res.created) created++;
+        else exists++;
+      }else{
+        failed++;
+        console.warn('[CRMO] stands ensureKeep failed:', child, res && res.error);
+      }
+    }
+
+    var doMove = window.confirm('לנסות גם להעביר קבצים מהתיקיות הישנות (stands_all וכו\') אל stands/<child>?');
+    var moved=0, moveFailed=0, scanned=0;
+
+    async function listSafe(prefix){
+      try{
+        return await sb.storage.from(bucket).list(prefix, { limit: 1000 });
+      }catch(e){
+        return { data: null, error: e };
+      }
+    }
+
+    async function walkAndMove(fromPrefix, toPrefix, depth){
+      if(depth > 6) return;
+      var r = await listSafe(fromPrefix);
+      if(r && r.error){
+        console.warn('[CRMO] list error', fromPrefix, r.error);
+        return;
+      }
+      var items = (r && r.data) ? r.data : [];
+      for(var j=0;j<items.length;j++){
+        var it = items[j];
+        if(!it || !it.name) continue;
+        scanned++;
+        var isFolder = (!it.id && !it.metadata && !it.updated_at && !it.created_at);
+        // Some SDKs mark folders by null metadata; be defensive:
+        if(isFolder){
+          await walkAndMove(fromPrefix + '/' + it.name, toPrefix + '/' + it.name, depth+1);
+          continue;
+        }
+        var fromPath = fromPrefix + '/' + it.name;
+        var toPath = toPrefix + '/' + it.name;
+        try{
+          var mv = await sb.storage.from(bucket).move(fromPath, toPath);
+          if(mv && mv.error){
+            var em = String(mv.error.message || mv.error);
+            if(/exist|already|duplicate|409/i.test(em)){
+              // if already exists, try to remove source? we keep source as-is to be safe
+              continue;
+            }
+            moveFailed++;
+            console.warn('[CRMO] move failed', fromPath, '->', toPath, em);
+          }else{
+            moved++;
+          }
+        }catch(e){
+          moveFailed++;
+          console.warn('[CRMO] move exception', fromPath, '->', toPath, e);
+        }
+      }
+    }
+
+    if(doMove){
+      setMsg('מעביר קבצים מתיקיות stands_* אל stands/... (אם קיימים)...', false);
+      for(var k=0;k<map.length;k++){
+        var legacy = map[k][0];
+        var child2 = map[k][1];
+        var from = base + '/' + legacy;
+        var to = base + '/' + master + '/' + child2;
+        await walkAndMove(from, to, 0);
+      }
+    }
+
+    var summary = 'STANDS סודר. תיקיות: נוצרו ' + created + ', כבר קיימות ' + exists + ', נכשלו ' + failed;
+    if(doMove){
+      summary += '. קבצים: נסרקו ' + scanned + ', הועברו ' + moved + ', נכשלו ' + moveFailed;
+      summary += '.';
+    }else{
+      summary += '.';
+    }
+    summary += '\n\nכדי לראות בעץ בסופאבייס: פתח את assets/galleries/stands ותראה בפנים את 8 התיקיות.';
+    setMsg(summary, false);
+  }catch(e){
+    setMsg(String((e && e.message) ? e.message : e), true);
+  }
+};
+
 
 
     // show panel only for admins
