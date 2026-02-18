@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1579 -->
+<!-- CRMO_v1580 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1579";
-window.CRMO_VERSION = "CRMO_v1579";
-window.CRMO_VERSION_NUMBER = 1579;
+window.CRMO_BUILD_VERSION = "1580";
+window.CRMO_VERSION = "CRMO_v1580";
+window.CRMO_VERSION_NUMBER = 1580;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -15139,8 +15139,8 @@ const items = ensureDataset(tempGrid);
   };
   const setUser = (u)=> localStorage.setItem(KEY_USER, JSON.stringify(u));
   const isAuthed = ()=> !!getUser();
-  const openAuth = ()=>{ authOverlay.style.display='block'; };
-  const closeAuth = ()=>{ authOverlay.style.display='none'; };
+  const openAuth = ()=>{ const ao = authOverlay || document.getElementById('crmo-auth-overlay'); if(!ao) return; ao.style.display='block'; };
+  const closeAuth = ()=>{ const ao = authOverlay || document.getElementById('crmo-auth-overlay'); if(!ao) return; ao.style.display='none'; };
   authClose?.addEventListener('click', closeAuth);
   authOverlay?.addEventListener('click', (e)=>{ if (e.target===authOverlay) closeAuth(); });
   tabVisitors?.addEventListener('click', ()=>{
@@ -15326,47 +15326,102 @@ const items = ensureDataset(tempGrid);
 </script><script>
 (function(){
   const KEY_USER='crmo:user';
-  const o=document.getElementById('crmo-auth-overlay');
-  const x=document.getElementById('crmo-auth-close');
-  const email=document.getElementById('crmo-auth-email');
-  const pass=document.getElementById('crmo-auth-pass');
-  const loginBtn=document.getElementById('crmo-auth-submit');
-  const forgot=document.getElementById('crmo-forgot-link');
-  const goReg=document.getElementById('crmo-go-register');
-  const goClient=document.getElementById('crmo-go-client');
-  function open(){ o.style.display='block'; }
-  function close(){ o.style.display='none'; }
-  x?.addEventListener('click', close);
-  o?.addEventListener('click', (e)=>{ if (e.target===o) close(); });
-  loginBtn?.addEventListener('click', ()=>{
-    if(!email.value||!pass.value){ alert('נא למלא אימייל וסיסמה'); return; }
-    const u={provider:'password', email:email.value, remember:document.getElementById('crmo-remember')?.checked||false};
-    localStorage.setItem(KEY_USER, JSON.stringify(u));
-    close();
-    document.dispatchEvent(new CustomEvent('crmo:user:login',{detail:u}));
-  });
-  forgot?.addEventListener('click',(e)=>{ e.preventDefault(); alert('נשלח קישור איפוס סיסמה למייל אם קיים במערכת.'); });
-  document.querySelectorAll('#crmo-auth .providers.icons button').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const p=btn.getAttribute('data-provider')||'social';
-      const u={provider:p, id:(Date.now()+'').slice(-8)};
-      localStorage.setItem(KEY_USER, JSON.stringify(u));
+  const get = (id)=>document.getElementById(id);
+
+  function open(){
+    const o = get('crmo-auth-overlay');
+    if(!o){
+      try{ console.warn('[CRMO] auth overlay missing (crmo-auth-overlay)'); }catch(e){}
+      return;
+    }
+    o.style.display='block';
+    bind();
+  }
+
+  function close(){
+    const o = get('crmo-auth-overlay');
+    if(o) o.style.display='none';
+  }
+
+  let bound = false;
+  function bind(){
+    if(bound) return;
+
+    const o = get('crmo-auth-overlay');
+    const x = get('crmo-auth-close');
+    const email = get('crmo-auth-email');
+    const pass = get('crmo-auth-pass');
+    const loginBtn = get('crmo-auth-submit');
+
+    if(!o || !x || !email || !pass || !loginBtn){
+      scheduleRetry();
+      return;
+    }
+
+    bound = true;
+
+    x.addEventListener('click', close);
+    o.addEventListener('click', (e)=>{ if (e.target===o) close(); });
+
+    loginBtn.addEventListener('click', ()=>{
+      if(!email.value || !pass.value){ alert('נא למלא אימייל וסיסמה'); return; }
+      const u = { provider:'password', email: email.value, remember: get('crmo-remember')?.checked || false };
+      try{ localStorage.setItem(KEY_USER, JSON.stringify(u)); }catch(e){}
       close();
-      document.dispatchEvent(new CustomEvent('crmo:user:login',{detail:u}));
+      try{ document.dispatchEvent(new CustomEvent('crmo:user:login',{detail:u})); }catch(e){}
     });
-  });
-  (function attachHeaderOpener(){
-    const cands=[...document.querySelectorAll('header a, header button, nav a, nav button')];
+
+    const forgot = get('crmo-forgot-link');
+    forgot?.addEventListener('click',(e)=>{ e.preventDefault(); alert('נשלח קישור איפוס סיסמה למייל אם קיים במערכת.'); });
+
+    document.querySelectorAll('#crmo-auth .providers.icons button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const p = btn.getAttribute('data-provider') || 'social';
+        const u = { provider:p, id:(Date.now()+'').slice(-8) };
+        try{ localStorage.setItem(KEY_USER, JSON.stringify(u)); }catch(e){}
+        close();
+        try{ document.dispatchEvent(new CustomEvent('crmo:user:login',{detail:u})); }catch(e){}
+      });
+    });
+  }
+
+  let retryN = 0;
+  let retryTimer = null;
+  function scheduleRetry(){
+    if(retryTimer) return;
+    if(retryN > 25) return;
+    retryTimer = setTimeout(()=>{
+      retryTimer = null;
+      retryN++;
+      bind();
+    }, 80);
+  }
+
+  function markHeaderButtons(){
+    const cands = Array.from(document.querySelectorAll('header a, header button, nav a, nav button'));
     cands.forEach(el=>{
-      const t=(el.textContent||'').trim();
-      if(t.includes('כניסה')||t.includes('כניסת')) el.setAttribute('data-auth-open','');
+      const t = (el.textContent || '').trim();
+      if(t.includes('כניסה') || t.includes('כניסת')) el.setAttribute('data-auth-open','');
     });
-  })();
-  document.querySelectorAll('[data-auth-open]').forEach(el=>{
-    el.addEventListener('click',(e)=>{ e.preventDefault(); open(); });
-  });
-  const qs=new URLSearchParams(location.search);
-  if(qs.get('login')==='1' || location.hash==='#login'){ open(); }
+  }
+
+  function attach(){
+    markHeaderButtons();
+    bind();
+    document.querySelectorAll('[data-auth-open]').forEach(el=>{
+      el.addEventListener('click', (e)=>{ e.preventDefault(); open(); });
+    });
+    const qs = new URLSearchParams(location.search);
+    if(qs.get('login') === '1' || location.hash === '#login'){ open(); }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', attach);
+  } else {
+    attach();
+  }
+
+  try{ window.CRMO_openUserAuth = open; }catch(e){}
 })();
 </script>
 <style id="CRMO_v396_inline_login">
@@ -28802,25 +28857,17 @@ try{
   window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK = false;
 
 <script>
-/* CRMO v1547b: usability offline guard (hosted=cloud by default) */
+/* CRMO v1547: usability offline guard (prevents auto cloud pull) */
 (function(){
   try{
-    var sp = new URLSearchParams(location.search||'');
-    var host = String(location.hostname||'').toLowerCase();
-    var isLocal = (location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1');
-    // Hosted pages should be ONLINE by default. Local files stay OFFLINE unless ?cloud=1.
-    var wantCloud = /(?:\?|&)cloud=1(?:&|$)/.test(location.search);
-    var forceOffline = (sp.get('offline') === '1' || String(sp.get('offline')||'').toLowerCase() === 'true');
-    var allowCloud = (!isLocal) || wantCloud;
-    if (forceOffline) allowCloud = false;
-
+    // Default: offline usability. To allow cloud, open with ?cloud=1
+    var allowCloud = /(?:\?|&)cloud=1(?:&|$)/.test(location.search);
     if(!allowCloud){
       sessionStorage.setItem('CRMO_FORCE_OFFLINE','1');
-      sessionStorage.setItem('crmo_remote_pulled','1'); // blocks auto pull
+      sessionStorage.setItem('crmo_remote_pulled','1'); // blocks auto pull in v1547 logic
       window.CRMO_FORCE_OFFLINE = true;
     }else{
       sessionStorage.removeItem('CRMO_FORCE_OFFLINE');
-      sessionStorage.removeItem('crmo_remote_pulled');
       window.CRMO_FORCE_OFFLINE = false;
     }
   }catch(e){}
