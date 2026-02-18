@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1571 -->
+<!-- CRMO_v1572 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,8 +80,8 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1571";
-window.CRMO_VERSION = "CRMO_v1571";
+window.CRMO_BUILD_VERSION = "1572";
+window.CRMO_VERSION = "CRMO_v1572";
 window.CRMO_VERSION_NUMBER = 1571;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
@@ -18522,7 +18522,7 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
         }
       }
     }
-    async function attemptLogin(){
+    async async function attemptLogin(){
       var email = normEmail(authEmail.value);
       var pass  = (authPass.value || '').trim();
       if(!email || !pass){
@@ -18545,8 +18545,37 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
       } else if(role === 'admin'){
         var admins = getAdmins();
         var item = admins.find(function(a){ return normEmail(a.email) === email; });
-        if(!item) ok = false;
-        else {
+        if(!item){
+          // Fallback: allow Supabase-auth admin if email is allowlisted in CRMO_SUPABASE_ADMIN_EMAILS
+          var allow = false;
+          try{
+            var list = window.CRMO_SUPABASE_ADMIN_EMAILS;
+            if(Array.isArray(list) && list.length){
+              allow = list.map(normEmail).indexOf(email) >= 0;
+            } else {
+              // One-time bootstrap (safer than allowing everyone): add ?bootstrap=1 to the URL for first admin login
+              try{
+                var sp = new URLSearchParams(location.search || '');
+                allow = (sp.get('bootstrap') === '1' || sp.get('bootstrap_admin') === '1' || sp.get('bootstrapAdmin') === '1');
+              }catch(e){}
+            }
+          }catch(e){}
+          if(allow && typeof window.CRMO_getSB === 'function'){
+            try{
+              var sb = await window.CRMO_getSB();
+              if(sb && sb.auth && typeof sb.auth.signInWithPassword === 'function'){
+                var res = await sb.auth.signInWithPassword({ email: email, password: pass });
+                ok = !(res && res.error);
+              }else{
+                ok = false;
+              }
+            }catch(e){
+              ok = false;
+            }
+          }else{
+            ok = false;
+          }
+        } else {
           if(item.suspended) ok = false;
           else {
             var expOk = true;
