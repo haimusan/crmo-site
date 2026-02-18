@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1580 -->
+<!-- CRMO_v1581 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1580";
-window.CRMO_VERSION = "CRMO_v1580";
-window.CRMO_VERSION_NUMBER = 1580;
+window.CRMO_BUILD_VERSION = "1581";
+window.CRMO_VERSION = "CRMO_v1581";
+window.CRMO_VERSION_NUMBER = 1581;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -15331,7 +15331,13 @@ const items = ensureDataset(tempGrid);
   function open(){
     const o = get('crmo-auth-overlay');
     if(!o){
-      try{ console.warn('[CRMO] auth overlay missing (crmo-auth-overlay)'); }catch(e){}
+      try{ console.warn('[CRMO] auth overlay missing (crmo-auth-overlay) - falling back to modern auth modal'); }catch(e){}
+      // Fallback: open the modern auth UI so the button works on hosted deployments too.
+      try{
+        if (typeof window.CRMO_openCustomerAuthAuto === 'function') { window.CRMO_openCustomerAuthAuto('login'); return; }
+        if (typeof window.CRMO_openAuthAuto === 'function') { window.CRMO_openAuthAuto(); return; }
+        if (typeof window.CRMO_openAuth === 'function') { window.CRMO_openAuth('admin'); return; }
+      }catch(e){}
       return;
     }
     o.style.display='block';
