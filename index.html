@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1574 -->
+<!-- CRMO_v1577 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1575";
-window.CRMO_VERSION = "CRMO_v1575";
-window.CRMO_VERSION_NUMBER = 1575;
+window.CRMO_BUILD_VERSION = "1577";
+window.CRMO_VERSION = "CRMO_v1577";
+window.CRMO_VERSION_NUMBER = 1577;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -255,7 +255,6 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       // expose on <html>
       if (n) document.documentElement.setAttribute("data-crmo-build", n);
       if (tag) document.documentElement.setAttribute("data-crmo-version", tag);
-      try{ var mv=document.querySelector('meta[name="crmo-version"]'); if(mv) mv.setAttribute("content", tag||""); var mb=document.querySelector('meta[name="crmo-build"]'); if(mb) mb.setAttribute("content", n||""); }catch(e){}
     }catch(e){}
   }
   if (document.readyState === "loading") {
@@ -1151,9 +1150,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1575</title>
-<meta name="crmo-version" content="CRMO_v1575">
-<meta name="crmo-build" content="1575">
+<title>CRMO_v1456</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -15142,14 +15139,8 @@ const items = ensureDataset(tempGrid);
   };
   const setUser = (u)=> localStorage.setItem(KEY_USER, JSON.stringify(u));
   const isAuthed = ()=> !!getUser();
-  const openAuth = ()=>{
-    // Legacy overlay is optional; if missing, fall back to the newer customer auth modal.
-    if(authOverlay){ authOverlay.style.display='block'; return; }
-    try{
-      if(window.CRMO_openCustomerAuthAuto){ window.CRMO_openCustomerAuthAuto('login'); return; }
-    }catch(e){}
-  };
-  const closeAuth = ()=>{ if(authOverlay){ authOverlay.style.display='none'; } };
+  const openAuth = ()=>{ try{ if(authOverlay){ authOverlay.style.display='block'; return; } }catch(e){} try{ if(window.CRMO_openCustomerAuthAuto) window.CRMO_openCustomerAuthAuto('login'); }catch(e){} };
+  const closeAuth = ()=>{ try{ if(authOverlay){ authOverlay.style.display='none'; } }catch(e){} };
   authClose?.addEventListener('click', closeAuth);
   authOverlay?.addEventListener('click', (e)=>{ if (e.target===authOverlay) closeAuth(); });
   tabVisitors?.addEventListener('click', ()=>{
@@ -15332,7 +15323,10 @@ const items = ensureDataset(tempGrid);
     try{ applyAll(); }catch(e){}
   });
 })();
-</script><style id="CRMO_v396_inline_login">
+</script><script>
+/* CRMO_v1577: removed legacy customer auth overlay bootstrap (was causing null-style errors). */
+</script>
+<style id="CRMO_v396_inline_login">
 #login-section .header{padding:18px 0;border-bottom:1px solid #eee}
 #login-section .head-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
 #login-section .title-wrap{max-width:max(560px,48vw);margin-inline:auto 0}
@@ -18485,7 +18479,7 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
         }
       }
     }
-    async async function attemptLogin(){
+    async function attemptLogin(){
       var email = normEmail(authEmail.value);
       var pass  = (authPass.value || '').trim();
       if(!email || !pass){
@@ -18508,37 +18502,8 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
       } else if(role === 'admin'){
         var admins = getAdmins();
         var item = admins.find(function(a){ return normEmail(a.email) === email; });
-        if(!item){
-          // Fallback: allow Supabase-auth admin if email is allowlisted in CRMO_SUPABASE_ADMIN_EMAILS
-          var allow = false;
-          try{
-            var list = window.CRMO_SUPABASE_ADMIN_EMAILS;
-            if(Array.isArray(list) && list.length){
-              allow = list.map(normEmail).indexOf(email) >= 0;
-            } else {
-              // One-time bootstrap (safer than allowing everyone): add ?bootstrap=1 to the URL for first admin login
-              try{
-                var sp = new URLSearchParams(location.search || '');
-                allow = (sp.get('bootstrap') === '1' || sp.get('bootstrap_admin') === '1' || sp.get('bootstrapAdmin') === '1');
-              }catch(e){}
-            }
-          }catch(e){}
-          if(allow && typeof window.CRMO_getSB === 'function'){
-            try{
-              var sb = await window.CRMO_getSB();
-              if(sb && sb.auth && typeof sb.auth.signInWithPassword === 'function'){
-                var res = await sb.auth.signInWithPassword({ email: email, password: pass });
-                ok = !(res && res.error);
-              }else{
-                ok = false;
-              }
-            }catch(e){
-              ok = false;
-            }
-          }else{
-            ok = false;
-          }
-        } else {
+        if(!item) ok = false;
+        else {
           if(item.suspended) ok = false;
           else {
             var expOk = true;
@@ -18973,6 +18938,19 @@ if(sess0 && (sess0.role === 'admin' || sess0.role === 'master' || sess0.role ===
     window.CRMO_AUTH = {
       masterEmail: MASTER_EMAIL,
       getSession: getSession,
+      setRole: function(role){
+        try{
+          role = String(role||'guest');
+          if(role === 'master' || role === 'admin' || role === 'ux'){
+            setSession({ role: role, issuedAt: nowTs(), expiresAt: nowTs() + (12*60*60*1000) });
+            applyRole(role);
+          }else{
+            clearSession();
+            applyRole(role === 'client' ? 'client' : (role === 'social' ? 'social' : (role === 'user' ? 'user' : 'guest')));
+          }
+          try{ if(window.CRMO_refreshPermissionsUI) window.CRMO_refreshPermissionsUI(); }catch(e){}
+        }catch(e){}
+      },
       clearSession: function(){ clearSession(); applyRole('guest'); },
       setDemoEnabled: setDemoEnabled,
       isDemoEnabled: isDemoEnabled
@@ -29963,6 +29941,29 @@ function boot(){
       var sb = await getSb();
       var out = await sb.auth.getSession();
       session = out && out.data && out.data.session ? out.data.session : null;
+      // Promote to internal-admin when Supabase session email is in CRMO_SUPABASE_ADMIN_EMAILS
+      try{
+        var em = session && session.user ? (session.user.email || (session.user.user_metadata && session.user.user_metadata.email)) : '';
+        em = String(em||'').toLowerCase().trim();
+        var list = (window.CRMO_SUPABASE_ADMIN_EMAILS || []);
+        var isAdmin = false;
+        if(em && Array.isArray(list)){
+          for(var i=0;i<list.length;i++){
+            var it = String(list[i]||'').toLowerCase().trim();
+            if(it && it === em){ isAdmin = true; break; }
+          }
+        }
+        if(isAdmin){
+          try{
+            // keep master if already set (local/dev)
+            if(!(document.body && document.body.classList && document.body.classList.contains('role-master'))){
+              if(window.CRMO_AUTH && typeof window.CRMO_AUTH.setRole === 'function'){
+                window.CRMO_AUTH.setRole('admin');
+              }
+            }
+          }catch(e){}
+        }
+      }catch(e){}
       setPublicRole(!!session);
       syncTileLikeHints();
       syncTileLikeStates();
