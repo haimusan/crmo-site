@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1577 -->
+<!-- CRMO_v1578 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,14 +80,48 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1577";
-window.CRMO_VERSION = "CRMO_v1577";
-window.CRMO_VERSION_NUMBER = 1577;
+window.CRMO_BUILD_VERSION = "1578";
+window.CRMO_VERSION = "CRMO_v1578";
+window.CRMO_VERSION_NUMBER = 1578;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
+
+<style id="CRMO_v1578_login_css_hotfix">
+/* ensure header login is clickable even with overlays */
+header #login-trigger{position:relative;z-index:100001;cursor:pointer;pointer-events:auto}
+</style>
+
+<script id="CRMO_v1578_login_click_hotfix">
+(function(){
+  try{
+    function tryOpen(mode){
+      try{
+        if(typeof window.CRMO_openCustomerAuthAuto === 'function'){ window.CRMO_openCustomerAuthAuto(mode||'login'); return true; }
+        if(typeof window.CRMO_openAuthAuto === 'function'){ window.CRMO_openAuthAuto(); return true; }
+        if(typeof window.CRMO_openAuth === 'function'){ window.CRMO_openAuth('admin'); return true; }
+      }catch(e){}
+      return false;
+    }
+    window.addEventListener('click', function(ev){
+      try{
+        var t = ev.target;
+        if(!t) return;
+        var el = (t.closest ? t.closest('#login-trigger,[data-login-trigger],[data-auth-open]') : null);
+        if(!el) return;
+        // Only the header "כניסת לקוחות" (avoid catching other "כניסה" buttons)
+        var txt = (el.textContent||'').trim();
+        if(txt && txt !== 'כניסת לקוחות') return;
+        ev.preventDefault();
+        tryOpen('login');
+      }catch(e){}
+    }, true);
+  }catch(e){}
+})();
+</script>
+
 
 <script id="crmo_asset_paths_v1557">
 /* v1556: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
@@ -15324,7 +15358,7 @@ const items = ensureDataset(tempGrid);
   });
 })();
 </script><script>
-/* CRMO_v1577: removed legacy customer auth overlay bootstrap (was causing null-style errors). */
+/* CRMO_v1578: removed legacy customer auth overlay bootstrap (was causing null-style errors). */
 </script>
 <style id="CRMO_v396_inline_login">
 #login-section .header{padding:18px 0;border-bottom:1px solid #eee}
