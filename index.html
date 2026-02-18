@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1582 -->
+<!-- CRMO_v1583 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1582";
-window.CRMO_VERSION = "CRMO_v1582";
-window.CRMO_VERSION_NUMBER = 1582;
+window.CRMO_BUILD_VERSION = "1583";
+window.CRMO_VERSION = "CRMO_v1583";
+window.CRMO_VERSION_NUMBER = 1583;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -8368,6 +8368,16 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   object-fit: contain !important;
 }
 </style>
+
+<style id="CRMO_v1583_auth_modal_ui_fix">
+/* Ensure auth modals are always clickable and centered above any overlays */
+.crmo-auth-modal{ z-index: 2000005 !important; }
+.crmo-auth-modal .crmo-auth-backdrop{ z-index: 2000005 !important; }
+.crmo-auth-modal .crmo-auth-panel{ z-index: 2000006 !important; pointer-events:auto !important; margin:0 auto !important; }
+#crmo-auth-modal-client{ align-items:center !important; justify-content:center !important; padding:0 !important; }
+#crmo-auth-modal-client .crmo-auth-panel.crmo-client-login{ margin:0 auto !important; }
+</style>
+
 </head>
 <body class="gallery-hover-ready role-guest">
 <div dir="rtl" id="crmo-role-toggle">
@@ -32299,8 +32309,8 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_auth_global_fallback_v1582">
-/* CRMO_v1582: global auth modal fallback
+<script id="crmo_auth_global_fallback_v1583">
+/* CRMO_v1583: global auth modal fallback
    Ensures login/register modals can open even if earlier setup didn't run. */
 (function(){
   function show(el){ if(!el) return false; el.hidden = false; el.style.display = 'block'; el.setAttribute('aria-hidden','false'); return true; }
@@ -32368,6 +32378,55 @@ function CRMO_clearLocalDataAndReload(){
         return;
       }
       t = t.parentElement;
+    }
+  }, true);
+})();
+</script>
+
+
+<script id="CRMO_v1583_auth_modal_behavior_fix">
+(function(){
+  function isOpen(modal){
+    try{ return !!modal && modal.hidden === false && modal.getAttribute('aria-hidden') === 'false'; }catch(e){ return false; }
+  }
+  function closeClient(){
+    try{
+      if (typeof window.CRMO_closeClientAuthModal === 'function') { window.CRMO_closeClientAuthModal(); return; }
+    }catch(e){}
+    var m = document.getElementById('crmo-auth-modal-client');
+    if(!m) return;
+    m.hidden = true;
+    m.setAttribute('aria-hidden','true');
+  }
+  // ESC to close (client + admin) reliably
+  document.addEventListener('keydown', function(ev){
+    if(ev.key !== 'Escape') return;
+    var mc = document.getElementById('crmo-auth-modal-client');
+    var ma = document.getElementById('crmo-auth-modal');
+    if(isOpen(mc) || isOpen(ma)){
+      closeClient();
+      try{
+        if (typeof window.CRMO_closeAuthModal === 'function') window.CRMO_closeAuthModal();
+      }catch(e){}
+      ev.preventDefault();
+    }
+  });
+  // Make sure close button/backdrop always close, even if other handlers failed
+  document.addEventListener('click', function(ev){
+    var t = ev.target;
+    if(!t) return;
+    if(t.closest){
+      var btn = t.closest('#crmo-auth-modal-client .crmo-auth-close, #crmo-auth-modal-client [data-close="1"]');
+      if(btn){
+        closeClient();
+        ev.preventDefault();
+        return;
+      }
+      var btnA = t.closest('#crmo-auth-modal .crmo-auth-close, #crmo-auth-modal [data-close="1"], #crmo-auth-cancel');
+      if(btnA){
+        try{ if (typeof window.CRMO_closeAuthModal === 'function') window.CRMO_closeAuthModal(); }catch(e){}
+        ev.preventDefault();
+      }
     }
   }, true);
 })();
