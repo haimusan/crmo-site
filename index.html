@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1563 -->
+<!-- CRMO_v1570 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,7 +80,12 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1569";
+window.CRMO_BUILD_VERSION = "1570";
+window.CRMO_VERSION = "CRMO_v1570";
+window.CRMO_VERSION_NUMBER = 1570;
+window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
+window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
+
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -208,9 +213,14 @@ window.CRMO_STUDIO_TITLE = "CRMO";
 (function(){
   try{
     var sp = new URLSearchParams(location.search||'');
-    // Default: OFFLINE unless explicitly requested with ?cloud=1
-    var cloud = sp.get('cloud');
-    window.CRMO_OFFLINE_MODE = !(cloud === '1' || cloud === 'true');
+    // Respect CRMO_ALLOW_CLOUD if it was already computed by the hard guard.
+    if (typeof window.CRMO_ALLOW_CLOUD === 'boolean'){
+      window.CRMO_OFFLINE_MODE = !window.CRMO_ALLOW_CLOUD;
+    }else{
+      // Fallback: OFFLINE unless explicitly requested with ?cloud=1
+      var cloud = sp.get('cloud');
+      window.CRMO_OFFLINE_MODE = !(cloud === '1' || cloud === 'true');
+    }
     window.CRMO_USABILITY_MODE = true;
     // Optional: force-disable cloud restore if a previous clear flagged it
     try{
@@ -229,14 +239,22 @@ window.CRMO_STUDIO_TITLE = "CRMO";
 (function(){
   function apply(){
     try{
-      var v = String(window.CRMO_BUILD_VERSION || "");
-      // write into header + footer
+      var n = String(window.CRMO_BUILD_VERSION || "");
+      var tag = String(window.CRMO_VERSION || (n ? ("CRMO_v" + n) : ""));
+      // write build NUMBER into header + footer
       var top = document.getElementById("crmo-top-version");
-      if (top) top.textContent = v;
+      if (top){
+        top.textContent = n;
+        if(tag) top.setAttribute('title', tag);
+      }
       var foot = document.getElementById("crmo-footer-version");
-      if (foot) foot.textContent = v;
-      // optional: also expose on <html>
-      if (v) document.documentElement.setAttribute("data-crmo-build", v);
+      if (foot){
+        foot.textContent = n;
+        if(tag) foot.setAttribute('title', tag);
+      }
+      // expose on <html>
+      if (n) document.documentElement.setAttribute("data-crmo-build", n);
+      if (tag) document.documentElement.setAttribute("data-crmo-version", tag);
     }catch(e){}
   }
   if (document.readyState === "loading") {
@@ -14110,8 +14128,9 @@ document.addEventListener('click', function(e){
 </div>
 </section>
 <script id="crmo-login-trigger-auth">
-document.addEventListener('DOMContentLoaded', function(){
-  var trigger = document.getElementById('login-trigger');
+(function(){
+  function __crmo_init(){
+var trigger = document.getElementById('login-trigger');
   if(!trigger) return;
   trigger.addEventListener('click', function(ev){
     ev.preventDefault();
@@ -14121,7 +14140,13 @@ document.addEventListener('DOMContentLoaded', function(){
       if(window.CRMO_openAuth){ window.CRMO_openAuth('admin'); return; }
     }catch(e){}
   });
-});
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', __crmo_init);
+  }else{
+    __crmo_init();
+  }
+})();
 </script>
 <script id="v163_ratio_script">
 (function(){
@@ -18150,8 +18175,9 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 <script id="crmo-role-toggle-js">
-document.addEventListener('DOMContentLoaded', function(){
-  try{
+(function(){
+  function __crmo_init(){
+try{
     var root = document.body;
     var box = document.getElementById('crmo-role-toggle');
     if(!box || !root) return;
@@ -18951,7 +18977,13 @@ if(sess0 && (sess0.role === 'admin' || sess0.role === 'master' || sess0.role ===
     window.CRMO_openAuthAuto = openAuthAuto;
     window.CRMO_openCustomerAuthAuto = openCustomerAuthAuto;
   }catch(e){}
-});
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', __crmo_init);
+  }else{
+    __crmo_init();
+  }
+})();
 </script>
 <script id="CRMO_v1263_capabilities_js">
 document.addEventListener('DOMContentLoaded', function(){
