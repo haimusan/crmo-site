@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1581 -->
+<!-- CRMO_v1582 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1581";
-window.CRMO_VERSION = "CRMO_v1581";
-window.CRMO_VERSION_NUMBER = 1581;
+window.CRMO_BUILD_VERSION = "1582";
+window.CRMO_VERSION = "CRMO_v1582";
+window.CRMO_VERSION_NUMBER = 1582;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -32294,6 +32294,81 @@ function CRMO_clearLocalDataAndReload(){
         return false;
       }
     }catch(e){}
+  }, true);
+})();
+</script>
+
+
+<script id="crmo_auth_global_fallback_v1582">
+/* CRMO_v1582: global auth modal fallback
+   Ensures login/register modals can open even if earlier setup didn't run. */
+(function(){
+  function show(el){ if(!el) return false; el.hidden = false; el.style.display = 'block'; el.setAttribute('aria-hidden','false'); return true; }
+  function hide(el){ if(!el) return; el.hidden = true; el.style.display = 'none'; el.setAttribute('aria-hidden','true'); }
+
+  function openClient(mode){
+    var modal = document.getElementById('crmo-auth-modal-client');
+    if(!modal) return false;
+
+    // reset common fields safely
+    var err = document.getElementById('crmo-auth-error-client');
+    if(err){ err.hidden = true; err.textContent = ''; }
+    var email = document.getElementById('crmo-auth-email-client');
+    if(email){ email.removeAttribute('readonly'); }
+    var pass = document.getElementById('crmo-auth-pass-client');
+    if(pass){ pass.value = ''; }
+
+    show(modal);
+
+    try{ if(window.CRMO_setClientAuthMode) window.CRMO_setClientAuthMode((mode === 'register') ? 'register' : 'login'); }catch(e){}
+    try{ var t=document.getElementById('crmo-auth-title-client'); if(t) t.textContent='כניסת לקוחות'; }catch(e){}
+    try{ var s=document.getElementById('crmo-auth-sub-client'); if(s) s.textContent='הכנס מייל וסיסמה'; }catch(e){}
+
+    // focus
+    try{ (email || pass || modal).focus && (email || pass || modal).focus(); }catch(e){}
+    return true;
+  }
+
+  function openAdmin(){
+    var modal = document.getElementById('crmo-auth-modal');
+    if(!modal) return false;
+
+    var err = document.getElementById('crmo-auth-error');
+    if(err){ err.hidden = true; err.textContent = ''; }
+    var pass = document.getElementById('crmo-auth-pass');
+    if(pass){ pass.value = ''; }
+
+    show(modal);
+    try{ var t=document.getElementById('crmo-auth-title'); if(t) t.textContent='כניסת מנהלים'; }catch(e){}
+    try{ var s=document.getElementById('crmo-auth-sub'); if(s) s.textContent='הכנס מייל וסיסמה'; }catch(e){}
+
+    try{ var email=document.getElementById('crmo-auth-email'); (email || pass || modal).focus && (email || pass || modal).focus(); }catch(e){}
+    return true;
+  }
+
+  // Export only if missing
+  if(typeof window.CRMO_openCustomerAuthAuto !== 'function'){
+    window.CRMO_openCustomerAuthAuto = openClient;
+  }
+  if(typeof window.CRMO_openAuthAuto !== 'function'){
+    window.CRMO_openAuthAuto = openAdmin;
+  }
+
+  // Strong click fallback for headers/buttons
+  window.addEventListener('click', function(ev){
+    var t = ev.target;
+    if(!t) return;
+    // walk up
+    for(var i=0;i<4 && t;i++){
+      if(t.matches && (t.matches('[data-auth-open]') || t.id === 'login-trigger')){
+        ev.preventDefault();
+        var ok = false;
+        try{ ok = openClient('login'); }catch(e){}
+        if(!ok){ try{ openAdmin(); }catch(e){} }
+        return;
+      }
+      t = t.parentElement;
+    }
   }, true);
 })();
 </script>
