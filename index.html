@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1578 -->
+<!-- CRMO_v1579 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,48 +80,14 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1578";
-window.CRMO_VERSION = "CRMO_v1578";
-window.CRMO_VERSION_NUMBER = 1578;
+window.CRMO_BUILD_VERSION = "1579";
+window.CRMO_VERSION = "CRMO_v1579";
+window.CRMO_VERSION_NUMBER = 1579;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
-
-<style id="CRMO_v1578_login_css_hotfix">
-/* ensure header login is clickable even with overlays */
-header #login-trigger{position:relative;z-index:100001;cursor:pointer;pointer-events:auto}
-</style>
-
-<script id="CRMO_v1578_login_click_hotfix">
-(function(){
-  try{
-    function tryOpen(mode){
-      try{
-        if(typeof window.CRMO_openCustomerAuthAuto === 'function'){ window.CRMO_openCustomerAuthAuto(mode||'login'); return true; }
-        if(typeof window.CRMO_openAuthAuto === 'function'){ window.CRMO_openAuthAuto(); return true; }
-        if(typeof window.CRMO_openAuth === 'function'){ window.CRMO_openAuth('admin'); return true; }
-      }catch(e){}
-      return false;
-    }
-    window.addEventListener('click', function(ev){
-      try{
-        var t = ev.target;
-        if(!t) return;
-        var el = (t.closest ? t.closest('#login-trigger,[data-login-trigger],[data-auth-open]') : null);
-        if(!el) return;
-        // Only the header "כניסת לקוחות" (avoid catching other "כניסה" buttons)
-        var txt = (el.textContent||'').trim();
-        if(txt && txt !== 'כניסת לקוחות') return;
-        ev.preventDefault();
-        tryOpen('login');
-      }catch(e){}
-    }, true);
-  }catch(e){}
-})();
-</script>
-
 
 <script id="crmo_asset_paths_v1557">
 /* v1556: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
@@ -15173,8 +15139,8 @@ const items = ensureDataset(tempGrid);
   };
   const setUser = (u)=> localStorage.setItem(KEY_USER, JSON.stringify(u));
   const isAuthed = ()=> !!getUser();
-  const openAuth = ()=>{ try{ if(authOverlay){ authOverlay.style.display='block'; return; } }catch(e){} try{ if(window.CRMO_openCustomerAuthAuto) window.CRMO_openCustomerAuthAuto('login'); }catch(e){} };
-  const closeAuth = ()=>{ try{ if(authOverlay){ authOverlay.style.display='none'; } }catch(e){} };
+  const openAuth = ()=>{ authOverlay.style.display='block'; };
+  const closeAuth = ()=>{ authOverlay.style.display='none'; };
   authClose?.addEventListener('click', closeAuth);
   authOverlay?.addEventListener('click', (e)=>{ if (e.target===authOverlay) closeAuth(); });
   tabVisitors?.addEventListener('click', ()=>{
@@ -15358,7 +15324,50 @@ const items = ensureDataset(tempGrid);
   });
 })();
 </script><script>
-/* CRMO_v1578: removed legacy customer auth overlay bootstrap (was causing null-style errors). */
+(function(){
+  const KEY_USER='crmo:user';
+  const o=document.getElementById('crmo-auth-overlay');
+  const x=document.getElementById('crmo-auth-close');
+  const email=document.getElementById('crmo-auth-email');
+  const pass=document.getElementById('crmo-auth-pass');
+  const loginBtn=document.getElementById('crmo-auth-submit');
+  const forgot=document.getElementById('crmo-forgot-link');
+  const goReg=document.getElementById('crmo-go-register');
+  const goClient=document.getElementById('crmo-go-client');
+  function open(){ o.style.display='block'; }
+  function close(){ o.style.display='none'; }
+  x?.addEventListener('click', close);
+  o?.addEventListener('click', (e)=>{ if (e.target===o) close(); });
+  loginBtn?.addEventListener('click', ()=>{
+    if(!email.value||!pass.value){ alert('נא למלא אימייל וסיסמה'); return; }
+    const u={provider:'password', email:email.value, remember:document.getElementById('crmo-remember')?.checked||false};
+    localStorage.setItem(KEY_USER, JSON.stringify(u));
+    close();
+    document.dispatchEvent(new CustomEvent('crmo:user:login',{detail:u}));
+  });
+  forgot?.addEventListener('click',(e)=>{ e.preventDefault(); alert('נשלח קישור איפוס סיסמה למייל אם קיים במערכת.'); });
+  document.querySelectorAll('#crmo-auth .providers.icons button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p=btn.getAttribute('data-provider')||'social';
+      const u={provider:p, id:(Date.now()+'').slice(-8)};
+      localStorage.setItem(KEY_USER, JSON.stringify(u));
+      close();
+      document.dispatchEvent(new CustomEvent('crmo:user:login',{detail:u}));
+    });
+  });
+  (function attachHeaderOpener(){
+    const cands=[...document.querySelectorAll('header a, header button, nav a, nav button')];
+    cands.forEach(el=>{
+      const t=(el.textContent||'').trim();
+      if(t.includes('כניסה')||t.includes('כניסת')) el.setAttribute('data-auth-open','');
+    });
+  })();
+  document.querySelectorAll('[data-auth-open]').forEach(el=>{
+    el.addEventListener('click',(e)=>{ e.preventDefault(); open(); });
+  });
+  const qs=new URLSearchParams(location.search);
+  if(qs.get('login')==='1' || location.hash==='#login'){ open(); }
+})();
 </script>
 <style id="CRMO_v396_inline_login">
 #login-section .header{padding:18px 0;border-bottom:1px solid #eee}
@@ -18972,19 +18981,6 @@ if(sess0 && (sess0.role === 'admin' || sess0.role === 'master' || sess0.role ===
     window.CRMO_AUTH = {
       masterEmail: MASTER_EMAIL,
       getSession: getSession,
-      setRole: function(role){
-        try{
-          role = String(role||'guest');
-          if(role === 'master' || role === 'admin' || role === 'ux'){
-            setSession({ role: role, issuedAt: nowTs(), expiresAt: nowTs() + (12*60*60*1000) });
-            applyRole(role);
-          }else{
-            clearSession();
-            applyRole(role === 'client' ? 'client' : (role === 'social' ? 'social' : (role === 'user' ? 'user' : 'guest')));
-          }
-          try{ if(window.CRMO_refreshPermissionsUI) window.CRMO_refreshPermissionsUI(); }catch(e){}
-        }catch(e){}
-      },
       clearSession: function(){ clearSession(); applyRole('guest'); },
       setDemoEnabled: setDemoEnabled,
       isDemoEnabled: isDemoEnabled
@@ -28806,17 +28802,25 @@ try{
   window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK = false;
 
 <script>
-/* CRMO v1547: usability offline guard (prevents auto cloud pull) */
+/* CRMO v1547b: usability offline guard (hosted=cloud by default) */
 (function(){
   try{
-    // Default: offline usability. To allow cloud, open with ?cloud=1
-    var allowCloud = /(?:\?|&)cloud=1(?:&|$)/.test(location.search);
+    var sp = new URLSearchParams(location.search||'');
+    var host = String(location.hostname||'').toLowerCase();
+    var isLocal = (location.protocol === 'file:' || host === 'localhost' || host === '127.0.0.1');
+    // Hosted pages should be ONLINE by default. Local files stay OFFLINE unless ?cloud=1.
+    var wantCloud = /(?:\?|&)cloud=1(?:&|$)/.test(location.search);
+    var forceOffline = (sp.get('offline') === '1' || String(sp.get('offline')||'').toLowerCase() === 'true');
+    var allowCloud = (!isLocal) || wantCloud;
+    if (forceOffline) allowCloud = false;
+
     if(!allowCloud){
       sessionStorage.setItem('CRMO_FORCE_OFFLINE','1');
-      sessionStorage.setItem('crmo_remote_pulled','1'); // blocks auto pull in v1547 logic
+      sessionStorage.setItem('crmo_remote_pulled','1'); // blocks auto pull
       window.CRMO_FORCE_OFFLINE = true;
     }else{
       sessionStorage.removeItem('CRMO_FORCE_OFFLINE');
+      sessionStorage.removeItem('crmo_remote_pulled');
       window.CRMO_FORCE_OFFLINE = false;
     }
   }catch(e){}
@@ -29975,29 +29979,6 @@ function boot(){
       var sb = await getSb();
       var out = await sb.auth.getSession();
       session = out && out.data && out.data.session ? out.data.session : null;
-      // Promote to internal-admin when Supabase session email is in CRMO_SUPABASE_ADMIN_EMAILS
-      try{
-        var em = session && session.user ? (session.user.email || (session.user.user_metadata && session.user.user_metadata.email)) : '';
-        em = String(em||'').toLowerCase().trim();
-        var list = (window.CRMO_SUPABASE_ADMIN_EMAILS || []);
-        var isAdmin = false;
-        if(em && Array.isArray(list)){
-          for(var i=0;i<list.length;i++){
-            var it = String(list[i]||'').toLowerCase().trim();
-            if(it && it === em){ isAdmin = true; break; }
-          }
-        }
-        if(isAdmin){
-          try{
-            // keep master if already set (local/dev)
-            if(!(document.body && document.body.classList && document.body.classList.contains('role-master'))){
-              if(window.CRMO_AUTH && typeof window.CRMO_AUTH.setRole === 'function'){
-                window.CRMO_AUTH.setRole('admin');
-              }
-            }
-          }catch(e){}
-        }
-      }catch(e){}
       setPublicRole(!!session);
       syncTileLikeHints();
       syncTileLikeStates();
