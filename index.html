@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1570 -->
+<!-- CRMO_v1571 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1570";
-window.CRMO_VERSION = "CRMO_v1570";
-window.CRMO_VERSION_NUMBER = 1570;
+window.CRMO_BUILD_VERSION = "1571";
+window.CRMO_VERSION = "CRMO_v1571";
+window.CRMO_VERSION_NUMBER = 1571;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -14129,23 +14129,35 @@ document.addEventListener('click', function(e){
 </section>
 <script id="crmo-login-trigger-auth">
 (function(){
-  function __crmo_init(){
-var trigger = document.getElementById('login-trigger');
-  if(!trigger) return;
-  trigger.addEventListener('click', function(ev){
-    ev.preventDefault();
+  function openLogin(){
     try{
-      if(window.CRMO_openCustomerAuthAuto){ window.CRMO_openCustomerAuthAuto(); return; }
-      if(window.CRMO_openAuthAuto){ window.CRMO_openAuthAuto(); return; }
-      if(window.CRMO_openAuth){ window.CRMO_openAuth('admin'); return; }
+      if (typeof window.CRMO_openCustomerAuthAuto === 'function') { window.CRMO_openCustomerAuthAuto('login'); return; }
+      if (typeof window.CRMO_openAuthAuto === 'function') { window.CRMO_openAuthAuto(); return; }
+      if (typeof window.CRMO_openAuth === 'function') { window.CRMO_openAuth('admin'); return; }
     }catch(e){}
-  });
   }
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', __crmo_init);
-  }else{
-    __crmo_init();
+
+  function pickTarget(node){
+    if(!node || !node.closest) return null;
+    // Preferred explicit hooks
+    var el = node.closest('#login-trigger,[data-login-trigger],[data-auth-open]');
+    if(el) return el;
+
+    // Fallback: exact label in header/nav (avoid catching other “כניסה” buttons)
+    var cand = node.closest('a,button,span,div');
+    if(!cand) return null;
+    if(!cand.closest('header, nav')) return null;
+    var txt = (cand.textContent || '').trim();
+    if(txt === 'כניסת לקוחות') return cand;
+    return null;
   }
+
+  document.addEventListener('click', function(ev){
+    var t = pickTarget(ev.target);
+    if(!t) return;
+    ev.preventDefault();
+    openLogin();
+  }, true);
 })();
 </script>
 <script id="v163_ratio_script">
