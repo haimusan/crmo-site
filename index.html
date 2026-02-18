@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1572 -->
+<!-- CRMO_v1574 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1572";
-window.CRMO_VERSION = "CRMO_v1572";
-window.CRMO_VERSION_NUMBER = 1571;
+window.CRMO_BUILD_VERSION = "1575";
+window.CRMO_VERSION = "CRMO_v1575";
+window.CRMO_VERSION_NUMBER = 1575;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -255,6 +255,7 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       // expose on <html>
       if (n) document.documentElement.setAttribute("data-crmo-build", n);
       if (tag) document.documentElement.setAttribute("data-crmo-version", tag);
+      try{ var mv=document.querySelector('meta[name="crmo-version"]'); if(mv) mv.setAttribute("content", tag||""); var mb=document.querySelector('meta[name="crmo-build"]'); if(mb) mb.setAttribute("content", n||""); }catch(e){}
     }catch(e){}
   }
   if (document.readyState === "loading") {
@@ -1150,7 +1151,9 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1456</title>
+<title>CRMO_v1575</title>
+<meta name="crmo-version" content="CRMO_v1575">
+<meta name="crmo-build" content="1575">
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -15139,8 +15142,14 @@ const items = ensureDataset(tempGrid);
   };
   const setUser = (u)=> localStorage.setItem(KEY_USER, JSON.stringify(u));
   const isAuthed = ()=> !!getUser();
-  const openAuth = ()=>{ authOverlay.style.display='block'; };
-  const closeAuth = ()=>{ authOverlay.style.display='none'; };
+  const openAuth = ()=>{
+    // Legacy overlay is optional; if missing, fall back to the newer customer auth modal.
+    if(authOverlay){ authOverlay.style.display='block'; return; }
+    try{
+      if(window.CRMO_openCustomerAuthAuto){ window.CRMO_openCustomerAuthAuto('login'); return; }
+    }catch(e){}
+  };
+  const closeAuth = ()=>{ if(authOverlay){ authOverlay.style.display='none'; } };
   authClose?.addEventListener('click', closeAuth);
   authOverlay?.addEventListener('click', (e)=>{ if (e.target===authOverlay) closeAuth(); });
   tabVisitors?.addEventListener('click', ()=>{
@@ -15323,53 +15332,7 @@ const items = ensureDataset(tempGrid);
     try{ applyAll(); }catch(e){}
   });
 })();
-</script><script>
-(function(){
-  const KEY_USER='crmo:user';
-  const o=document.getElementById('crmo-auth-overlay');
-  const x=document.getElementById('crmo-auth-close');
-  const email=document.getElementById('crmo-auth-email');
-  const pass=document.getElementById('crmo-auth-pass');
-  const loginBtn=document.getElementById('crmo-auth-submit');
-  const forgot=document.getElementById('crmo-forgot-link');
-  const goReg=document.getElementById('crmo-go-register');
-  const goClient=document.getElementById('crmo-go-client');
-  function open(){ o.style.display='block'; }
-  function close(){ o.style.display='none'; }
-  x?.addEventListener('click', close);
-  o?.addEventListener('click', (e)=>{ if (e.target===o) close(); });
-  loginBtn?.addEventListener('click', ()=>{
-    if(!email.value||!pass.value){ alert('נא למלא אימייל וסיסמה'); return; }
-    const u={provider:'password', email:email.value, remember:document.getElementById('crmo-remember')?.checked||false};
-    localStorage.setItem(KEY_USER, JSON.stringify(u));
-    close();
-    document.dispatchEvent(new CustomEvent('crmo:user:login',{detail:u}));
-  });
-  forgot?.addEventListener('click',(e)=>{ e.preventDefault(); alert('נשלח קישור איפוס סיסמה למייל אם קיים במערכת.'); });
-  document.querySelectorAll('#crmo-auth .providers.icons button').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const p=btn.getAttribute('data-provider')||'social';
-      const u={provider:p, id:(Date.now()+'').slice(-8)};
-      localStorage.setItem(KEY_USER, JSON.stringify(u));
-      close();
-      document.dispatchEvent(new CustomEvent('crmo:user:login',{detail:u}));
-    });
-  });
-  (function attachHeaderOpener(){
-    const cands=[...document.querySelectorAll('header a, header button, nav a, nav button')];
-    cands.forEach(el=>{
-      const t=(el.textContent||'').trim();
-      if(t.includes('כניסה')||t.includes('כניסת')) el.setAttribute('data-auth-open','');
-    });
-  })();
-  document.querySelectorAll('[data-auth-open]').forEach(el=>{
-    el.addEventListener('click',(e)=>{ e.preventDefault(); open(); });
-  });
-  const qs=new URLSearchParams(location.search);
-  if(qs.get('login')==='1' || location.hash==='#login'){ open(); }
-})();
-</script>
-<style id="CRMO_v396_inline_login">
+</script><style id="CRMO_v396_inline_login">
 #login-section .header{padding:18px 0;border-bottom:1px solid #eee}
 #login-section .head-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
 #login-section .title-wrap{max-width:max(560px,48vw);margin-inline:auto 0}
