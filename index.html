@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1583 -->
+<!-- CRMO_v1584 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1583";
-window.CRMO_VERSION = "CRMO_v1583";
-window.CRMO_VERSION_NUMBER = 1583;
+window.CRMO_BUILD_VERSION = "1584";
+window.CRMO_VERSION = "CRMO_v1584";
+window.CRMO_VERSION_NUMBER = 1584;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -8369,7 +8369,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 }
 </style>
 
-<style id="CRMO_v1583_auth_modal_ui_fix">
+<style id="CRMO_v1584_auth_modal_ui_fix">
 /* Ensure auth modals are always clickable and centered above any overlays */
 .crmo-auth-modal{ z-index: 2000005 !important; }
 .crmo-auth-modal .crmo-auth-backdrop{ z-index: 2000005 !important; }
@@ -32309,8 +32309,8 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_auth_global_fallback_v1583">
-/* CRMO_v1583: global auth modal fallback
+<script id="crmo_auth_global_fallback_v1584">
+/* CRMO_v1584: global auth modal fallback
    Ensures login/register modals can open even if earlier setup didn't run. */
 (function(){
   function show(el){ if(!el) return false; el.hidden = false; el.style.display = 'block'; el.setAttribute('aria-hidden','false'); return true; }
@@ -32384,7 +32384,7 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="CRMO_v1583_auth_modal_behavior_fix">
+<script id="CRMO_v1584_auth_modal_behavior_fix">
 (function(){
   function isOpen(modal){
     try{ return !!modal && modal.hidden === false && modal.getAttribute('aria-hidden') === 'false'; }catch(e){ return false; }
@@ -32429,6 +32429,97 @@ function CRMO_clearLocalDataAndReload(){
       }
     }
   }, true);
+})();
+</script>
+
+
+<script>
+/* CRMO v1584: ensure client login/register toggle works even if earlier init didn't run */
+(function(){
+  function ensure(){
+    var modal = document.getElementById('crmo-auth-modal-client');
+    if(!modal) return false;
+    var panel = modal.querySelector('.crmo-auth-panel');
+    var btnLogin = document.getElementById('crmo-client-btn-login');
+    var btnRegister = document.getElementById('crmo-client-btn-register');
+    var linkToggle = document.getElementById('crmo-client-register');
+    var bottomText = document.getElementById('crmo-client-bottom-text');
+    var submitBtn = document.getElementById('crmo-auth-submit-client');
+    if(!panel) return false;
+
+    function setMode(mode){
+      mode = (mode === 'register') ? 'register' : 'login';
+      panel.classList.remove('mode-login','mode-register');
+      panel.classList.add(mode === 'register' ? 'mode-register' : 'mode-login');
+      if(btnLogin) btnLogin.classList.toggle('active', mode === 'login');
+      if(btnRegister) btnRegister.classList.toggle('active', mode === 'register');
+      if(submitBtn) submitBtn.textContent = (mode === 'register') ? 'הרשמה' : 'כניסה';
+      if(linkToggle && bottomText){
+        if(mode === 'register'){
+          bottomText.textContent = 'כבר נרשמת?';
+          linkToggle.textContent = 'כניסה';
+          linkToggle.setAttribute('data-mode','login');
+        }else{
+          bottomText.textContent = 'עוד לא נרשמת?';
+          linkToggle.textContent = 'הרשמה';
+          linkToggle.setAttribute('data-mode','register');
+        }
+      }
+      try{
+        // focus first relevant input
+        if(mode === 'register'){
+          var first = document.getElementById('crmo-auth-first-client') || document.getElementById('crmo-auth-email-client');
+          if(first) first.focus();
+        }else{
+          var email = document.getElementById('crmo-auth-email-client');
+          if(email) email.focus();
+        }
+      }catch(e){}
+      try{ window.CRMO_setClientAuthMode = setMode; }catch(e){}
+    }
+
+    if(btnLogin && !btnLogin.__crmoBound){
+      btnLogin.__crmoBound = true;
+      btnLogin.addEventListener('click', function(ev){ try{ev.preventDefault();}catch(e){} setMode('login'); });
+    }
+    if(btnRegister && !btnRegister.__crmoBound){
+      btnRegister.__crmoBound = true;
+      btnRegister.addEventListener('click', function(ev){ try{ev.preventDefault();}catch(e){} setMode('register'); });
+    }
+    if(linkToggle && !linkToggle.__crmoBound){
+      linkToggle.__crmoBound = true;
+      linkToggle.addEventListener('click', function(ev){
+        try{ ev.preventDefault(); }catch(e){}
+        var next = linkToggle.getAttribute('data-mode') || 'register';
+        setMode(next);
+      });
+    }
+
+    // default mode
+    if(!panel.classList.contains('mode-login') && !panel.classList.contains('mode-register')){
+      setMode('login');
+    }
+    return true;
+  }
+
+  // run now or after DOM ready
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ ensure(); });
+  } else {
+    ensure();
+  }
+
+  // also run whenever the modal is opened via our fallbacks
+  try{
+    var oldOpen = window.CRMO_openCustomerAuthAuto;
+    window.CRMO_openCustomerAuthAuto = function(mode){
+      try{ if(typeof oldOpen === 'function') oldOpen(mode); }catch(e){}
+      try{ ensure(); }catch(e){}
+      try{
+        if(typeof window.CRMO_setClientAuthMode === 'function') window.CRMO_setClientAuthMode(mode || 'login');
+      }catch(e){}
+    };
+  }catch(e){}
 })();
 </script>
 
