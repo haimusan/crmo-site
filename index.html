@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1596 -->
+<!-- CRMO_v1597 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -22,9 +22,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1596";
-window.CRMO_VERSION = 'CRMO_v1596';
-window.CRMO_VERSION_NUMBER = 1596;
+window.CRMO_BUILD_VERSION = "1597";
+window.CRMO_VERSION = 'CRMO_v1597';
+window.CRMO_VERSION_NUMBER = 1597;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1108,7 +1108,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1596</title>
+<title>CRMO_v1597</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -32662,56 +32662,110 @@ if (document.readyState === 'loading') {
 }
 
 async function runAuth() {
-    const email = document.getElementById('m-email').value;
-    const password = document.getElementById('m-pass').value;
+    const email = (document.getElementById('m-email')?.value || '').trim();
+    const password = document.getElementById('m-pass')?.value || '';
     const status = document.getElementById('m-status');
 
-    if(!email || !password) { status.innerText = "נא למלא את כל השדות"; return; }
-    status.style.color = "#666";
-    status.innerText = "מתחבר...";
+    const setStatus = (msg, color) => {
+        if (!status) return;
+        status.style.color = color || '#666';
+        status.innerText = msg;
+    };
+
+    if(!email || !password) { setStatus("נא למלא את כל השדות", "red"); return; }
+    setStatus("מתחבר...", "#666");
 
     try {
         // ודא מצב ענן גם בהרצה מקומית
         window.CRMO_ALLOW_CLOUD = true;
         window.CRMO_OFFLINE_MODE = false;
 
-        // גיבוי הגדרות למקרה שהמשתנים הגלובליים לא זמינים/נחתכו
+        // שימוש במפתחות מתוך window; fallback רק אם חסר (מונע "איבוד מפתח")
         const url = (window.CRMO_SUPABASE_URL && String(window.CRMO_SUPABASE_URL).trim()) || "https://rtodtmeqijhszdhelawy.supabase.co";
-        const key = (window.CRMO_SUPABASE_ANON_KEY && String(window.CRMO_SUPABASE_ANON_KEY).trim()) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
+        const key = (window.CRMO_SUPABASE_ANON_KEY && String(window.CRMO_SUPABASE_ANON_KEY).trim()) || "";
 
-        // ייצוא מפורש ל-window כדי שקוד אחר לא 'יאבד' אותם
-        window.CRMO_SUPABASE_URL = url;
-        window.CRMO_SUPABASE_ANON_KEY = key;
-
-        // קבל לקוח יציב (טוען supabase-js אם צריך)
-        let sb = null;
-        if (typeof window.CRMO_getSbClient === 'function') {
-            sb = await window.CRMO_getSbClient();
-        } else {
-            if (typeof supabase === 'undefined') {
-                status.style.color = "red";
-                status.innerText = "שגיאה: ספריית החיבור לא נטענה";
-                return;
-            }
-            sb = supabase.createClient(url, key);
+        if (typeof supabase === 'undefined') {
+            setStatus("שגיאה: ספריית Supabase לא נטענה", "red");
+            return;
+        }
+        if (!key) {
+            setStatus("שגיאה: מפתח Supabase חסר/ריק", "red");
+            return;
         }
 
-        const { error } = currentMode === 'login'
+        // יצירת לקוח אחד ויחיד כדי שה-session יישמר (persistSession)
+        if (!window.__CRMO_AUTH_SB || window.__CRMO_AUTH_SB.__crmo_url !== url) {
+            window.__CRMO_AUTH_SB = supabase.createClient(url, key, {
+                auth: {
+                    persistSession: true,
+                    autoRefreshToken: true,
+                    detectSessionInUrl: true,
+                    storage: window.localStorage
+                }
+            });
+            window.__CRMO_AUTH_SB.__crmo_url = url;
+
+            // מאזין לאירועי התחברות (מקל דיבוג)
+            if (!window.__CRMO_AUTH_LISTENER_ATTACHED) {
+                window.__CRMO_AUTH_LISTENER_ATTACHED = true;
+                window.__CRMO_AUTH_SB.auth.onAuthStateChange((event, session) => {
+                    window.__CRMO_LAST_AUTH = {
+                        event,
+                        hasSession: !!session,
+                        email: session?.user?.email || null,
+                        at: new Date().toISOString()
+                    };
+                });
+            }
+        }
+
+        const sb = window.__CRMO_AUTH_SB;
+
+        // ניסיון התחברות/הרשמה
+        const { data, error } = currentMode === 'login'
             ? await sb.auth.signInWithPassword({ email, password })
             : await sb.auth.signUp({ email, password });
 
         if (error) throw error;
 
-        status.style.color = "green";
+        // הרשמה: לעתים נדרש אישור במייל ואין session מיידי
         if (currentMode === 'signup') {
-            status.innerText = "נרשמת! בדוק אישור במייל שלך.";
-        } else {
-            status.innerText = "התחברת בהצלחה! טוען...";
-            setTimeout(() => location.reload(), 800);
+            setStatus("נרשמת! אם נדרש אישור במייל – אשר ואז התחבר.", "green");
+            return;
         }
+
+        // התחברות: ודא שיש session לפני רענון
+        const ses = await sb.auth.getSession();
+        const hasSession = !!ses?.data?.session;
+
+        if (!hasSession) {
+            // דיבוג קצר למשתמש
+            const last = window.__CRMO_LAST_AUTH?.event ? (" (" + window.__CRMO_LAST_AUTH.event + ")") : "";
+            setStatus("התחברות נכשלה: אין session נשמר" + last + ". פתח Network וחפש /auth/v1/token", "red");
+            return;
+        }
+
+        // הרשאות אדמין: אם יש רשימת אימיילים – בדיקה; אחרת משתמש ראשון נשמר ב-localStorage
+        const userEmail = ses.data.session.user?.email ? String(ses.data.session.user.email).trim().toLowerCase() : "";
+        const list = Array.isArray(window.CRMO_SUPABASE_ADMIN_EMAILS) ? window.CRMO_SUPABASE_ADMIN_EMAILS : [];
+
+        if (list.length) {
+            const isAdmin = list.map(x => String(x).trim().toLowerCase()).includes(userEmail);
+            if (!isAdmin) {
+                setStatus("התחברת, אבל האימייל לא מוגדר כאדמין.", "red");
+                return;
+            }
+        } else {
+            // fallback: הגדר אדמין בדפדפן הזה
+            localStorage.setItem('crmo:admin:email', userEmail);
+        }
+
+        setStatus("התחברת בהצלחה! מרענן...", "green");
+        setTimeout(() => location.reload(), 600);
+
     } catch (err) {
-        status.style.color = "red";
-        status.innerText = "שגיאה: " + (err.message || "לא ניתן להתחבר");
+        const msg = (err && (err.message || err.error_description)) ? (err.message || err.error_description) : "לא ניתן להתחבר";
+        setStatus("שגיאה: " + msg, "red");
     }
 }
 
