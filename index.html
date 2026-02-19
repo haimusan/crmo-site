@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1597 -->
+<!-- CRMO_v1598 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -22,9 +22,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1597";
-window.CRMO_VERSION = 'CRMO_v1597';
-window.CRMO_VERSION_NUMBER = 1597;
+window.CRMO_BUILD_VERSION = "1598";
+window.CRMO_VERSION = 'CRMO_v1598';
+window.CRMO_VERSION_NUMBER = 1598;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1108,7 +1108,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1597</title>
+<title>CRMO_v1598</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -32780,6 +32780,28 @@ window.addEventListener('keydown', function(e){
 
 // סגירה בלחיצה על הרקע
 document.getElementById('crmo-auth-overlay')?.addEventListener('click', closeCrmoAuth);
+
+// Bind UI events without relying on inline onclick attributes (CSP-safe)
+(function bindCrmoAuthUI(){
+    const $ = (id)=>document.getElementById(id);
+    const on = (el, ev, fn, opts)=>{ try{ el && el.addEventListener(ev, fn, opts); }catch(_){} };
+
+    // Tabs
+    on($('tl-btn'), 'click', ()=>setMode('login'));
+    on($('ts-btn'), 'click', ()=>setMode('signup'));
+
+    // Submit
+    const submit = $('m-btn');
+    on(submit, 'click', (e)=>{ const st=$('m-status'); if(st && (!st.innerText || st.innerText==='')){ st.style.color='#666'; st.innerText='בודק...'; } runAuth(); });
+    on(submit, 'touchend', (e)=>{ e.preventDefault(); runAuth(); }, {passive:false});
+
+    // Enter to submit
+    ['m-email','m-pass'].forEach(id=> on($(id), 'keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); runAuth(); } }));
+
+    // Close X (works even if inline onclick is blocked)
+    const closeX = document.querySelector('#crmo-auth-modal span') || document.querySelector('#crmo-auth-modal .crmo-close');
+    on(closeX, 'click', closeCrmoAuth);
+})();
 </script>
 
 </body>
