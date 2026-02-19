@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1592 -->
+<!-- CRMO_v1594 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1592";
-window.CRMO_VERSION = 'CRMO_v1592';
-window.CRMO_VERSION_NUMBER = 1592;
+window.CRMO_BUILD_VERSION = "1594";
+window.CRMO_VERSION = 'CRMO_v1594';
+window.CRMO_VERSION_NUMBER = 1594;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1150,7 +1150,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1592</title>
+<title>CRMO_v1594</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -9987,7 +9987,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 </div>
 
 
-<!-- CRMO Auth modal replaced in v1592 (see end of body) -->
+<!-- CRMO Auth modal replaced in v1594 (see end of body) -->
 
 
 <!-- CRMO Customer auth modal (v1245) -->
@@ -32601,8 +32601,43 @@ function CRMO_clearLocalDataAndReload(){
 
 
 
-<div id="crmo-auth-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999998; backdrop-filter:blur(5px);"></div>
-<div id="crmo-auth-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:350px; background:white; padding:30px; border-radius:20px; z-index:9999999; direction:rtl; font-family:sans-serif; text-align:right; box-shadow:0 15px 50px rgba(0,0,0,0.5);">
+<style id="crmo-auth-force-top">
+/* CRMO Auth Override v1594
+   Goal: modal always above any legacy overlays, and CRMO_openAuth override happens AFTER deferred scripts.
+*/
+#crmo-auth-overlay{
+  position:fixed !important;
+  inset:0 !important;
+  background:rgba(0,0,0,0.85) !important;
+  display:none !important;
+  z-index:2147483646 !important;
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
+}
+#crmo-auth-modal{
+  position:fixed !important;
+  top:50% !important;
+  left:50% !important;
+  transform:translate(-50%, -50%) !important;
+  width:350px !important;
+  background:#fff !important;
+  padding:30px !important;
+  border-radius:20px !important;
+  z-index:2147483647 !important;
+  direction:rtl !important;
+  font-family:sans-serif !important;
+  text-align:right !important;
+  box-shadow:0 15px 50px rgba(0,0,0,0.5) !important;
+  display:none !important;
+  opacity:1 !important;
+  visibility:visible !important;
+}
+body.crmo-auth-open #crmo-auth-overlay{ display:block !important; }
+body.crmo-auth-open #crmo-auth-modal{ display:block !important; }
+</style>
+
+<div id="crmo-auth-overlay" aria-hidden="true"></div>
+<div id="crmo-auth-modal" role="dialog" aria-modal="true" aria-hidden="true">
     <span onclick="closeCrmoAuth()" style="position:absolute; top:15px; left:20px; cursor:pointer; font-size:24px; color:#aaa;">✕</span>
 
     <div style="display:flex; justify-content:center; gap:30px; margin-bottom:25px; border-bottom:1px solid #eee; padding-bottom:15px;">
@@ -32630,16 +32665,43 @@ function setMode(m) {
 }
 
 function closeCrmoAuth() {
-    document.getElementById('crmo-auth-overlay').style.display = 'none';
-    document.getElementById('crmo-auth-modal').style.display = 'none';
+    document.body.classList.remove('crmo-auth-open');
+    var ov = document.getElementById('crmo-auth-overlay');
+    var md = document.getElementById('crmo-auth-modal');
+    if(ov){ ov.setAttribute('aria-hidden','true'); }
+    if(md){ md.setAttribute('aria-hidden','true'); }
+    try{ window.CRMO_unlockScroll && window.CRMO_unlockScroll('auth'); }catch(e){}
 }
 
-// דריסה סופית של פונקציית הפתיחה
-window.CRMO_openAuth = function() {
-    document.getElementById('crmo-auth-overlay').style.display = 'block';
-    document.getElementById('crmo-auth-modal').style.display = 'block';
-    document.getElementById('m-email').focus();
-};
+function CRMO_openAuth_NOW() {
+    document.body.classList.add('crmo-auth-open');
+    var ov = document.getElementById('crmo-auth-overlay');
+    var md = document.getElementById('crmo-auth-modal');
+    if(ov){ ov.setAttribute('aria-hidden','false'); }
+    if(md){ md.setAttribute('aria-hidden','false'); }
+    try{ window.CRMO_lockScroll && window.CRMO_lockScroll('auth'); }catch(e){}
+    try{ document.getElementById('m-email').focus(); }catch(e){}
+    // Re-assert after any late scripts try to hide it
+    setTimeout(function(){
+        if(document.body.classList.contains('crmo-auth-open')){
+            document.body.classList.add('crmo-auth-open');
+            try{ document.getElementById('m-email').focus(); }catch(e){}
+        }
+    }, 0);
+}
+
+// התקנה מאוחרת כדי לדרוס גם סקריפטים עם defer שרצים אחרי סוף הדף
+function CRMO_installAuthOverride(){
+    window.CRMO_openAuth = function(){ CRMO_openAuth_NOW(); };
+    // Re-assert once more shortly after, just in case another script overwrote it
+    setTimeout(function(){ window.CRMO_openAuth = function(){ CRMO_openAuth_NOW(); }; }, 300);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', CRMO_installAuthOverride, { once:true });
+} else {
+    CRMO_installAuthOverride();
+}
 
 async function runAuth() {
     const email = document.getElementById('m-email').value;
@@ -32651,10 +32713,10 @@ async function runAuth() {
     status.innerText = "מתחבר ל-Supabase...";
 
     try {
-        // אתחול ישיר ומהיר
+        if (typeof supabase === 'undefined') throw new Error('Supabase SDK not loaded');
         const sb = supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
 
-        const { error } = currentMode === 'login' 
+        const { error } = currentMode === 'login'
             ? await sb.auth.signInWithPassword({ email, password })
             : await sb.auth.signUp({ email, password });
 
@@ -32673,10 +32735,18 @@ async function runAuth() {
     }
 }
 
-// סגירה ב-ESC
-document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeCrmoAuth(); });
-</script>
+// ESC: סגירה אחת בלבד (capture + stopImmediatePropagation) כדי למנוע 'עוד שתי לחיצות'
+window.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && document.body.classList.contains('crmo-auth-open')){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        closeCrmoAuth();
+    }
+}, true);
 
+// סגירה בלחיצה על הרקע
+document.getElementById('crmo-auth-overlay')?.addEventListener('click', closeCrmoAuth);
+</script>
 
 </body>
 </html>
