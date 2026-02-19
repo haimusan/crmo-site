@@ -29424,6 +29424,41 @@ async function refreshStatus(){
       sendBtn.__bound = true;
       sendBtn.addEventListener('click', async function(){
         try{
+          // Prevent accidental multiple clicks / rate-limit spam (Magic Link)
+          try{
+            var until = parseInt(sessionStorage.getItem('crmo:otp:until')||'0',10) || 0;
+            var now = Date.now();
+            if(until > now){
+              var sec = Math.ceil((until-now)/1000);
+              setMsg('<span style="color:#ffd60a;font-weight:700">נא להמתין</span> ' + sec + ' שניות ואז לנסות שוב.');
+              return;
+            }
+            // lock immediately for 60s to avoid double-clicks
+            sessionStorage.setItem('crmo:otp:until', String(now + 60*1000));
+            if(sendBtn){
+              sendBtn.disabled = true;
+              sendBtn.style.opacity = '0.65';
+              sendBtn.style.cursor = 'not-allowed';
+              var origText = sendBtn.__origText || sendBtn.innerText;
+              sendBtn.__origText = origText;
+              var tick = function(){
+                var u = parseInt(sessionStorage.getItem('crmo:otp:until')||'0',10) || 0;
+                var left = Math.max(0, Math.ceil((u-Date.now())/1000));
+                if(left<=0){
+                  sendBtn.disabled = false;
+                  sendBtn.style.opacity = '';
+                  sendBtn.style.cursor = '';
+                  sendBtn.innerText = origText;
+                  if(sendBtn.__tickTimer){ clearInterval(sendBtn.__tickTimer); sendBtn.__tickTimer=null; }
+                  return;
+                }
+                sendBtn.innerText = origText + ' (' + left + ')';
+              };
+              tick();
+              if(sendBtn.__tickTimer){ clearInterval(sendBtn.__tickTimer); }
+              sendBtn.__tickTimer = setInterval(tick, 500);
+            }
+          }catch(_e){}
           setMsg('שולח לינק…');
           var sb = await getClient();
           var email = (emailEl && emailEl.value) ? emailEl.value.trim() : '';
@@ -29433,11 +29468,70 @@ async function refreshStatus(){
           if(out && out.error) throw out.error;
           setMsg('שלחתי לינק למייל. פתח/י אותו מאותו מכשיר כדי להתחבר.');
           refreshStatus();
-        }catch(e){
+        catch(e){
+          try{
+            var msg = String(e && (e.message||e) || e);
+            var m = msg.match(/after\s+(\d+)\s+seconds/i);
+            if(m && m[1]){
+              var sec = parseInt(m[1],10) || 0;
+              if(sec>0){
+                sessionStorage.setItem('crmo:otp:until', String(Date.now() + sec*1000));
+              }
+            } else {
+              sessionStorage.removeItem('crmo:otp:until');
+            }
+          }catch(_e){}
+          // Re-render countdown state (if any)
+          try{
+            if(sendBtn && sendBtn.__origText){
+              var u = parseInt(sessionStorage.getItem('crmo:otp:until')||'0',10) || 0;
+              if(u > Date.now()){
+                sendBtn.disabled = true;
+                sendBtn.style.opacity = '0.65';
+                sendBtn.style.cursor = 'not-allowed';
+              } else {
+                sendBtn.disabled = false;
+                sendBtn.style.opacity = '';
+                sendBtn.style.cursor = '';
+                sendBtn.innerText = sendBtn.__origText;
+                if(sendBtn.__tickTimer){ clearInterval(sendBtn.__tickTimer); sendBtn.__tickTimer=null; }
+              }
+            }
+          }catch(_e2){}
           setMsg('<span style="color:#ff453a;font-weight:700">שגיאה:</span> ' + String(e && (e.message||e) || e));
         }
       });
     }
+    // Sync Magic Link cooldown UI (in case a previous click is still cooling down)
+    try{
+      if(sendBtn){
+        var until = parseInt(sessionStorage.getItem('crmo:otp:until')||'0',10) || 0;
+        var now = Date.now();
+        if(until > now){
+          sendBtn.disabled = true;
+          sendBtn.style.opacity = '0.65';
+          sendBtn.style.cursor = 'not-allowed';
+          var origText = sendBtn.__origText || sendBtn.innerText;
+          sendBtn.__origText = origText;
+          var tick = function(){
+            var u = parseInt(sessionStorage.getItem('crmo:otp:until')||'0',10) || 0;
+            var left = Math.max(0, Math.ceil((u-Date.now())/1000));
+            if(left<=0){
+              sendBtn.disabled = false;
+              sendBtn.style.opacity = '';
+              sendBtn.style.cursor = '';
+              sendBtn.innerText = origText;
+              if(sendBtn.__tickTimer){ clearInterval(sendBtn.__tickTimer); sendBtn.__tickTimer=null; }
+              return;
+            }
+            sendBtn.innerText = origText + ' (' + left + ')';
+          };
+          tick();
+          if(sendBtn.__tickTimer){ clearInterval(sendBtn.__tickTimer); }
+          sendBtn.__tickTimer = setInterval(tick, 500);
+        }
+      }
+    }catch(_e){}
     if(logoutBtn && !logoutBtn.__bound){
       logoutBtn.__bound = true;
       logoutBtn.addEventListener('click', async function(){
