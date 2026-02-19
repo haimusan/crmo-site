@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1610 -->
+<!-- CRMO_v1611 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -27,9 +27,9 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1610";
-window.CRMO_VERSION = 'CRMO_v1610';
-window.CRMO_VERSION_NUMBER = 1610;
+window.CRMO_BUILD_VERSION = "1611";
+window.CRMO_VERSION = 'CRMO_v1611';
+window.CRMO_VERSION_NUMBER = 1611;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -328,15 +328,176 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
   }
 
   function isAdminEmail(email){
-    try{
-      email = String(email||'').toLowerCase();
-      if(!email) return false;
+    // Role-based access control: ONLY owners see admin tools.
+    return window.CRMO_IS_OWNER === true;
+  }
 
-      // 1) Explicit list wins (if provided)
-      var list = window.CRMO_SUPABASE_ADMIN_EMAILS || [];
-      if(Array.isArray(list) && list.length){
-        return list.map(function(x){return String(x||'').toLowerCase();}).indexOf(email) >= 0;
+  /* ===== CRMO RBAC (v1611) ===== */
+  (function(){
+    // Hide admin DOM immediately; we will only enable it for owners after role check.
+    try{
+      if(!document.getElementById('crmo-admin-stealth-css')){
+        var st = document.createElement('style');
+        st.id = 'crmo-admin-stealth-css';
+        st.textContent = `
+          #crmo-admin-bar, #crmo-admin-editor, #crmo-admin-subbar,
+          #CRMO_v1358_brands_admin_panel,
+          #crmo-header-admin, #crmo-mode-admin,
+          #crmo-settings-admin, #crmo-media-admin, #crmo-galleries-admin,
+          #crmo-tracking-admin, #crmo-permissions-admin, #crmo-audience-admin,
+          #crmo-campaign-admin, #crmo-dev-admin, #crmo-restore-admin,
+          #crmo-admin-add-btn, #crmo-admins-list
+          { display:none !important; visibility:hidden !important; }
+        `;
+        document.head.appendChild(st);
       }
+    }catch(e){}
+  })();
+
+  async function CRMO_refreshRoleAndAdminUI(){
+    try{
+      // If supabase client can't load, treat as viewer.
+      if(typeof window.supabase === 'undefined' && !window.CRMO_getSbClient){
+        window.CRMO_IS_OWNER = false;
+        try{ localStorage.removeItem('crmo:admin:email'); }catch(e){}
+        CRMO_disableAdminDom();
+        return { role: null, owner: false, reason: 'supabase_not_ready' };
+      }
+
+      var sb = null;
+      try{
+        sb = (window.CRMO_getSbClient) ? await window.CRMO_getSbClient() : null;
+      }catch(e){}
+      if(!sb && typeof window.supabase !== 'undefined'){
+        try{
+          sb = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
+        }catch(e){}
+      }
+      if(!sb){
+        window.CRMO_IS_OWNER = false;
+        try{ localStorage.removeItem('crmo:admin:email'); }catch(e){}
+        CRMO_disableAdminDom();
+        return { role: null, owner: false, reason: 'no_client' };
+      }
+
+      var ses = await sb.auth.getSession();
+      var session = ses && ses.data ? ses.data.session : null;
+      if(!session || !session.user){
+        window.CRMO_IS_OWNER = false;
+        try{ localStorage.removeItem('crmo:admin:email'); }catch(e){}
+        CRMO_disableAdminDom();
+        return { role: null, owner: false, reason: 'no_session' };
+      }
+
+      var uid = session.user.id;
+      var email = session.user.email || '';
+
+      // Query role table: public.crmo_user_roles
+      var role = null;
+      try{
+        var q = sb.from('crmo_user_roles').select('role').eq('user_id', uid);
+        // maybeSingle if available
+        if(typeof q.maybeSingle === 'function'){
+          var out = await q.maybeSingle();
+          if(out && out.data && out.data.role) role = out.data.role;
+        }else{
+          var out2 = await q.limit(1);
+          if(out2 && out2.data && out2.data[0] && out2.data[0].role) role = out2.data[0].role;
+        }
+      }catch(e){}
+
+      var isOwner = (role === 'owner');
+      window.CRMO_IS_OWNER = isOwner;
+
+      if(isOwner){
+        // Keep compatibility with legacy admin code without granting admin to everyone.
+        try{ localStorage.setItem('crmo:admin:email', String(email||'').toLowerCase()); }catch(e){}
+        CRMO_enableAdminDom();
+      }else{
+        try{ localStorage.removeItem('crmo:admin:email'); }catch(e){}
+        CRMO_disableAdminDom(true); // remove from DOM for stealth
+      }
+      return { role: role, owner: isOwner };
+    }catch(e){
+      window.CRMO_IS_OWNER = false;
+      try{ localStorage.removeItem('crmo:admin:email'); }catch(_e){}
+      CRMO_disableAdminDom();
+      return { role: null, owner: false, reason: 'error', error: (e && e.message) ? e.message : String(e||'') };
+    }
+  }
+
+  function CRMO_adminNodes(){
+    // Known admin roots / panels
+    return Array.from(document.querySelectorAll([
+      '#crmo-admin-bar',
+      '#crmo-admin-editor',
+      '#crmo-admin-subbar',
+      '#CRMO_v1358_brands_admin_panel',
+      '#crmo-header-admin',
+      '#crmo-mode-admin',
+      '#crmo-settings-admin',
+      '#crmo-media-admin',
+      '#crmo-galleries-admin',
+      '#crmo-tracking-admin',
+      '#crmo-permissions-admin',
+      '#crmo-audience-admin',
+      '#crmo-campaign-admin',
+      '#crmo-dev-admin',
+      '#crmo-restore-admin',
+      '#crmo-admin-add-btn',
+      '#crmo-admins-list'
+    ].join(',')));
+  }
+
+  function CRMO_enableAdminDom(){
+    try{
+      var st = document.getElementById('crmo-admin-stealth-css');
+      if(st) st.remove();
+    }catch(e){}
+    try{
+      CRMO_adminNodes().forEach(function(n){
+        if(n){ n.style.display=''; n.style.visibility=''; n.hidden=false; }
+      });
+    }catch(e){}
+    try{ document.documentElement.classList.add('crmo-owner'); }catch(e){}
+  }
+
+  function CRMO_disableAdminDom(remove){
+    try{ document.documentElement.classList.remove('crmo-owner'); }catch(e){}
+    try{
+      CRMO_adminNodes().forEach(function(n){
+        if(!n) return;
+        if(remove){
+          n.remove();
+        }else{
+          n.style.display='none';
+          n.style.visibility='hidden';
+          n.hidden=true;
+        }
+      });
+    }catch(e){}
+    // ensure stealth css stays
+    try{
+      if(!document.getElementById('crmo-admin-stealth-css')){
+        var st = document.createElement('style');
+        st.id='crmo-admin-stealth-css';
+        st.textContent='#crmo-admin-bar,#crmo-admin-editor,#crmo-admin-subbar{display:none!important}';
+        document.head.appendChild(st);
+      }
+    }catch(e){}
+  }
+
+  // Quiet background role check at startup (no UI messages)
+  (function(){
+    function boot(){
+      CRMO_refreshRoleAndAdminUI();
+      // Retry once shortly after in case auth state becomes available after async SDK init
+      setTimeout(function(){ CRMO_refreshRoleAndAdminUI(); }, 800);
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+  /* ===== /CRMO RBAC ===== */
 
       // 2) If list is empty, fall back to a "first admin" stored in localStorage
       var stored = '';
@@ -18530,6 +18691,8 @@ async function attemptCustomerLogin(){
           console.log('[CRMO] used fetch auth fallback for customer login');
         }
         closeCustomerAuth();
+        try{ window.CRMO_refreshRoleAndAdminUI && window.CRMO_refreshRoleAndAdminUI(); }catch(_e){}
+        try{ setTimeout(function(){ location.reload(); }, 50); }catch(_e){}
       }catch(e){
         var msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : String(e||'');
         if(msg === 'SUPABASE_NOT_CONFIGURED') msg = 'עוד לא חיברו את האתר להרשמה 😅 נסה שוב עוד מעט.';
@@ -18838,6 +19001,8 @@ async function attemptCustomerRegister(){
           console.log('[CRMO] used fetch auth fallback for customer signup');
         }
         closeCustomerAuth();
+        try{ window.CRMO_refreshRoleAndAdminUI && window.CRMO_refreshRoleAndAdminUI(); }catch(_e){}
+        try{ setTimeout(function(){ location.reload(); }, 50); }catch(_e){}
       }catch(e){
         var msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : String(e||'');
         if(msg === 'SUPABASE_NOT_CONFIGURED') msg = 'עוד לא חיברו את האתר להרשמה 😅 נסה שוב עוד מעט.';
@@ -18947,6 +19112,8 @@ async function attemptCustomerRegister(){
         var t = ev.target;
         if(!t) return;
         if(t.getAttribute && t.getAttribute('data-close') === '1') closeCustomerAuth();
+        try{ window.CRMO_refreshRoleAndAdminUI && window.CRMO_refreshRoleAndAdminUI(); }catch(_e){}
+        try{ setTimeout(function(){ location.reload(); }, 50); }catch(_e){}
       });
     }
     var closeBtnsClient = document.querySelectorAll('#crmo-auth-modal-client .crmo-auth-close, #crmo-auth-cancel-client');
