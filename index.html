@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1598 -->
+<!-- CRMO_v1599 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -22,9 +22,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1598";
-window.CRMO_VERSION = 'CRMO_v1598';
-window.CRMO_VERSION_NUMBER = 1598;
+window.CRMO_BUILD_VERSION = "1599";
+window.CRMO_VERSION = 'CRMO_v1599';
+window.CRMO_VERSION_NUMBER = 1599;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1108,7 +1108,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1598</title>
+<title>CRMO_v1599</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -32801,6 +32801,145 @@ document.getElementById('crmo-auth-overlay')?.addEventListener('click', closeCrm
     // Close X (works even if inline onclick is blocked)
     const closeX = document.querySelector('#crmo-auth-modal span') || document.querySelector('#crmo-auth-modal .crmo-close');
     on(closeX, 'click', closeCrmoAuth);
+})();
+</script>
+
+
+<style id="crmo-auth-hardening">
+  /* Hard force modal visibility when open (beats inline style toggles) */
+  body.crmo-auth-open #crmo-auth-overlay{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    pointer-events:auto !important;
+    z-index: 2147483646 !important;
+  }
+  body.crmo-auth-open #crmo-auth-modal{
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    pointer-events:auto !important;
+    z-index: 2147483647 !important;
+  }
+</style>
+
+<script>
+/* CRMO v1599 auth hardening: ensures clicks always work and modal cannot be silently hidden */
+(function(){
+  const $ = (id) => document.getElementById(id);
+
+  function ensureGlobals(){
+    // Make sure these exist and are trimmed
+    if (typeof window.CRMO_SUPABASE_URL === 'string') window.CRMO_SUPABASE_URL = window.CRMO_SUPABASE_URL.trim();
+    if (typeof window.CRMO_SUPABASE_ANON_KEY === 'string') window.CRMO_SUPABASE_ANON_KEY = window.CRMO_SUPABASE_ANON_KEY.trim();
+  }
+
+  function hardShow(){
+    const ov = $('crmo-auth-overlay');
+    const md = $('crmo-auth-modal');
+    if (!ov || !md) return;
+    ov.hidden = false; md.hidden = false;
+    document.body.classList.add('crmo-auth-open');
+    // Also set inline as backup (CSS still wins)
+    ov.style.display = 'block';
+    md.style.display = 'block';
+  }
+
+  function hardHide(){
+    const ov = $('crmo-auth-overlay');
+    const md = $('crmo-auth-modal');
+    document.body.classList.remove('crmo-auth-open');
+    if (ov){ ov.style.display = 'none'; ov.hidden = true; }
+    if (md){ md.style.display = 'none'; md.hidden = true; }
+  }
+
+  // Wrap existing functions (if present) to use hard show/hide
+  const prevOpen = window.CRMO_openAuth;
+  window.CRMO_openAuth = function(){
+    ensureGlobals();
+    hardShow();
+    try { if (typeof prevOpen === 'function') prevOpen(); } catch(e){}
+    // Re-assert after scripts/CSS settle
+    setTimeout(hardShow, 0);
+    setTimeout(hardShow, 120);
+    setTimeout(hardShow, 400);
+    const email = $('m-email'); if (email) email.focus();
+  };
+
+  const prevClose = window.closeCrmoAuth;
+  window.closeCrmoAuth = function(){
+    try { if (typeof prevClose === 'function') prevClose(); } catch(e){}
+    hardHide();
+  };
+
+  // MutationObserver: if something hides our modal while open, re-open it
+  const md = $('crmo-auth-modal');
+  const ov = $('crmo-auth-overlay');
+  const status = $('m-status');
+  function isOpen(){
+    return document.body.classList.contains('crmo-auth-open');
+  }
+  function reassert(reason){
+    if (!isOpen()) return;
+    hardShow();
+    if (status && status.innerText){
+      // Keep original status; just append a subtle dot if needed
+      status.dataset.crmoReassert = reason || 'reassert';
+    }
+  }
+
+  if (md && ov){
+    const obs = new MutationObserver((mutations)=>{
+      for (const m of mutations){
+        if (!isOpen()) continue;
+        if (m.type === 'attributes'){
+          const target = m.target;
+          const cs = getComputedStyle(target);
+          if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0'){
+            reassert('hidden_by_' + (target.id || target.tagName));
+            break;
+          }
+        }
+      }
+    });
+    obs.observe(md, { attributes:true, attributeFilter:['style','class','hidden'] });
+    obs.observe(ov, { attributes:true, attributeFilter:['style','class','hidden'] });
+  }
+
+  // ESC close - capture, stop other handlers from “eating” clicks/esc
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape' && isOpen()){
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      window.closeCrmoAuth();
+    }
+  }, true);
+
+  // Diagnostic helper (call from Console)
+  window.CRMO_diagAuth = function(){
+    const md = $('crmo-auth-modal');
+    const ov = $('crmo-auth-overlay');
+    const btn = $('m-btn');
+    const mdcs = md ? getComputedStyle(md) : null;
+    const ovcs = ov ? getComputedStyle(ov) : null;
+    const rect = md ? md.getBoundingClientRect() : null;
+    const topAtCenter = rect ? document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2) : null;
+    const btnRect = btn ? btn.getBoundingClientRect() : null;
+    const topAtBtn = btnRect ? document.elementFromPoint(btnRect.left + btnRect.width/2, btnRect.top + btnRect.height/2) : null;
+
+    return {
+      isOpen: isOpen(),
+      modal: md ? {display: mdcs.display, visibility: mdcs.visibility, opacity: mdcs.opacity, zIndex: mdcs.zIndex} : null,
+      overlay: ov ? {display: ovcs.display, visibility: ovcs.visibility, opacity: ovcs.opacity, zIndex: ovcs.zIndex, pointerEvents: ovcs.pointerEvents} : null,
+      topAtModalCenter: topAtCenter ? {id: topAtCenter.id || null, tag: topAtCenter.tagName} : null,
+      topAtButton: topAtBtn ? {id: topAtBtn.id || null, tag: topAtBtn.tagName} : null,
+      emailValLen: ($('m-email')?.value || '').length,
+      passValLen: ($('m-pass')?.value || '').length
+    };
+  };
+
+  // Ensure globals are set early
+  ensureGlobals();
 })();
 </script>
 
