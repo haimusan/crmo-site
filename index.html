@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1585 -->
+<!-- CRMO_v1586 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,8 +80,8 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1585";
-window.CRMO_VERSION = 'CRMO_v1585';
+window.CRMO_BUILD_VERSION = "1586";
+window.CRMO_VERSION = 'CRMO_v1586';
 window.CRMO_VERSION_NUMBER = 1584;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
@@ -18560,7 +18560,8 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
         return null;
       }
     }
-    async function attemptCustomerLogin(){
+    
+async function attemptCustomerLogin(){
       var email = normEmail(authEmailClient && authEmailClient.value);
       var pass  = (authPassClient && authPassClient.value) ? (authPassClient.value || '').trim() : '';
       if(!email || !pass){
@@ -18575,17 +18576,30 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
             && String(window.CRMO_SUPABASE_URL).indexOf('PASTE_') !== 0
             && String(window.CRMO_SUPABASE_ANON_KEY).indexOf('PASTE_') !== 0))
           throw new Error('SUPABASE_NOT_CONFIGURED');
-        var sb = (window.CRMO_getSbClient) ? await window.CRMO_getSbClient() : null;
-        if(!sb) throw new Error('SUPABASE_NOT_READY');
-        if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent=''; }
-        var out = await sb.auth.signInWithPassword({ email: email, password: pass });
-        if(out && out.error) throw out.error;
+
+        // Prefer supabase-js if available, but fall back to fetch auth if CDN is blocked by CSP
+        var usedFallback = false;
+        try{
+          var sb = (window.CRMO_getSbClient) ? await window.CRMO_getSbClient() : null;
+          if(!sb) throw new Error('SUPABASE_NOT_READY');
+          if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent=''; }
+          var out = await sb.auth.signInWithPassword({ email: email, password: pass });
+          if(out && out.error) throw out.error;
+        }catch(e1){
+          usedFallback = true;
+          // If script-src CSP blocks jsdelivr/unpkg, window.CRMO_getSbClient throws. Use fetch endpoints.
+          await window.CRMO_auth_password(email, pass);
+        }
+        if(usedFallback){
+          console.log('[CRMO] used fetch auth fallback for customer login');
+        }
         closeCustomerAuth();
       }catch(e){
         var msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : String(e||'');
         if(msg === 'SUPABASE_NOT_CONFIGURED') msg = 'עוד לא חיברו את האתר להרשמה 😅 נסה שוב עוד מעט.';
         else if(/invalid login credentials/i.test(msg)) msg = 'המייל או הסיסמה לא נכונים (או שנרשמת דרך סושיאל).';
         else if(/provider/i.test(msg) && /oauth/i.test(msg)) msg = 'נראה שהחשבון הזה מחובר דרך סושיאל. נסה Google / LinkedIn.';
+        else if(/failed to load supabase-js/i.test(msg) || /refused to load the script/i.test(msg)) msg = 'הדפדפן חסם טעינת ספריית Supabase. עדכנתי את המערכת לעקוף את זה — נסה שוב.';
         else if(!msg) msg = 'לא הצלחתי להתחבר. נסה שוב.';
         if(authErrClient){
           authErrClient.hidden = false;
@@ -18593,6 +18607,7 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
         }
       }
     }
+
     async function attemptLogin(){
       var email = normEmail(authEmail.value);
       var pass  = (authPass.value || '').trim();
@@ -18852,57 +18867,55 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
           ssoL.addEventListener('click', function(){ sso('linkedin_oidc'); });
         }
       }catch(e){}
-      async function attemptCustomerRegister(){
-        var email = normEmail(authEmailClient && authEmailClient.value);
-        var pass  = (authPassClient && authPassClient.value) ? (authPassClient.value || '').trim() : '';
-        var fn = (firstClient && firstClient.value) ? (firstClient.value || '').trim() : '';
-        var ln = (lastClient && lastClient.value) ? (lastClient.value || '').trim() : '';
-        if(!fn || !ln || !email || !pass){
-          if(authErrClient){
-            authErrClient.hidden = false;
-            authErrClient.textContent = 'כדי להירשם צריך למלא שם, אימייל וסיסמה';
-          }
-          return;
+      
+async function attemptCustomerRegister(){
+      var first = (authFirstClient && authFirstClient.value) ? (authFirstClient.value||'').trim() : '';
+      var last  = (authLastClient && authLastClient.value) ? (authLastClient.value||'').trim() : '';
+      var email = normEmail(authEmailClient && authEmailClient.value);
+      var pass  = (authPassClient && authPassClient.value) ? (authPassClient.value || '').trim() : '';
+      if(!first || !last || !email || !pass){
+        if(authErrClient){
+          authErrClient.hidden = false;
+          authErrClient.textContent = 'יש למלא שם פרטי, שם משפחה, מייל וסיסמה';
         }
+        return;
+      }
+      try{
+        if(!(window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY
+            && String(window.CRMO_SUPABASE_URL).indexOf('PASTE_') !== 0
+            && String(window.CRMO_SUPABASE_ANON_KEY).indexOf('PASTE_') !== 0))
+          throw new Error('SUPABASE_NOT_CONFIGURED');
+
+        var meta = { first_name: first, last_name: last };
+        var usedFallback = false;
         try{
-          if(!(window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY
-              && String(window.CRMO_SUPABASE_URL).indexOf('PASTE_') !== 0
-              && String(window.CRMO_SUPABASE_ANON_KEY).indexOf('PASTE_') !== 0))
-            throw new Error('SUPABASE_NOT_CONFIGURED');
           var sb = (window.CRMO_getSbClient) ? await window.CRMO_getSbClient() : null;
           if(!sb) throw new Error('SUPABASE_NOT_READY');
           if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent=''; }
-          var redirectTo = location.origin + location.pathname;
-          var out = await sb.auth.signUp({
-            email: email,
-            password: pass,
-            options: {
-              data: { first_name: fn, last_name: ln },
-              emailRedirectTo: redirectTo
-            }
-          });
+          var out = await sb.auth.signUp({ email: email, password: pass, options: { data: meta } });
           if(out && out.error) throw out.error;
-          var hasSession = !!(out && out.data && out.data.session);
-          if(hasSession){
-            closeCustomerAuth();
-            return;
-          }
-          if(authErrClient){
-            authErrClient.hidden = false;
-            authErrClient.textContent = 'נרשמת! עכשיו רק לאשר את המייל וזהו 😉';
-          }
-        }catch(e){
-          var msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : String(e||'');
-          if(msg === 'SUPABASE_NOT_CONFIGURED') msg = 'עוד לא חיברו את האתר להרשמה 😅 נסה שוב עוד מעט.';
-          else if(/user already registered/i.test(msg)) msg = 'נראה שכבר נרשמת. בוא נעשה כניסה 🙂';
-          else if(/password/i.test(msg) && /short|length/i.test(msg)) msg = 'הסיסמה קצרה מדי—תן לנו עוד כמה תווים 😉';
-          else if(!msg) msg = 'לא הצלחתי להירשם. נסה שוב.';
-          if(authErrClient){
-            authErrClient.hidden = false;
-            authErrClient.textContent = msg;
-          }
+        }catch(e1){
+          usedFallback = true;
+          await window.CRMO_auth_signup(email, pass, meta);
+        }
+        if(usedFallback){
+          console.log('[CRMO] used fetch auth fallback for customer signup');
+        }
+        closeCustomerAuth();
+      }catch(e){
+        var msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : String(e||'');
+        if(msg === 'SUPABASE_NOT_CONFIGURED') msg = 'עוד לא חיברו את האתר להרשמה 😅 נסה שוב עוד מעט.';
+        else if(/already registered/i.test(msg) || /already exists/i.test(msg) || /User already registered/i.test(msg)) msg = 'משתמש עם המייל הזה כבר קיים. נסה "כניסה".';
+        else if(/Password/i.test(msg) && /least/i.test(msg)) msg = 'הסיסמה חלשה מדי. נסה סיסמה ארוכה יותר.';
+        else if(/refused to load the script/i.test(msg)) msg = 'הדפדפן חסם טעינת ספריית Supabase. עדכנתי את המערכת לעקוף את זה — נסה שוב.';
+        else if(!msg) msg = 'לא הצלחתי להירשם. נסה שוב.';
+        if(authErrClient){
+          authErrClient.hidden = false;
+          authErrClient.textContent = msg;
         }
       }
+    }
+
       if(authSubmitClient){
         authSubmitClient.addEventListener('click', async function(){
           try{
@@ -28993,6 +29006,67 @@ try{
     return _sb;
   }
   window.CRMO_getSbClient = getClient;
+
+  // ---- Supabase Auth fetch fallback (for sites with restrictive script-src CSP that blocks CDN) ----
+  async function CRMO_auth_password(email, password){
+    var base = (window.CRMO_SUPABASE_URL||'').toString().replace(/\/$/,'');
+    var key  = (window.CRMO_SUPABASE_ANON_KEY||'').toString();
+    var url = base + '/auth/v1/token?grant_type=password';
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'apikey': key,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ email: email, password: password })
+    });
+    var data = {};
+    try{ data = await res.json(); }catch(e){}
+    if(!res.ok){
+      throw new Error((data && (data.error_description||data.msg||data.error)) || ('auth failed ' + res.status));
+    }
+    try{
+      // persist a minimal session so UI can treat user as logged-in
+      var sess = { access_token: data.access_token, refresh_token: data.refresh_token, expires_in: data.expires_in, token_type: data.token_type, user: data.user, ts: Date.now() };
+      localStorage.setItem('CRMO_SB_SESSION', JSON.stringify(sess));
+      window.CRMO_SB_SESSION = sess;
+    }catch(e){}
+    return data;
+  }
+
+  async function CRMO_auth_signup(email, password, meta){
+    var base = (window.CRMO_SUPABASE_URL||'').toString().replace(/\/$/,'');
+    var key  = (window.CRMO_SUPABASE_ANON_KEY||'').toString();
+    var url = base + '/auth/v1/signup';
+    var payload = { email: email, password: password };
+    if(meta && typeof meta === 'object') payload.data = meta;
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'apikey': key,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    var data = {};
+    try{ data = await res.json(); }catch(e){}
+    if(!res.ok){
+      throw new Error((data && (data.error_description||data.msg||data.error)) || ('signup failed ' + res.status));
+    }
+    try{
+      var sess = { access_token: data.access_token, refresh_token: data.refresh_token, expires_in: data.expires_in, token_type: data.token_type, user: data.user, ts: Date.now() };
+      localStorage.setItem('CRMO_SB_SESSION', JSON.stringify(sess));
+      window.CRMO_SB_SESSION = sess;
+    }catch(e){}
+    return data;
+  }
+
+  // Expose for debugging
+  window.CRMO_auth_password = CRMO_auth_password;
+  window.CRMO_auth_signup = CRMO_auth_signup;
+
   function normalizeEmail(s){
     return (s||'').toString().trim().toLowerCase();
   }
