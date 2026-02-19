@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1603 -->
+<!-- CRMO_v1604 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -32144,6 +32144,19 @@ function CRMO_clearLocalDataAndReload(){
   const bottomText   = $id("crmo-client-bottom-text");
   const bottomLink   = $id("crmo-client-register");
   const forgotLink   = $id("crmo-client-forgot");
+  // Ensure Magic Link control exists (some designs don't include it)
+  let magicLinkEl = $id("crmo-client-magic");
+  try{
+    if (!magicLinkEl && forgotLink && forgotLink.parentElement){
+      magicLinkEl = document.createElement("a");
+      magicLinkEl.id = "crmo-client-magic";
+      magicLinkEl.href = "#";
+      magicLinkEl.textContent = "קישור כניסה במייל";
+      magicLinkEl.style.cssText = "display:inline-block; margin-inline-start:10px; font-size:13px; color:#007bff; text-decoration:underline; cursor:pointer;";
+      forgotLink.parentElement.appendChild(magicLinkEl);
+    }
+  }catch(e){}
+
   const rememberCb   = $id("crmo-client-remember");
   const passToggle   = $id("crmo-pass-toggle-client");
 
@@ -32229,7 +32242,9 @@ function CRMO_clearLocalDataAndReload(){
       setTimeout(() => location.reload(), 700);
     }catch(err){
       // Show the raw Supabase message so you can see exact rejection reasons
-      setError(String(err?.message || err || "לא ניתן להתחבר"));
+      var m = String(err?.message || err || "לא ניתן להתחבר");
+      if (m.includes("Invalid login credentials")) { m += " — אם נרשמת עם קישור/סושיאל, נסה \"קישור כניסה במייל\" או התחברות דרך Google/LinkedIn."; }
+      setError(m);
     }finally{
       submitBtn && (submitBtn.disabled = false);
       submitBtn && (submitBtn.style.opacity = "1");
@@ -32246,6 +32261,21 @@ function CRMO_clearLocalDataAndReload(){
       if (error) throw error;
     }catch(err){
       setError("שגיאה: " + (err?.message || "לא ניתן להתחבר"));
+    }
+  }
+
+  async function magicLink(){
+    const email = (emailEl?.value || "").trim();
+    if (!email) { setError("נא להכניס אימייל כדי לשלוח קישור כניסה"); return; }
+    try{
+      const sb = getSb(window.localStorage);
+      window.__CRMO_CLIENT_SB = sb;
+      const emailRedirectTo = window.location.origin;
+      const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo } });
+      if (error) throw error;
+      setError("נשלח קישור כניסה למייל. פתח אותו באותו דפדפן כדי להתחבר.");
+    }catch(err){
+      setError("שגיאה: " + (err?.message || "לא ניתן לשלוח קישור"));
     }
   }
 
@@ -32274,6 +32304,7 @@ function CRMO_clearLocalDataAndReload(){
   });
 
   if (forgotLink) forgotLink.addEventListener("click", (e) => { e.preventDefault(); forgot(); });
+  if (magicLinkEl) magicLinkEl.addEventListener("click", (e) => { e.preventDefault(); magicLink(); });
 
   if (ssoGoogleBtn) ssoGoogleBtn.addEventListener("click", () => oauth("google"));
   if (ssoLinkedBtn) ssoLinkedBtn.addEventListener("click", () => oauth("linkedin"));
@@ -32312,19 +32343,19 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_v1603_bootstrap">
+<script id="crmo_v1604_bootstrap">
 (function(){
   try{
-    window.CRMO_BUILD_VERSION = "1603";
-    window.CRMO_VERSION = "1603";
-    try{ localStorage.setItem('crmo:meta:build','1603'); }catch(e){}
+    window.CRMO_BUILD_VERSION = "1604";
+    window.CRMO_VERSION = "1604";
+    try{ localStorage.setItem('crmo:meta:build','1604'); }catch(e){}
     function setText(id, txt){
       var el = document.getElementById(id);
       if(el) el.textContent = txt;
     }
     function apply(){
-      setText('crmo-top-version', 'v1603');
-      setText('crmo-footer-version', 'v1603');
+      setText('crmo-top-version', 'v1604');
+      setText('crmo-footer-version', 'v1604');
     }
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
     else apply();
