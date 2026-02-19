@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1584 -->
+<!-- CRMO_v1585 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,8 +80,8 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1584";
-window.CRMO_VERSION = "CRMO_v1584";
+window.CRMO_BUILD_VERSION = "1585";
+window.CRMO_VERSION = 'CRMO_v1585';
 window.CRMO_VERSION_NUMBER = 1584;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
@@ -212,17 +212,17 @@ window.CRMO_STUDIO_TITLE = "CRMO";
 <script id="crmo_offline_default">
 (function(){
   try{
-    var sp = new URLSearchParams(location.search||'');
-    // Respect CRMO_ALLOW_CLOUD if it was already computed by the hard guard.
+    // IMPORTANT: do not override CRMO_ALLOW_CLOUD decision on hosted domains.
     if (typeof window.CRMO_ALLOW_CLOUD === 'boolean'){
       window.CRMO_OFFLINE_MODE = !window.CRMO_ALLOW_CLOUD;
-    }else{
-      // Fallback: OFFLINE unless explicitly requested with ?cloud=1
-      var cloud = sp.get('cloud');
-      window.CRMO_OFFLINE_MODE = !(cloud === '1' || cloud === 'true');
+      window.CRMO_USABILITY_MODE = true;
+      return;
     }
+    var sp = new URLSearchParams(location.search||'');
+    // Fallback: OFFLINE unless explicitly requested with ?cloud=1
+    var cloud = sp.get('cloud');
+    window.CRMO_OFFLINE_MODE = !(cloud === '1' || cloud === 'true');
     window.CRMO_USABILITY_MODE = true;
-    // Optional: force-disable cloud restore if a previous clear flagged it
     try{
       if (sessionStorage.getItem('CRMO_SKIP_CLOUD_RESTORE') === '1') {
         window.CRMO_OFFLINE_MODE = true;
@@ -18905,9 +18905,36 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
       }
       if(authSubmitClient){
         authSubmitClient.addEventListener('click', async function(){
-          var isRegister = !!(panelClient && panelClient.classList.contains('mode-register'));
-          if(isRegister) await attemptCustomerRegister();
-          else await attemptCustomerLogin();
+          try{
+            if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; }
+            // Tiny visible feedback so it never feels "stuck"
+            authSubmitClient.disabled = true;
+            var prevTxt = authSubmitClient.textContent;
+            authSubmitClient.textContent = 'בודק...';
+            console.log('[CRMO] client auth submit', {
+              mode: (panelClient && panelClient.classList.contains('mode-register')) ? 'register' : 'login',
+              allowCloud: !!window.CRMO_ALLOW_CLOUD,
+              offline: !!window.CRMO_OFFLINE_MODE,
+              hasUrl: !!window.CRMO_SUPABASE_URL,
+              hasKey: !!window.CRMO_SUPABASE_ANON_KEY
+            });
+            // If cloud is off, explain it clearly (this was a common source of "nothing happens")
+            if(window.CRMO_OFFLINE_MODE){
+              if(authErrClient){
+                authErrClient.hidden = false;
+                authErrClient.textContent = 'המערכת כרגע במצב OFFLINE ולכן לא יכולה להתחבר. נסה לפתוח את האתר בלי offline/עם cloud פעיל.';
+              }
+              return;
+            }
+            var isRegister = !!(panelClient && panelClient.classList.contains('mode-register'));
+            if(isRegister) await attemptCustomerRegister();
+            else await attemptCustomerLogin();
+          }finally{
+            try{
+              authSubmitClient.disabled = false;
+              authSubmitClient.textContent = (panelClient && panelClient.classList.contains('mode-register')) ? 'הרשמה' : 'כניסה';
+            }catch(_e){}
+          }
         });
       }
       var editBtn = document.getElementById('crmo-client-auth-edit');
