@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1590 -->
+<!-- CRMO_v1591 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1590";
-window.CRMO_VERSION = 'CRMO_v1590';
-window.CRMO_VERSION_NUMBER = 1590;
+window.CRMO_BUILD_VERSION = "1591";
+window.CRMO_VERSION = 'CRMO_v1591';
+window.CRMO_VERSION_NUMBER = 1591;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1150,7 +1150,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1590</title>
+<title>CRMO_v1591</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -9986,36 +9986,9 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
   </div>
 </div>
 
-<!-- CRMO Auth modal (v1233) -->
-<div id="crmo-auth-modal" class="crmo-auth-modal" hidden aria-hidden="true">
-  <div class="crmo-auth-backdrop" data-close="1"></div>
-  <div class="crmo-auth-panel" role="dialog" aria-modal="true" aria-label="כניסה לניהול">
-    <button type="button" class="crmo-auth-close" aria-label="סגירת חלון כניסה">×</button>
-<div class="crmo-auth-title" id="crmo-auth-title">כניסה לניהול</div>
-    <div class="crmo-auth-sub" id="crmo-auth-sub">הכנס מייל וסיסמה</div>
 
-    <label class="crmo-auth-field">
-          <input type="email" class="crmo-auth-input" id="crmo-auth-email" autocomplete="username" placeholder=" " inputmode="email" autocapitalize="none" spellcheck="false" dir="ltr" />
-          <span class="crmo-float-label">מייל</span>
-        </label>
+<!-- CRMO Auth modal replaced in v1591 (see end of body) -->
 
-    <label class="crmo-auth-field">
-          <div class="crmo-pass-wrap">
-            <input type="password" class="crmo-auth-input" id="crmo-auth-pass" autocomplete="current-password" placeholder=" " />
-            <button type="button" class="crmo-pass-toggle" id="crmo-pass-toggle-admin" aria-label="הצגת סיסמה" title="הצגת סיסמה">👁</button>
-            <span class="crmo-float-label">סיסמה</span>
-          </div>
-        </label>
-        <div class="crmo-auth-help">מינימום 8 תווים</div>
-
-    <div class="crmo-auth-error" id="crmo-auth-error" hidden></div>
-
-    <div class="crmo-auth-actions">
-      <button type="button" class="crmo-auth-btn" id="crmo-auth-cancel">ביטול</button>
-      <button type="button" class="crmo-auth-btn primary" id="crmo-auth-submit">כניסה</button>
-    </div>
-  </div>
-</div>
 
 <!-- CRMO Customer auth modal (v1245) -->
 <div id="crmo-auth-modal-client" class="crmo-auth-modal" hidden aria-hidden="true">
@@ -32624,179 +32597,93 @@ function CRMO_clearLocalDataAndReload(){
 })();
 </script>
 
-
-<!-- crmo_auth_overlay_v1590 (injected) -->
-<div id="crmo-auth-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999998; backdrop-filter:blur(4px);"></div>
+<div id="crmo-auth-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999998; backdrop-filter:blur(4px);" onclick="closeCrmoAuth()"></div>
 <div id="crmo-auth-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:360px; background:white; padding:30px; border-radius:16px; z-index:9999999; direction:rtl; font-family:system-ui, -apple-system, sans-serif; box-shadow:0 20px 50px rgba(0,0,0,0.3);">
-  <span id="crmo-auth-close" style="position:absolute; top:15px; left:20px; cursor:pointer; font-size:24px; color:#999;">✕</span>
+    <span onclick="closeCrmoAuth()" style="position:absolute; top:15px; left:20px; cursor:pointer; font-size:24px; color:#999;">✕</span>
 
-  <div style="display:flex; justify-content:center; gap:25px; margin-bottom:25px; border-bottom:1px solid #eee; padding-bottom:12px;">
-    <button id="tab-login" type="button" style="border:none; background:none; font-weight:700; color:#007bff; cursor:pointer; font-size:16px;">כניסה</button>
-    <button id="tab-signup" type="button" style="border:none; background:none; font-weight:700; color:#888; cursor:pointer; font-size:16px;">הרשמה</button>
-  </div>
+    <div style="display:flex; justify-content:center; gap:25px; margin-bottom:25px; border-bottom:1px solid #eee; padding-bottom:12px;">
+        <button id="tab-login" onclick="setAuthMode('login')" style="border:none; background:none; font-weight:700; color:#007bff; cursor:pointer; font-size:16px;">כניסה</button>
+        <button id="tab-signup" onclick="setAuthMode('signup')" style="border:none; background:none; font-weight:700; color:#888; cursor:pointer; font-size:16px;">הרשמה</button>
+    </div>
 
-  <h2 id="auth-title" style="margin:0 0 8px 0; font-size:20px; color:#333;">כניסת מנהלים</h2>
-  <p id="auth-subtext" style="margin:0 0 20px 0; font-size:14px; color:#666;">הכנס פרטים כדי לנהל את האתר</p>
+    <h2 id="auth-title" style="margin:0 0 8px 0; font-size:20px; color:#333;">כניסת מנהלים</h2>
+    <p id="auth-subtext" style="margin:0 0 20px 0; font-size:14px; color:#666;">הכנס פרטים כדי לנהל את האתר</p>
 
-  <input type="email" id="auth-email" placeholder="אימייל" autocomplete="email" style="width:100%; padding:12px; margin-bottom:12px; border:1px solid #ddd; border-radius:8px; font-size:15px; box-sizing:border-box;">
-  <input type="password" id="auth-pass" placeholder="סיסמה" autocomplete="current-password" style="width:100%; padding:12px; margin-bottom:18px; border:1px solid #ddd; border-radius:8px; font-size:15px; box-sizing:border-box;">
+    <input type="email" id="auth-email" placeholder="אימייל" style="width:100%; padding:12px; margin-bottom:12px; border:1px solid #ddd; border-radius:8px; font-size:15px; box-sizing:border-box;">
+    <input type="password" id="auth-pass" placeholder="סיסמה" style="width:100%; padding:12px; margin-bottom:18px; border:1px solid #ddd; border-radius:8px; font-size:15px; box-sizing:border-box;">
 
-  <button id="auth-submit-btn" type="button" style="width:100%; padding:14px; background:#007bff; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:16px; transition:0.2s;">התחבר</button>
-  <div id="auth-msg" style="color:#d93025; font-size:13px; margin-top:12px; text-align:center; min-height:18px; font-weight:500;"></div>
+    <button id="auth-submit-btn" onclick="doAuth()" style="width:100%; padding:14px; background:#007bff; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:16px; transition:0.2s;">התחבר</button>
+    <div id="auth-msg" style="color:#d93025; font-size:13px; margin-top:12px; text-align:center; min-height:18px; font-weight:500;"></div>
 </div>
 
-<script id="crmo_auth_overlay_logic_v1590">
-(function(){
-  var authMode = 'login';
+<script>
+window.authMode = 'login';
 
-  function setAuthMode(mode){
-    authMode = mode === 'signup' ? 'signup' : 'login';
-    var title = document.getElementById('auth-title');
-    var sub = document.getElementById('auth-subtext');
-    var btn = document.getElementById('auth-submit-btn');
-    var msg = document.getElementById('auth-msg');
-    if(title) title.innerText = (authMode === 'login') ? 'כניסת מנהלים' : 'הרשמת מנהל חדש';
-    if(sub) sub.innerText = (authMode === 'login') ? 'הכנס פרטים כדי לנהל את האתר' : 'צור חשבון ניהול חדש';
-    if(btn) btn.innerText = (authMode === 'login') ? 'התחבר' : 'צור חשבון';
-    var tl = document.getElementById('tab-login');
-    var ts = document.getElementById('tab-signup');
-    if(tl) tl.style.color = (authMode === 'login') ? '#007bff' : '#888';
-    if(ts) ts.style.color = (authMode === 'signup') ? '#007bff' : '#888';
-    if(msg) { msg.style.color = '#d93025'; msg.innerText = ''; }
-  }
+function setAuthMode(mode) {
+    window.authMode = mode;
+    document.getElementById('auth-title').innerText = mode === 'login' ? 'כניסת מנהלים' : 'הרשמת מנהל חדש';
+    document.getElementById('auth-subtext').innerText = mode === 'login' ? 'הכנס פרטים כדי לנהל את האתר' : 'צור חשבון ניהול חדש';
+    document.getElementById('auth-submit-btn').innerText = mode === 'login' ? 'התחבר' : 'צור חשבון';
+    document.getElementById('tab-login').style.color = mode === 'login' ? '#007bff' : '#888';
+    document.getElementById('tab-signup').style.color = mode === 'signup' ? '#007bff' : '#888';
+    document.getElementById('auth-msg').innerText = '';
+}
 
-  function openCrmoAuth(){
-    var ov = document.getElementById('crmo-auth-overlay');
-    var md = document.getElementById('crmo-auth-modal');
-    if(ov) ov.style.display = 'block';
-    if(md) md.style.display = 'block';
-    try{ document.getElementById('auth-email').focus(); }catch(e){}
-  }
+function closeCrmoAuth() {
+    document.getElementById('crmo-auth-overlay').style.display = 'none';
+    document.getElementById('crmo-auth-modal').style.display = 'none';
+}
 
-  function closeCrmoAuth(){
-    var ov = document.getElementById('crmo-auth-overlay');
-    var md = document.getElementById('crmo-auth-modal');
-    if(ov) ov.style.display = 'none';
-    if(md) md.style.display = 'none';
-  }
+window.CRMO_openAuth = function() {
+    document.getElementById('crmo-auth-overlay').style.display = 'block';
+    document.getElementById('crmo-auth-modal').style.display = 'block';
+    document.getElementById('auth-email').focus();
+}
 
-  async function ensureSupabaseClient(){
-    // Prefer existing app client if present
-    try{
-      if (typeof window.CRMO_getSbClient === 'function'){
-        return await window.CRMO_getSbClient();
-      }
-    }catch(e){}
-    try{
-      if (typeof window.CRMO_getSB === 'function'){
-        return await window.CRMO_getSB();
-      }
-    }catch(e){}
+// Compatibility: some parts of the app call CRMO_openAuthAuto()
+window.CRMO_openAuthAuto = function(){ window.CRMO_openAuth(); }
 
-    // Fallback: if supabase-js is loaded globally, create client
-    if (window.supabase && typeof window.supabase.createClient === 'function'){
-      var url = window.CRMO_SUPABASE_URL;
-      var key = window.CRMO_SUPABASE_ANON_KEY;
-      return window.supabase.createClient(url, key);
+async function doAuth() {
+    const email = document.getElementById('auth-email').value;
+    const password = document.getElementById('auth-pass').value;
+    const msg = document.getElementById('auth-msg');
+
+    if(!email || !password) { msg.innerText = "נא למלא אימייל וסיסמה"; return; }
+    msg.style.color = "#666";
+    msg.innerText = "מתחבר...";
+
+    try {
+        // אתחול לקוח Supabase בתוך הפונקציה כדי למנוע בעיות טעינה
+        if (!window.supabaseClient) {
+            if (typeof window.CRMO_getSbClient === 'function') {
+                window.supabaseClient = await window.CRMO_getSbClient();
+            } else {
+                const url = window.CRMO_SUPABASE_URL;
+                const key = window.CRMO_SUPABASE_ANON_KEY;
+                if (!window.supabase || !window.supabase.createClient) throw new Error('Supabase library not loaded');
+                window.supabaseClient = supabase.createClient(url, key);
+            }
+        }
+
+        const { data, error } = window.authMode === 'login' 
+            ? await window.supabaseClient.auth.signInWithPassword({ email, password })
+            : await window.supabaseClient.auth.signUp({ email, password });
+
+        if (error) throw error;
+
+        msg.style.color = "green";
+        if (window.authMode === 'signup') {
+            msg.innerText = "נרשמת בהצלחה! בדוק את האימייל לאישור.";
+        } else {
+            msg.innerText = "התחברת! מרענן...";
+            setTimeout(() => location.reload(), 1000);
+        }
+    } catch (e) {
+        msg.style.color = "#d93025";
+        msg.innerText = "שגיאה: " + (e.message || "לא ניתן להתחבר");
     }
-
-    // Last resort: dynamically load supabase-js
-    await new Promise(function(resolve, reject){
-      try{
-        var s = document.createElement('script');
-        s.src = 'https://unpkg.com/@supabase/supabase-js@2';
-        s.async = true;
-        s.onload = resolve;
-        s.onerror = function(){ reject(new Error('Supabase SDK failed to load')); };
-        document.head.appendChild(s);
-      }catch(err){ reject(err); }
-    });
-
-    if (!(window.supabase && typeof window.supabase.createClient === 'function')){
-      throw new Error('Supabase SDK not available');
-    }
-    return window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
-  }
-
-  async function doAuth(){
-    var email = (document.getElementById('auth-email')||{}).value || '';
-    var password = (document.getElementById('auth-pass')||{}).value || '';
-    var msg = document.getElementById('auth-msg');
-
-    if(!email || !password){
-      if(msg){ msg.style.color = '#d93025'; msg.innerText = 'נא למלא אימייל וסיסמה'; }
-      return;
-    }
-    if(msg){ msg.style.color = '#666'; msg.innerText = 'מתחבר...'; }
-
-    try{
-      var sb = await ensureSupabaseClient();
-      var resp = (authMode === 'login')
-        ? await sb.auth.signInWithPassword({ email: email, password: password })
-        : await sb.auth.signUp({ email: email, password: password });
-
-      if(resp && resp.error) throw resp.error;
-
-      if(msg){ msg.style.color = 'green'; }
-
-      if(authMode === 'signup'){
-        if(msg) msg.innerText = 'נרשמת בהצלחה! בדוק את האימייל לאישור.';
-      }else{
-        if(msg) msg.innerText = 'התחברת! מרענן...';
-        setTimeout(function(){ location.reload(); }, 900);
-      }
-    }catch(e){
-      if(msg){
-        msg.style.color = '#d93025';
-        msg.innerText = 'שגיאה: ' + (e && e.message ? e.message : 'לא ניתן להתחבר');
-      }
-    }
-  }
-
-  // Bind UI events
-  function bind(){
-    var tl = document.getElementById('tab-login');
-    var ts = document.getElementById('tab-signup');
-    var closeBtn = document.getElementById('crmo-auth-close');
-    var overlay = document.getElementById('crmo-auth-overlay');
-    var submit = document.getElementById('auth-submit-btn');
-
-    if(tl) tl.onclick = function(){ setAuthMode('login'); };
-    if(ts) ts.onclick = function(){ setAuthMode('signup'); };
-    if(closeBtn) closeBtn.onclick = closeCrmoAuth;
-    if(overlay) overlay.onclick = closeCrmoAuth;
-    if(submit) submit.onclick = doAuth;
-
-    // ESC closes
-    document.addEventListener('keydown', function(ev){
-      if(ev && ev.key === 'Escape'){
-        closeCrmoAuth();
-      }
-    });
-  }
-
-  // Override site opener (admin)
-  window.CRMO_openAuth = function(){
-    openCrmoAuth();
-  };
-
-  // Try to also hook existing customer opener if site uses it
-  if(!window.CRMO_openAuthAuto){
-    window.CRMO_openAuthAuto = openCrmoAuth;
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){
-      bind();
-      setAuthMode('login');
-    });
-  }else{
-    bind();
-    setAuthMode('login');
-  }
-})();
+}
 </script>
-<!-- /crmo_auth_overlay_v1590 -->
 
 </body>
 </html>
