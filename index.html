@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1606 -->
+<!-- CRMO_v1607 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -32437,63 +32437,20 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_v1606_bootstrap">
+<script id="crmo_v1607_bootstrap">
 (function(){
   try{
-    window.CRMO_BUILD_VERSION = "1606";
-    window.CRMO_VERSION = "1606";
-    try{ localStorage.setItem('crmo:meta:build','1606'); }catch(e){}
+    window.CRMO_BUILD_VERSION = "1607";
+    window.CRMO_VERSION = "1607";
+    try{ localStorage.setItem('crmo:meta:build','1607'); }catch(e){}
     function setText(id, txt){
       var el = document.getElementById(id);
       if(el) el.textContent = txt;
     }
-    function normalizeAssetUrl(u){
-      if(!u) return u;
-      u = String(u);
-      if(u.startsWith('http://') || u.startsWith('https://') || u.startsWith('data:') || u.startsWith('blob:') || u.startsWith('mailto:') || u.startsWith('tel:') || u.startsWith('#')) return u;
-      if(u.startsWith('/')) return u;
-      // Make root-relative for common asset folders
-      if(u.startsWith('assets/') || u.startsWith('images/') || u.startsWith('img/') || u.startsWith('icons/') || u.startsWith('branding/')) return '/' + u;
-      return u;
-    }
-    function fixAssetAttr(selector, attr){
-      try{
-        var els = document.querySelectorAll(selector);
-        for(var i=0;i<els.length;i++){
-          var el = els[i];
-          var v = el.getAttribute(attr);
-          if(!v) continue;
-          var nv = normalizeAssetUrl(v);
-          if(nv !== v) el.setAttribute(attr, nv);
-        }
-      }catch(e){}
-    }
-    function fixInlineBackgrounds(){
-      try{
-        var els = document.querySelectorAll('[style*="url("]');
-        for(var i=0;i<els.length;i++){
-          var el = els[i];
-          var st = el.getAttribute('style') || '';
-          // replace url(assets/...) -> url(/assets/...)
-          var ns = st.replace(/url\((['"]?)(assets|images|img|icons|branding)\//g, 'url($1/$2/');
-          if(ns !== st) el.setAttribute('style', ns);
-        }
-      }catch(e){}
-    }
-    function fixAssetPaths(){
-      // Images / media
-      fixAssetAttr('img[src]', 'src');
-      fixAssetAttr('source[src]', 'src');
-      fixAssetAttr('video[poster]', 'poster');
-      // Favicons / manifests / link icons
-      fixAssetAttr('link[href]', 'href');
-      fixInlineBackgrounds();
-    }
     function apply(){
-      setText('crmo-top-version', 'v1606');
-      setText('crmo-footer-version', 'v1606');
-      fixAssetPaths();
-    }
+      setText('crmo-top-version', 'v1607');
+      setText('crmo-footer-version', 'v1607');
+}
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
     else apply();
 
