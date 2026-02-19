@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1600 -->
+<!-- CRMO_v1599 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -22,9 +22,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1600";
-window.CRMO_VERSION = 'CRMO_v1600';
-window.CRMO_VERSION_NUMBER = 1600;
+window.CRMO_BUILD_VERSION = "1601";
+window.CRMO_VERSION = 'CRMO_v1601';
+window.CRMO_VERSION_NUMBER = 1601;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1108,7 +1108,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1600</title>
+<title>CRMO_v1599</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -32559,424 +32559,211 @@ function CRMO_clearLocalDataAndReload(){
 
 
 
-<style id="crmo-auth-force-top">
-/* CRMO Auth Override v1594
-   Goal: modal always above any legacy overlays, and CRMO_openAuth override happens AFTER deferred scripts.
-*/
-#crmo-auth-overlay{
-  position:fixed !important;
-  inset:0 !important;
-  background:rgba(0,0,0,0.85) !important;
-  display:none !important;
-  z-index:2147483646 !important;
-  backdrop-filter:blur(5px);
-  -webkit-backdrop-filter:blur(5px);
-}
-#crmo-auth-modal{
-  position:fixed !important;
-  top:50% !important;
-  left:50% !important;
-  transform:translate(-50%, -50%) !important;
-  width:350px !important;
-  background:#fff !important;
-  padding:30px !important;
-  border-radius:20px !important;
-  z-index:2147483647 !important;
-  direction:rtl !important;
-  font-family:sans-serif !important;
-  text-align:right !important;
-  box-shadow:0 15px 50px rgba(0,0,0,0.5) !important;
-  display:none !important;
-  opacity:1 !important;
-  visibility:visible !important;
-}
-body.crmo-auth-open #crmo-auth-overlay{ display:block !important; }
-body.crmo-auth-open #crmo-auth-modal{ display:block !important; }
-</style>
 
-<div id="crmo-auth-overlay" aria-hidden="true"></div>
-<div id="crmo-auth-modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <span onclick="closeCrmoAuth()" style="position:absolute; top:15px; left:20px; cursor:pointer; font-size:24px; color:#aaa;">✕</span>
-
-    <div style="display:flex; justify-content:center; gap:30px; margin-bottom:25px; border-bottom:1px solid #eee; padding-bottom:15px;">
-        <button id="tl-btn" onclick="setMode('login')" style="border:none; background:none; font-weight:bold; color:#007bff; cursor:pointer; font-size:16px;">כניסה</button>
-        <button id="ts-btn" onclick="setMode('signup')" style="border:none; background:none; font-weight:bold; color:#888; cursor:pointer; font-size:16px;">הרשמה</button>
-    </div>
-
-    <h2 id="m-title" style="margin:0 0 10px 0; font-size:18px;">כניסת מנהלים</h2>
-    <input type="email" id="m-email" placeholder="אימייל" style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;">
-    <input type="password" id="m-pass" placeholder="סיסמה" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:8px; box-sizing:border-box;">
-
-    <button id="m-btn" onclick="runAuth()" style="width:100%; padding:14px; background:#007bff; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:16px;">התחבר</button>
-    <div id="m-status" style="color:red; font-size:13px; margin-top:15px; text-align:center; min-height:20px;"></div>
-</div>
-
+<!-- CRMO Client Auth Wiring v1601 -->
 <script>
-var currentMode = 'login';
-
-function setMode(m) {
-    currentMode = m;
-    document.getElementById('m-title').innerText = m === 'login' ? 'כניסת מנהלים' : 'הרשמת מנהל חדש';
-    document.getElementById('m-btn').innerText = m === 'login' ? 'התחבר' : 'צור חשבון';
-    document.getElementById('tl-btn').style.color = m === 'login' ? '#007bff' : '#888';
-    document.getElementById('ts-btn').style.color = m === 'signup' ? '#007bff' : '#888';
-}
-
-function closeCrmoAuth() {
-    document.body.classList.remove('crmo-auth-open');
-    var ov = document.getElementById('crmo-auth-overlay');
-    var md = document.getElementById('crmo-auth-modal');
-    if(ov){ ov.setAttribute('aria-hidden','true'); }
-    if(md){ md.setAttribute('aria-hidden','true'); }
-    try{ window.CRMO_unlockScroll && window.CRMO_unlockScroll('auth'); }catch(e){}
-}
-
-function CRMO_openAuth_NOW() {
-    document.body.classList.add('crmo-auth-open');
-    var ov = document.getElementById('crmo-auth-overlay');
-    var md = document.getElementById('crmo-auth-modal');
-    if(ov){ ov.setAttribute('aria-hidden','false'); }
-    if(md){ md.setAttribute('aria-hidden','false'); }
-    try{ window.CRMO_lockScroll && window.CRMO_lockScroll('auth'); }catch(e){}
-    try{ document.getElementById('m-email').focus(); }catch(e){}
-    // Re-assert after any late scripts try to hide it
-    setTimeout(function(){
-        if(document.body.classList.contains('crmo-auth-open')){
-            document.body.classList.add('crmo-auth-open');
-            try{ document.getElementById('m-email').focus(); }catch(e){}
-        }
-    }, 0);
-}
-
-// התקנה מאוחרת כדי לדרוס גם סקריפטים עם defer שרצים אחרי סוף הדף
-function CRMO_installAuthOverride(){
-    window.CRMO_openAuth = function(){ CRMO_openAuth_NOW(); };
-    // Re-assert once more shortly after, just in case another script overwrote it
-    setTimeout(function(){ window.CRMO_openAuth = function(){ CRMO_openAuth_NOW(); }; }, 300);
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', CRMO_installAuthOverride, { once:true });
-} else {
-    CRMO_installAuthOverride();
-}
-
-async function runAuth() {
-    const email = (document.getElementById('m-email')?.value || '').trim();
-    const password = document.getElementById('m-pass')?.value || '';
-    const status = document.getElementById('m-status');
-
-    const setStatus = (msg, color) => {
-        if (!status) return;
-        status.style.color = color || '#666';
-        status.innerText = msg;
-    };
-
-    if(!email || !password) { setStatus("נא למלא את כל השדות", "red"); return; }
-    setStatus("מתחבר...", "#666");
-
-    try {
-        // ודא מצב ענן גם בהרצה מקומית
-        window.CRMO_ALLOW_CLOUD = true;
-        window.CRMO_OFFLINE_MODE = false;
-
-        // שימוש במפתחות מתוך window; fallback רק אם חסר (מונע "איבוד מפתח")
-        const url = (window.CRMO_SUPABASE_URL && String(window.CRMO_SUPABASE_URL).trim()) || "https://rtodtmeqijhszdhelawy.supabase.co";
-        const key = (window.CRMO_SUPABASE_ANON_KEY && String(window.CRMO_SUPABASE_ANON_KEY).trim()) || "";
-
-        if (typeof supabase === 'undefined') {
-            setStatus("שגיאה: ספריית Supabase לא נטענה", "red");
-            return;
-        }
-        if (!key) {
-            setStatus("שגיאה: מפתח Supabase חסר/ריק", "red");
-            return;
-        }
-
-        // יצירת לקוח אחד ויחיד כדי שה-session יישמר (persistSession)
-        if (!window.__CRMO_AUTH_SB || window.__CRMO_AUTH_SB.__crmo_url !== url) {
-            window.__CRMO_AUTH_SB = supabase.createClient(url, key, {
-                auth: {
-                    persistSession: true,
-                    autoRefreshToken: true,
-                    detectSessionInUrl: true,
-                    storage: window.localStorage
-                }
-            });
-            window.__CRMO_AUTH_SB.__crmo_url = url;
-
-            // מאזין לאירועי התחברות (מקל דיבוג)
-            if (!window.__CRMO_AUTH_LISTENER_ATTACHED) {
-                window.__CRMO_AUTH_LISTENER_ATTACHED = true;
-                window.__CRMO_AUTH_SB.auth.onAuthStateChange((event, session) => {
-                    window.__CRMO_LAST_AUTH = {
-                        event,
-                        hasSession: !!session,
-                        email: session?.user?.email || null,
-                        at: new Date().toISOString()
-                    };
-                });
-            }
-        }
-
-        const sb = window.__CRMO_AUTH_SB;
-
-        // ניסיון התחברות/הרשמה
-        const { data, error } = currentMode === 'login'
-            ? await sb.auth.signInWithPassword({ email, password })
-            : await sb.auth.signUp({ email, password });
-
-        if (error) throw error;
-
-        // הרשמה: לעתים נדרש אישור במייל ואין session מיידי
-        if (currentMode === 'signup') {
-            setStatus("נרשמת! אם נדרש אישור במייל – אשר ואז התחבר.", "green");
-            return;
-        }
-
-        // התחברות: ודא שיש session לפני רענון
-        const ses = await sb.auth.getSession();
-        const hasSession = !!ses?.data?.session;
-
-        if (!hasSession) {
-            // דיבוג קצר למשתמש
-            const last = window.__CRMO_LAST_AUTH?.event ? (" (" + window.__CRMO_LAST_AUTH.event + ")") : "";
-            setStatus("התחברות נכשלה: אין session נשמר" + last + ". פתח Network וחפש /auth/v1/token", "red");
-            return;
-        }
-
-        // הרשאות אדמין: אם יש רשימת אימיילים – בדיקה; אחרת משתמש ראשון נשמר ב-localStorage
-        const userEmail = ses.data.session.user?.email ? String(ses.data.session.user.email).trim().toLowerCase() : "";
-        const list = Array.isArray(window.CRMO_SUPABASE_ADMIN_EMAILS) ? window.CRMO_SUPABASE_ADMIN_EMAILS : [];
-
-        if (list.length) {
-            const isAdmin = list.map(x => String(x).trim().toLowerCase()).includes(userEmail);
-            if (!isAdmin) {
-                setStatus("התחברת, אבל האימייל לא מוגדר כאדמין.", "red");
-                return;
-            }
-        } else {
-            // fallback: הגדר אדמין בדפדפן הזה
-            localStorage.setItem('crmo:admin:email', userEmail);
-        }
-
-        setStatus("התחברת בהצלחה! מרענן...", "green");
-        setTimeout(() => location.reload(), 600);
-
-    } catch (err) {
-        const msg = (err && (err.message || err.error_description)) ? (err.message || err.error_description) : "לא ניתן להתחבר";
-        setStatus("שגיאה: " + msg, "red");
-    }
-}
-
-// ESC: סגירה אחת בלבד (capture + stopImmediatePropagation) כדי למנוע 'עוד שתי לחיצות'
-window.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && document.body.classList.contains('crmo-auth-open')){
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        closeCrmoAuth();
-    }
-}, true);
-
-// סגירה בלחיצה על הרקע
-document.getElementById('crmo-auth-overlay')?.addEventListener('click', closeCrmoAuth);
-
-// Bind UI events without relying on inline onclick attributes (CSP-safe)
-(function bindCrmoAuthUI(){
-    const $ = (id)=>document.getElementById(id);
-    const on = (el, ev, fn, opts)=>{ try{ el && el.addEventListener(ev, fn, opts); }catch(_){} };
-
-    // Tabs
-    on($('tl-btn'), 'click', ()=>setMode('login'));
-    on($('ts-btn'), 'click', ()=>setMode('signup'));
-
-    // Submit
-    const submit = $('m-btn');
-    on(submit, 'click', (e)=>{ const st=$('m-status'); if(st && (!st.innerText || st.innerText==='')){ st.style.color='#666'; st.innerText='בודק...'; } runAuth(); });
-    on(submit, 'touchend', (e)=>{ e.preventDefault(); runAuth(); }, {passive:false});
-
-    // Enter to submit
-    ['m-email','m-pass'].forEach(id=> on($(id), 'keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); runAuth(); } }));
-
-    // Close X (works even if inline onclick is blocked)
-    const closeX = document.querySelector('#crmo-auth-modal span') || document.querySelector('#crmo-auth-modal .crmo-close');
-    on(closeX, 'click', closeCrmoAuth);
-})();
-</script>
-
-
-<style id="crmo-auth-hardening">
-  /* Hard force modal visibility when open (beats inline style toggles) */
-  body.crmo-auth-open #crmo-auth-overlay{
-    display:block !important;
-    visibility:visible !important;
-    opacity:1 !important;
-    pointer-events:auto !important;
-    z-index: 2147483646 !important;
-  }
-  body.crmo-auth-open #crmo-auth-modal{
-    display:block !important;
-    visibility:visible !important;
-    opacity:1 !important;
-    pointer-events:auto !important;
-    z-index: 2147483647 !important;
-  }
-</style>
-
-<script>
-/* CRMO v1600 auth hardening: ensures clicks always work and modal cannot be silently hidden */
 (function(){
-  const $ = (id) => document.getElementById(id);
+  const CLIENT_MODAL_ID = "crmo-auth-modal-client";
+  const LEGACY_MODAL_ID = "crmo-auth-modal";
+  const LEGACY_OVERLAY_ID = "crmo-auth-overlay";
 
-  function ensureGlobals(){
-    // Make sure these exist and are trimmed
-    if (typeof window.CRMO_SUPABASE_URL === 'string') window.CRMO_SUPABASE_URL = window.CRMO_SUPABASE_URL.trim();
-    if (typeof window.CRMO_SUPABASE_ANON_KEY === 'string') window.CRMO_SUPABASE_ANON_KEY = window.CRMO_SUPABASE_ANON_KEY.trim();
-  }
+  const $id = (id) => document.getElementById(id);
+  const qs = (sel, root=document) => root.querySelector(sel);
 
-  function hardShow(){
-    const ov = $('crmo-auth-overlay');
-    const md = $('crmo-auth-modal');
-    if (!ov || !md) return;
-    ov.hidden = false; md.hidden = false;
-    document.body.classList.add('crmo-auth-open');
-    // Also set inline as backup (CSS still wins)
-    ov.style.display = 'block';
-    md.style.display = 'block';
-  }
-
-  function hardHide(){
-    const ov = $('crmo-auth-overlay');
-    const md = $('crmo-auth-modal');
-    document.body.classList.remove('crmo-auth-open');
-    if (ov){ ov.style.display = 'none'; ov.hidden = true; }
-    if (md){ md.style.display = 'none'; md.hidden = true; }
-  }
-
-  // Wrap existing functions (if present) to use hard show/hide
-  const prevOpen = window.CRMO_openAuth;
-  window.CRMO_openAuth = function(){
-    ensureGlobals();
-    hardShow();
-    try { if (typeof prevOpen === 'function') prevOpen(); } catch(e){}
-    // Re-assert after scripts/CSS settle
-    setTimeout(hardShow, 0);
-    setTimeout(hardShow, 120);
-    setTimeout(hardShow, 400);
-    const email = $('m-email'); if (email) email.focus();
-  };
-
-  const prevClose = window.closeCrmoAuth;
-  window.closeCrmoAuth = function(){
-    try { if (typeof prevClose === 'function') prevClose(); } catch(e){}
-    hardHide();
-  };
-
-  // MutationObserver: if something hides our modal while open, re-open it
-  const md = $('crmo-auth-modal');
-  const ov = $('crmo-auth-overlay');
-  const status = $('m-status');
-  function isOpen(){
-    return document.body.classList.contains('crmo-auth-open');
-  }
-  function reassert(reason){
-    if (!isOpen()) return;
-    hardShow();
-    if (status && status.innerText){
-      // Keep original status; just append a subtle dot if needed
-      status.dataset.crmoReassert = reason || 'reassert';
-    }
-  }
-
-  if (md && ov){
-    const obs = new MutationObserver((mutations)=>{
-      for (const m of mutations){
-        if (!isOpen()) continue;
-        if (m.type === 'attributes'){
-          const target = m.target;
-          const cs = getComputedStyle(target);
-          if (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0'){
-            reassert('hidden_by_' + (target.id || target.tagName));
-            break;
-          }
-        }
-      }
-    });
-    obs.observe(md, { attributes:true, attributeFilter:['style','class','hidden'] });
-    obs.observe(ov, { attributes:true, attributeFilter:['style','class','hidden'] });
-  }
-
-  // ESC close - capture, stop other handlers from “eating” clicks/esc
-  document.addEventListener('keydown', (e)=>{
-    if (e.key === 'Escape' && isOpen()){
-      e.stopImmediatePropagation();
-      e.preventDefault();
-      window.closeCrmoAuth();
-    }
-  }, true);
-
-  // Diagnostic helper (call from Console)
-  window.CRMO_diagAuth = function(){
-    const md = $('crmo-auth-modal');
-    const ov = $('crmo-auth-overlay');
-    const btn = $('m-btn');
-    const mdcs = md ? getComputedStyle(md) : null;
-    const ovcs = ov ? getComputedStyle(ov) : null;
-    const rect = md ? md.getBoundingClientRect() : null;
-    const topAtCenter = rect ? document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2) : null;
-    const btnRect = btn ? btn.getBoundingClientRect() : null;
-    const topAtBtn = btnRect ? document.elementFromPoint(btnRect.left + btnRect.width/2, btnRect.top + btnRect.height/2) : null;
-
-    return {
-      isOpen: isOpen(),
-      modal: md ? {display: mdcs.display, visibility: mdcs.visibility, opacity: mdcs.opacity, zIndex: mdcs.zIndex} : null,
-      overlay: ov ? {display: ovcs.display, visibility: ovcs.visibility, opacity: ovcs.opacity, zIndex: ovcs.zIndex, pointerEvents: ovcs.pointerEvents} : null,
-      topAtModalCenter: topAtCenter ? {id: topAtCenter.id || null, tag: topAtCenter.tagName} : null,
-      topAtButton: topAtBtn ? {id: topAtBtn.id || null, tag: topAtBtn.tagName} : null,
-      emailValLen: ($('m-email')?.value || '').length,
-      passValLen: ($('m-pass')?.value || '').length
-    };
-  };
-
-  // Ensure globals are set early
-  ensureGlobals();
-})();
-</script>
-
-
-<script id="CRMO_v1600_use_client_auth_ui">
-(function(){
+  // Hard-disable legacy admin modal if it exists (user requested to use only the mascot modal)
   try{
-    function openClient(mode){
-      try{ window.__CRMO_AUTH_CONTEXT = 'admin'; }catch(e){}
-      if (typeof window.CRMO_openCustomerAuthAuto === 'function') {
-        try{ window.CRMO_openCustomerAuthAuto(mode || 'login'); }catch(e){ return false; }
-        // Optional: tweak visible copy to match admin context
-        try{
-          var p = document.getElementById('crmo-client-title-text');
-          if(p && p.textContent && p.textContent.trim().length > 40){
-            p.textContent = 'כניסת מנהלים';
-          }
-        }catch(e){}
-        return true;
-      }
-      return false;
-    }
-
-    // Force all admin login entrypoints to use the client's modal UI
-    window.CRMO_openAuth = function(){ openClient('login'); };
-    window.CRMO_openAuthAuto = function(){ openClient('login'); };
-
-    // Prevent legacy admin modal/overlay from ever flashing
-    document.addEventListener('DOMContentLoaded', function(){
-      try{
-        var legacy = document.getElementById('crmo-auth-modal');
-        var legacyOv = document.getElementById('crmo-auth-overlay');
-        if (legacy) { legacy.hidden = true; legacy.style.display = 'none'; legacy.setAttribute('aria-hidden','true'); }
-        if (legacyOv) { legacyOv.hidden = true; legacyOv.style.display = 'none'; }
-      }catch(e){}
-    });
+    const lm = $id(LEGACY_MODAL_ID);
+    const lo = $id(LEGACY_OVERLAY_ID);
+    if (lm) { lm.hidden = true; lm.style.display = "none"; lm.setAttribute("aria-hidden","true"); }
+    if (lo) { lo.hidden = true; lo.style.display = "none"; lo.setAttribute("aria-hidden","true"); }
   }catch(e){}
+
+  function openClient(mode){
+    // Prefer the site's existing function if present
+    if (typeof window.CRMO_openCustomerAuthAuto === "function") {
+      window.CRMO_openCustomerAuthAuto(mode || "login");
+      return;
+    }
+    const modal = $id(CLIENT_MODAL_ID);
+    if (!modal) return;
+    modal.hidden = false;
+    modal.setAttribute("aria-hidden","false");
+  }
+
+  // Force header/admin entry points to always open the mascot modal
+  window.CRMO_openAuth = function(){ openClient("login"); };
+  window.CRMO_openAuthAuto = function(){ openClient("login"); };
+
+  const modal = $id(CLIENT_MODAL_ID);
+  if (!modal) return;
+
+  const errBox = $id("crmo-auth-error-client");
+  const emailEl = $id("crmo-auth-email-client");
+  const passEl  = $id("crmo-auth-pass-client");
+  const firstEl = $id("crmo-auth-first-client");
+  const lastEl  = $id("crmo-auth-last-client");
+
+  const regOnly = $id("crmo-client-register-only");
+  const btnLoginMode = $id("crmo-client-btn-login");
+  const btnRegMode   = $id("crmo-client-btn-register");
+  const submitBtn    = $id("crmo-auth-submit-client");
+  const bottomText   = $id("crmo-client-bottom-text");
+  const bottomLink   = $id("crmo-client-register");
+  const forgotLink   = $id("crmo-client-forgot");
+  const rememberCb   = $id("crmo-client-remember");
+  const passToggle   = $id("crmo-pass-toggle-client");
+
+  const ssoGoogleBtn  = qs(".crmo-sso-google", modal);
+  const ssoLinkedBtn  = qs(".crmo-sso-linkedin", modal);
+  const closeBtn      = qs(".crmo-auth-close", modal);
+  const backdrop      = qs(".crmo-auth-backdrop", modal);
+
+  let mode = "login"; // login | signup
+
+  function setError(msg){
+    if (!errBox) return;
+    errBox.textContent = msg || "";
+    errBox.style.display = msg ? "block" : "none";
+  }
+
+  function setMode(newMode){
+    mode = (newMode === "signup" || newMode === "register") ? "signup" : "login";
+    setError("");
+    if (regOnly) regOnly.style.display = (mode === "signup") ? "block" : "none";
+    if (submitBtn) submitBtn.textContent = (mode === "signup") ? "הרשמה" : "כניסה";
+    if (btnLoginMode) btnLoginMode.classList.toggle("active", mode === "login");
+    if (btnRegMode) btnRegMode.classList.toggle("active", mode === "signup");
+    if (bottomText) bottomText.textContent = (mode === "signup") ? "כבר נרשמת?" : "עוד לא נרשמת?";
+    if (bottomLink) bottomLink.textContent = (mode === "signup") ? "כניסה" : "הרשמה";
+  }
+
+  function close(){
+    modal.hidden = true;
+    modal.setAttribute("aria-hidden","true");
+    setError("");
+  }
+
+  function getSb(storage){
+    const url = String(window.CRMO_SUPABASE_URL || "").trim();
+    const key = String(window.CRMO_SUPABASE_ANON_KEY || "").trim();
+    if (!url || !key) throw new Error("חסרים פרטי חיבור (URL/KEY)");
+    if (typeof window.supabase === "undefined") throw new Error("ספריית Supabase לא נטענה");
+    return window.supabase.createClient(url, key, {
+      auth: { persistSession: true, autoRefreshToken: true, storage: storage || window.localStorage }
+    });
+  }
+
+  async function submit(){
+    const email = (emailEl?.value || "").trim();
+    const password = (passEl?.value || "");
+    if (!email || !password) { setError("נא למלא אימייל וסיסמה"); return; }
+
+    submitBtn && (submitBtn.disabled = true);
+    submitBtn && (submitBtn.style.opacity = "0.7");
+    setError("מתחבר...");
+
+    try{
+      const storage = (rememberCb && rememberCb.checked) ? window.localStorage : window.sessionStorage;
+      const sb = getSb(storage);
+      window.__CRMO_CLIENT_SB = sb;
+
+      const { error } = (mode === "signup")
+        ? await sb.auth.signUp({
+            email, password,
+            options: { data: { first_name: (firstEl?.value||"").trim(), last_name: (lastEl?.value||"").trim() } }
+          })
+        : await sb.auth.signInWithPassword({ email, password });
+
+      if (error) throw error;
+
+      // If you use Supabase auth as admin gate, store email for the site's admin check
+      try { window.localStorage.setItem("crmo:admin:email", email.toLowerCase()); } catch(e){}
+
+      const ses = await sb.auth.getSession();
+      if (!ses?.data?.session) throw new Error("התחברות הושלמה אבל לא נוצר סשן. נסה לרענן.");
+
+      setError(mode === "signup" ? "נרשמת! בדוק אישור במייל (אם נדרש)." : "התחברת! טוען...");
+      setTimeout(() => location.reload(), 700);
+    }catch(err){
+      setError("שגיאה: " + (err?.message || "לא ניתן להתחבר"));
+    }finally{
+      submitBtn && (submitBtn.disabled = false);
+      submitBtn && (submitBtn.style.opacity = "1");
+    }
+  }
+
+  async function oauth(provider){
+    setError("");
+    try{
+      const sb = getSb(window.localStorage);
+      window.__CRMO_CLIENT_SB = sb;
+      const redirectTo = location.origin + location.pathname;
+      const { error } = await sb.auth.signInWithOAuth({ provider, options: { redirectTo } });
+      if (error) throw error;
+    }catch(err){
+      setError("שגיאה: " + (err?.message || "לא ניתן להתחבר"));
+    }
+  }
+
+  async function forgot(){
+    const email = (emailEl?.value || "").trim();
+    if (!email) { setError("נא להכניס אימייל כדי לאפס סיסמה"); return; }
+    try{
+      const sb = getSb(window.localStorage);
+      const redirectTo = location.origin + location.pathname;
+      const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+      if (error) throw error;
+      setError("נשלח מייל לאיפוס סיסמה (אם האימייל קיים במערכת).");
+    }catch(err){
+      setError("שגיאה: " + (err?.message || "לא ניתן לשלוח איפוס סיסמה"));
+    }
+  }
+
+  // Bind events (no inline onclick)
+  if (btnLoginMode) btnLoginMode.addEventListener("click", () => setMode("login"));
+  if (btnRegMode)   btnRegMode.addEventListener("click", () => setMode("signup"));
+  if (submitBtn)    submitBtn.addEventListener("click", submit);
+
+  if (bottomLink) bottomLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    setMode(mode === "signup" ? "login" : "signup");
+  });
+
+  if (forgotLink) forgotLink.addEventListener("click", (e) => { e.preventDefault(); forgot(); });
+
+  if (ssoGoogleBtn) ssoGoogleBtn.addEventListener("click", () => oauth("google"));
+  if (ssoLinkedBtn) ssoLinkedBtn.addEventListener("click", () => oauth("linkedin"));
+
+  if (passToggle) passToggle.addEventListener("click", () => {
+    if (!passEl) return;
+    passEl.type = (passEl.type === "password") ? "text" : "password";
+  });
+
+  if (closeBtn) closeBtn.addEventListener("click", close);
+  if (backdrop) backdrop.addEventListener("click", close);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); }, true);
+
+  // Init to login mode
+  setMode("login");
+
+  // Diagnostic helper
+  window.CRMO_diagAuth = function(){
+    const v = (id) => {
+      const el = $id(id);
+      if (!el) return null;
+      const cs = getComputedStyle(el);
+      return { display: cs.display, hidden: !!el.hidden, ariaHidden: el.getAttribute("aria-hidden") };
+    };
+    return {
+      version: window.CRMO_BUILD_VERSION || window.CRMO_VERSION,
+      client: v(CLIENT_MODAL_ID),
+      legacy: v(LEGACY_MODAL_ID),
+      topAtCenter: (() => {
+        const el = document.elementFromPoint(innerWidth/2, innerHeight/2);
+        return { id: el?.id || null, tag: el?.tagName || null, cls: (el?.className||"").toString().slice(0,80) };
+      })()
+    };
+  };
 })();
 </script>
 
