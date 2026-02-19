@@ -1,69 +1,11 @@
 <!DOCTYPE html>
-<!-- CRMO_v1594 -->
+<!-- CRMO_v1595 -->
 
 <html dir="rtl" lang="he">
 <head>
 
-<script id="crmo_v1534_hard_offline_guard">
-(function(){
-  // Default OFFLINE for local dev. On hosted domains, Cloud is enabled automatically (unless ?offline=1).
-  var sp = new URLSearchParams(location.search||'');
-  var h = String(location.hash||'');
-  var hasAuthInHash = /(?:^|[&#?])access_token=|(?:^|[&#?])refresh_token=|(?:^|[&#?])code=|type=magiclink/i.test(h);
-  var allowCloud = !((sp.get('offline') === '1' || sp.get('offline') === 'true' || sp.get('cloud') === '0' || sp.get('cloud') === 'false')) && (
-    // Enable cloud by default on hosted domains (GitHub Pages / crmo.co.il). Keep OFFLINE for local file:// and localhost.
-    ((String(location.protocol||'') === 'https:' || String(location.protocol||'') === 'http:') &&
-      String(location.hostname||'') && String(location.hostname||'') !== 'localhost' && String(location.hostname||'') !== '127.0.0.1') ||
-    sp.get('cloud') === '1' || sp.get('cloud') === 'true' || hasAuthInHash
-  )
-  window.CRMO_ALLOW_CLOUD = allowCloud;
-  window.CRMO_OFFLINE_MODE = !allowCloud;
-  window.CRMO_USABILITY_MODE = true;
 
-    // If user just cleared, default to OFFLINE unless cloud was explicitly requested
-  try{
-    if(!allowCloud && (sp.get('cleared') === '1' || sessionStorage.getItem('CRMO_SKIP_CLOUD_RESTORE') === '1')) {
-      window.CRMO_ALLOW_CLOUD = false;
-      window.CRMO_OFFLINE_MODE = true;
-    }
-  }catch(e){}
-  // Hard-block fetch/XHR to Supabase-like endpoints unless explicitly allowed
-  try{
-    var _fetch = window.fetch;
-    window.fetch = function(input, init){
-      try{
-        var url = (typeof input === 'string') ? input : (input && input.url) ? input.url : '';
-        var u = String(url||'');
-        if(!window.CRMO_ALLOW_CLOUD && /(supabase\.co|supabase\.in|rest\/v1|storage\/v1)/i.test(u)){
-          return Promise.reject(new Error('CRMO_OFFLINE_BLOCKED_NETWORK'));
-        }
-      }catch(e){}
-      return _fetch.apply(this, arguments);
-    };
-  }catch(e){}
-
-  // Also block XHR open
-  try{
-    var _open = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function(method, url){
-      try{
-        var u = String(url||'');
-        if(!window.CRMO_ALLOW_CLOUD && /(supabase\.co|supabase\.in|rest\/v1|storage\/v1)/i.test(u)){
-          throw new Error('CRMO_OFFLINE_BLOCKED_NETWORK');
-        }
-      }catch(e){
-        // rethrow to stop request
-        throw e;
-      }
-      return _open.apply(this, arguments);
-    };
-  }catch(e){}
-})();
-</script>
-
-
-
-
+<script id="crmo_cloud_defaults">window.CRMO_ALLOW_CLOUD = true; window.CRMO_OFFLINE_MODE = false;</script>
 <script id="crmo_ghpages_redirect_fix">
 (function(){
   try{
@@ -80,9 +22,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1594";
-window.CRMO_VERSION = 'CRMO_v1594';
-window.CRMO_VERSION_NUMBER = 1594;
+window.CRMO_BUILD_VERSION = "1595";
+window.CRMO_VERSION = 'CRMO_v1595';
+window.CRMO_VERSION_NUMBER = 1595;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1150,7 +1092,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1594</title>
+<title>CRMO_v1595</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -32710,11 +32652,33 @@ async function runAuth() {
 
     if(!email || !password) { status.innerText = "נא למלא את כל השדות"; return; }
     status.style.color = "#666";
-    status.innerText = "מתחבר ל-Supabase...";
+    status.innerText = "מתחבר...";
 
     try {
-        if (typeof supabase === 'undefined') throw new Error('Supabase SDK not loaded');
-        const sb = supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
+        // ודא מצב ענן גם בהרצה מקומית
+        window.CRMO_ALLOW_CLOUD = true;
+        window.CRMO_OFFLINE_MODE = false;
+
+        // גיבוי הגדרות למקרה שהמשתנים הגלובליים לא זמינים/נחתכו
+        const url = (window.CRMO_SUPABASE_URL && String(window.CRMO_SUPABASE_URL).trim()) || "https://rtodtmeqijhszdhelawy.supabase.co";
+        const key = (window.CRMO_SUPABASE_ANON_KEY && String(window.CRMO_SUPABASE_ANON_KEY).trim()) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
+
+        // ייצוא מפורש ל-window כדי שקוד אחר לא 'יאבד' אותם
+        window.CRMO_SUPABASE_URL = url;
+        window.CRMO_SUPABASE_ANON_KEY = key;
+
+        // קבל לקוח יציב (טוען supabase-js אם צריך)
+        let sb = null;
+        if (typeof window.CRMO_getSbClient === 'function') {
+            sb = await window.CRMO_getSbClient();
+        } else {
+            if (typeof supabase === 'undefined') {
+                status.style.color = "red";
+                status.innerText = "שגיאה: ספריית החיבור לא נטענה";
+                return;
+            }
+            sb = supabase.createClient(url, key);
+        }
 
         const { error } = currentMode === 'login'
             ? await sb.auth.signInWithPassword({ email, password })
@@ -32726,7 +32690,7 @@ async function runAuth() {
         if (currentMode === 'signup') {
             status.innerText = "נרשמת! בדוק אישור במייל שלך.";
         } else {
-            status.innerText = "התחברת בהצלחה! מרענן...";
+            status.innerText = "התחברת בהצלחה! טוען...";
             setTimeout(() => location.reload(), 800);
         }
     } catch (err) {
