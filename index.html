@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1595 -->
+<!-- CRMO_v1596 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -22,9 +22,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1595";
-window.CRMO_VERSION = 'CRMO_v1595';
-window.CRMO_VERSION_NUMBER = 1595;
+window.CRMO_BUILD_VERSION = "1596";
+window.CRMO_VERSION = 'CRMO_v1596';
+window.CRMO_VERSION_NUMBER = 1596;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -324,9 +324,25 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 
   function isAdminEmail(email){
     try{
-      var list = window.CRMO_SUPABASE_ADMIN_EMAILS || [];
       email = String(email||'').toLowerCase();
-      return Array.isArray(list) && list.map(function(x){return String(x||'').toLowerCase();}).indexOf(email) >= 0;
+      if(!email) return false;
+
+      // 1) Explicit list wins (if provided)
+      var list = window.CRMO_SUPABASE_ADMIN_EMAILS || [];
+      if(Array.isArray(list) && list.length){
+        return list.map(function(x){return String(x||'').toLowerCase();}).indexOf(email) >= 0;
+      }
+
+      // 2) If list is empty, fall back to a "first admin" stored in localStorage
+      var stored = '';
+      try{ stored = String(localStorage.getItem('crmo:admin:email')||'').toLowerCase(); }catch(e){}
+      if(stored){
+        return stored === email;
+      }
+
+      // 3) No list + no stored admin: treat the first authenticated user on this browser as admin
+      try{ localStorage.setItem('crmo:admin:email', email); }catch(e){}
+      return true;
     }catch(e){}
     return false;
   }
@@ -1092,7 +1108,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1595</title>
+<title>CRMO_v1596</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
