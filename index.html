@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1588 -->
+<!-- CRMO_v1589 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -80,9 +80,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1588";
-window.CRMO_VERSION = 'CRMO_v1588';
-window.CRMO_VERSION_NUMBER = 1588;
+window.CRMO_BUILD_VERSION = "1589";
+window.CRMO_VERSION = 'CRMO_v1589';
+window.CRMO_VERSION_NUMBER = 1589;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -32623,6 +32623,195 @@ function CRMO_clearLocalDataAndReload(){
   }catch(e){}
 })();
 </script>
+
+
+<!-- ===== CRMO Admin Auth Overlay (v1589) ===== -->
+<div id="crmo-auth-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999998;"></div>
+<div id="crmo-auth" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+  width:360px; max-width:92vw; background:#fff; padding:22px 18px 18px; border-radius:14px; z-index:9999999;
+  direction:rtl; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; box-shadow:0 18px 44px rgba(0,0,0,.28);">
+  <span id="crmo-auth-x" style="position:absolute; top:10px; left:14px; cursor:pointer; font-size:20px; line-height:20px;">✕</span>
+
+  <div class="crmo-auth-tabs" style="display:flex; justify-content:center; gap:18px; margin:6px 0 16px;">
+    <button type="button" id="crmo-tab-login" style="border:none; background:none; font-weight:700; color:#0b63f6; cursor:pointer;">כניסה</button>
+    <button type="button" id="crmo-tab-signup" style="border:none; background:none; font-weight:700; color:#888; cursor:pointer;">הרשמה</button>
+  </div>
+
+  <h2 id="crmo-auth-title" style="margin:0 0 10px 0; font-size:18px;">כניסת מנהלים</h2>
+  <div style="display:grid; gap:10px;">
+    <input type="email" id="crmo-auth-email" placeholder="אימייל" autocomplete="email"
+      style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+    <input type="password" id="crmo-auth-pass" placeholder="סיסמה" autocomplete="current-password"
+      style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">
+  </div>
+
+  <button type="button" id="crmo-auth-submit-btn"
+    style="margin-top:14px; width:100%; padding:12px; background:#0b63f6; color:#fff; border:none; border-radius:10px; cursor:pointer; font-weight:800;">
+    התחבר
+  </button>
+
+  <div id="crmo-auth-msg" style="color:#b00020; font-size:12px; margin-top:10px; text-align:center; min-height:16px;"></div>
+</div>
+
+<script>
+(function(){
+  // --- State ---
+  var authMode = 'login';
+  var overlay = document.getElementById('crmo-auth-overlay');
+  var modal   = document.getElementById('crmo-auth');
+  var xBtn    = document.getElementById('crmo-auth-x');
+  var tabLogin= document.getElementById('crmo-tab-login');
+  var tabSignup=document.getElementById('crmo-tab-signup');
+  var titleEl = document.getElementById('crmo-auth-title');
+  var emailEl = document.getElementById('crmo-auth-email');
+  var passEl  = document.getElementById('crmo-auth-pass');
+  var submitBtn=document.getElementById('crmo-auth-submit-btn');
+  var msgEl   = document.getElementById('crmo-auth-msg');
+
+  function setMsg(t, ok){
+    if(!msgEl) return;
+    msgEl.style.color = ok ? '#0a7d2a' : '#b00020';
+    msgEl.textContent = t || '';
+  }
+
+  function setMode(mode){
+    authMode = (mode === 'signup') ? 'signup' : 'login';
+    if(titleEl) titleEl.textContent = (authMode === 'signup') ? 'הרשמת מנהל חדש' : 'כניסת מנהלים';
+    if(submitBtn) submitBtn.textContent = (authMode === 'signup') ? 'צור חשבון' : 'התחבר';
+    if(tabLogin) tabLogin.style.color = (authMode === 'login') ? '#0b63f6' : '#888';
+    if(tabSignup) tabSignup.style.color = (authMode === 'signup') ? '#0b63f6' : '#888';
+    setMsg('');
+  }
+
+  function openCrmoAuth(){
+    try{ setMsg(''); }catch(e){}
+    if(overlay) overlay.style.display = 'block';
+    if(modal) modal.style.display = 'block';
+    try{ document.body.classList.add('crmo-auth-open'); }catch(e){}
+    try{ setTimeout(function(){ if(emailEl) emailEl.focus(); }, 30); }catch(e){}
+  }
+
+  function closeCrmoAuth(){
+    if(overlay) overlay.style.display = 'none';
+    if(modal) modal.style.display = 'none';
+    try{ document.body.classList.remove('crmo-auth-open'); }catch(e){}
+    try{ if(passEl) passEl.value = ''; }catch(e){}
+    setMsg('');
+  }
+
+  async function getSb(){
+    // Prefer existing helper in the app
+    if(window.CRMO_getSbClient){
+      return await window.CRMO_getSbClient();
+    }
+    // Fallback: if global supabase namespace exists and has createClient
+    if(window.supabase && typeof window.supabase.createClient === 'function'
+        && window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY){
+      return window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
+    }
+    throw new Error('SUPABASE_NOT_READY');
+  }
+
+  function promoteToAdmin(email){
+    try{
+      if(typeof applyRole === 'function') applyRole('admin');
+    }catch(e){}
+    try{
+      if(typeof setSession === 'function'){
+        var expiresAt = Date.now() + (12*60*60*1000);
+        setSession({ role:'admin', email: email || '', expiresAt: expiresAt });
+      }
+    }catch(e){}
+    try{ if(window.CRMO_refreshPermissionsUI) window.CRMO_refreshPermissionsUI(); }catch(e){}
+  }
+
+  async function doAuth(){
+    var email = (emailEl && emailEl.value) ? String(emailEl.value).trim().toLowerCase() : '';
+    var password = (passEl && passEl.value) ? String(passEl.value) : '';
+    if(!email || !password){
+      setMsg('יש למלא מייל וסיסמה');
+      return;
+    }
+    try{
+      submitBtn.disabled = true;
+      var prev = submitBtn.textContent;
+      submitBtn.textContent = 'בודק...';
+      setMsg('');
+
+      // allowlist check (if configured)
+      try{
+        if(Array.isArray(window.CRMO_SUPABASE_ADMIN_EMAILS) && window.CRMO_SUPABASE_ADMIN_EMAILS.length){
+          var ok = window.CRMO_SUPABASE_ADMIN_EMAILS.map(function(x){return String(x).toLowerCase().trim();}).includes(email);
+          if(!ok) throw new Error('NOT_IN_ADMIN_LIST');
+        }
+      }catch(e){ if(e && e.message==='NOT_IN_ADMIN_LIST') throw e; }
+
+      var sb = await getSb();
+      if(!sb || !sb.auth) throw new Error('SUPABASE_NOT_READY');
+
+      var out;
+      if(authMode === 'signup'){
+        out = await sb.auth.signUp({ email: email, password: password });
+        if(out && out.error) throw out.error;
+        setMsg('נרשמת! בדוק את המייל לאישור החשבון.', true);
+      }else{
+        out = await sb.auth.signInWithPassword({ email: email, password: password });
+        if(out && out.error) throw out.error;
+        promoteToAdmin(email);
+        closeCrmoAuth();
+        try{ location.reload(); }catch(e){}
+      }
+      submitBtn.textContent = prev;
+      submitBtn.disabled = false;
+    }catch(e){
+      try{ submitBtn.disabled = false; submitBtn.textContent = (authMode==='signup') ? 'צור חשבון' : 'התחבר'; }catch(_e){}
+      var msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : String(e||'');
+      if(msg === 'NOT_IN_ADMIN_LIST') msg = 'האימייל הזה לא מוגדר כמנהל במערכת.';
+      else if(/invalid login credentials/i.test(msg)) msg = 'המייל או הסיסמה לא נכונים.';
+      else if(/email/i.test(msg) && /confirm/i.test(msg)) msg = 'בדוק את המייל לאישור החשבון.';
+      else if(msg === 'SUPABASE_NOT_READY') msg = 'החיבור ל-Supabase לא מוכן. ודא ש-URL+ANON מוגדרים.';
+      setMsg('שגיאה: ' + msg);
+      console.error('[CRMO] admin auth error', e);
+    }
+  }
+
+  // --- Wire UI ---
+  try{
+    setMode('login');
+    if(tabLogin) tabLogin.addEventListener('click', function(){ setMode('login'); });
+    if(tabSignup) tabSignup.addEventListener('click', function(){ setMode('signup'); });
+    if(xBtn) xBtn.addEventListener('click', closeCrmoAuth);
+    if(overlay) overlay.addEventListener('click', closeCrmoAuth);
+    if(submitBtn) submitBtn.addEventListener('click', doAuth);
+    if(passEl) passEl.addEventListener('keydown', function(ev){ if(ev.key === 'Enter') doAuth(); });
+    document.addEventListener('keydown', function(ev){ if(ev.key === 'Escape') closeCrmoAuth(); });
+  }catch(e){}
+
+  // --- Override open function used by buttons in the app ---
+  try{ window.closeCrmoAuth = closeCrmoAuth; }catch(e){}
+  try{ window.setAuthMode = function(m){ setMode(m==='signup'?'signup':'login'); }; }catch(e){}
+  try{ window.doAuth = doAuth; }catch(e){}
+  try{ window.CRMO_openAuth = function(){ openCrmoAuth(); }; }catch(e){}
+  try{ window.CRMO_openAuthAuto = function(){ openCrmoAuth(); }; }catch(e){}
+
+  // Also attach to common triggers if they exist
+  function hookTriggers(){
+    var sel = ['#login-trigger','[data-auth-open]','[data-open-auth]','[data-login-open]'];
+    sel.forEach(function(s){
+      try{
+        document.querySelectorAll(s).forEach(function(el){
+          el.addEventListener('click', function(ev){
+            try{ ev.preventDefault(); }catch(e){}
+            openCrmoAuth();
+          });
+        });
+      }catch(e){}
+    });
+  }
+  hookTriggers();
+})();
+</script>
+<!-- ===== /CRMO Admin Auth Overlay (v1589) ===== -->
 
 </body>
 </html>
