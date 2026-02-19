@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1599 -->
+<!-- CRMO_v1600 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -22,9 +22,9 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1599";
-window.CRMO_VERSION = 'CRMO_v1599';
-window.CRMO_VERSION_NUMBER = 1599;
+window.CRMO_BUILD_VERSION = "1600";
+window.CRMO_VERSION = 'CRMO_v1600';
+window.CRMO_VERSION_NUMBER = 1600;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1108,7 +1108,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1599</title>
+<title>CRMO_v1600</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -32824,7 +32824,7 @@ document.getElementById('crmo-auth-overlay')?.addEventListener('click', closeCrm
 </style>
 
 <script>
-/* CRMO v1599 auth hardening: ensures clicks always work and modal cannot be silently hidden */
+/* CRMO v1600 auth hardening: ensures clicks always work and modal cannot be silently hidden */
 (function(){
   const $ = (id) => document.getElementById(id);
 
@@ -32940,6 +32940,43 @@ document.getElementById('crmo-auth-overlay')?.addEventListener('click', closeCrm
 
   // Ensure globals are set early
   ensureGlobals();
+})();
+</script>
+
+
+<script id="CRMO_v1600_use_client_auth_ui">
+(function(){
+  try{
+    function openClient(mode){
+      try{ window.__CRMO_AUTH_CONTEXT = 'admin'; }catch(e){}
+      if (typeof window.CRMO_openCustomerAuthAuto === 'function') {
+        try{ window.CRMO_openCustomerAuthAuto(mode || 'login'); }catch(e){ return false; }
+        // Optional: tweak visible copy to match admin context
+        try{
+          var p = document.getElementById('crmo-client-title-text');
+          if(p && p.textContent && p.textContent.trim().length > 40){
+            p.textContent = 'כניסת מנהלים';
+          }
+        }catch(e){}
+        return true;
+      }
+      return false;
+    }
+
+    // Force all admin login entrypoints to use the client's modal UI
+    window.CRMO_openAuth = function(){ openClient('login'); };
+    window.CRMO_openAuthAuto = function(){ openClient('login'); };
+
+    // Prevent legacy admin modal/overlay from ever flashing
+    document.addEventListener('DOMContentLoaded', function(){
+      try{
+        var legacy = document.getElementById('crmo-auth-modal');
+        var legacyOv = document.getElementById('crmo-auth-overlay');
+        if (legacy) { legacy.hidden = true; legacy.style.display = 'none'; legacy.setAttribute('aria-hidden','true'); }
+        if (legacyOv) { legacyOv.hidden = true; legacyOv.style.display = 'none'; }
+      }catch(e){}
+    });
+  }catch(e){}
 })();
 </script>
 
