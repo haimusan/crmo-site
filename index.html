@@ -1,9 +1,54 @@
 <!DOCTYPE html>
-<!-- CRMO_v1611 -->
+<!-- CRMO_v1615 -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-window-supabase-expose">
+  
+  <base href="../">
+  <script id="crmo-mode-admin">
+    // CRMO dual-mode: admin entry (served from /admin/)
+    window.CRMO_MODE = "admin";
+    window.CRMO_ADMIN_ENTRY = "/admin/";
+  </script>
+  <script id="crmo-admin-gatekeeper">
+    // Non-blocking gatekeeper: if not owner, redirect to public index
+    (function(){
+      const toPublic = () => {
+        try { window.location.replace("../index.html"); } catch(e){ window.location.href = "../index.html"; }
+      };
+      // Run after load so we don't break parsing
+      window.addEventListener("load", async () => {
+        try {
+          if (typeof window.supabase === "undefined" && typeof window.supabaseClient === "undefined") {
+            console.warn("[CRMO] Supabase not available yet; redirecting to public.");
+            return toPublic();
+          }
+          // Prefer existing helper if present
+          if (typeof window.CRMO_refreshRoleAndAdminUI === "function") {
+            const r = await window.CRMO_refreshRoleAndAdminUI();
+            const isOwner = !!(r && (r.owner === true || r.role === "owner" || window.CRMO_IS_OWNER === true));
+            if (!isOwner) return toPublic();
+            return;
+          }
+          // Fallback: create a client and query roles table
+          const url = (window.CRMO_SUPABASE_URL || "").trim();
+          const key = (window.CRMO_SUPABASE_ANON_KEY || "").trim();
+          if (!url || !key) { console.warn("[CRMO] Missing Supabase keys; redirecting to public."); return toPublic(); }
+          const sb = window.supabase.createClient(url, key);
+          const { data: ses } = await sb.auth.getSession();
+          const userId = ses?.session?.user?.id;
+          if (!userId) return toPublic();
+          const { data, error } = await sb.from("crmo_user_roles").select("role").eq("user_id", userId).maybeSingle();
+          if (error) { console.warn("[CRMO] role check failed:", error.message); return toPublic(); }
+          if ((data?.role || "") !== "owner") return toPublic();
+        } catch (e) {
+          console.warn("[CRMO] gatekeeper error:", e?.message || e);
+          toPublic();
+        }
+      });
+    })();
+  </script>
+<script id="crmo-window-supabase-expose">
   // Ensure Supabase library is exposed for diagnostics
   try{ if(typeof window.supabase === 'undefined' && typeof supabase !== 'undefined'){ window.supabase = supabase; } }catch(e){}
   </script>
@@ -32,8 +77,8 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1612";
-window.CRMO_VERSION = 'CRMO_v1611';
+window.CRMO_BUILD_VERSION = "1615";
+window.CRMO_VERSION = 'CRMO_v1615';
 window.CRMO_VERSION_NUMBER = 1611;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
@@ -196,12 +241,12 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       // write build NUMBER into header + footer
       var top = document.getElementById("crmo-top-version");
       if (top){
-        top.textContent = n;
+        top.textContent = (n ? ("v"+n+" ADMIN") : "");
         if(tag) top.setAttribute('title', tag);
       }
       var foot = document.getElementById("crmo-footer-version");
       if (foot){
-        foot.textContent = n;
+        foot.textContent = (n ? ("v"+n+" ADMIN") : "");
         if(tag) foot.setAttribute('title', tag);
       }
       // expose on <html>
@@ -1317,7 +1362,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1599</title>
+<title>CRMO Admin Dashboard – v1615</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
