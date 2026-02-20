@@ -3,6 +3,11 @@
 
 <html dir="rtl" lang="he">
 <head>
+  <script id="crmo-window-supabase-expose">
+  // Ensure Supabase library is exposed for diagnostics
+  try{ if(typeof window.supabase === 'undefined' && typeof supabase !== 'undefined'){ window.supabase = supabase; } }catch(e){}
+  </script>
+
 <script id="crmo_sb_keys_in_head">
 window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
 window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
@@ -27,7 +32,7 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1611";
+window.CRMO_BUILD_VERSION = "1612";
 window.CRMO_VERSION = 'CRMO_v1611';
 window.CRMO_VERSION_NUMBER = 1611;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
@@ -309,6 +314,39 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
       kill.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
     }catch(e){}
   }
+  // Debug / recovery: force logout and clear local auth crumbs (v1612)
+  window.CRMO_forceLogout = async function(){
+    try{
+      var sb = null;
+      try{
+        if (window.CRMO_getSbClient) sb = await window.CRMO_getSbClient();
+      }catch(e){}
+      if(!sb){
+        try{
+          if (window.supabase && window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY){
+            sb = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
+          }
+        }catch(e){}
+      }
+      if(sb){
+        try{ await sb.auth.signOut(); }catch(e){}
+      }
+    }catch(e){}
+    try{
+      // remove supabase auth tokens + crmo local flags
+      var kill=[];
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        if(k.indexOf('sb-')===0 && k.indexOf('-auth-token')>0) kill.push(k);
+        if(k.indexOf('crmo:')===0 || k.indexOf('crmo_')===0 || k.indexOf('CRMO_')===0) kill.push(k);
+      }
+      kill.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+    }catch(e){}
+    try{ sessionStorage.clear(); }catch(e){}
+    try{ location.reload(); }catch(e){}
+  };
+
 
   async function getSbOrThrow(){
     if(!window.CRMO_getSB) throw new Error('CRMO_getSB missing');
@@ -404,7 +442,11 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
           var out2 = await q.limit(1);
           if(out2 && out2.data && out2.data[0] && out2.data[0].role) role = out2.data[0].role;
         }
-      }catch(e){}
+      }
+      catch(e){
+        try{ console.warn('[CRMO] role check failed; continuing as viewer', e); }catch(_e){}
+        role = null;
+      }
 
       var isOwner = (role === 'owner');
       window.CRMO_IS_OWNER = isOwner;
@@ -445,7 +487,8 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
       '#crmo-dev-admin',
       '#crmo-restore-admin',
       '#crmo-admin-add-btn',
-      '#crmo-admins-list'
+      '#crmo-admins-list',
+      '#crmo-profile-edit'
     ].join(',')));
   }
 
@@ -30155,8 +30198,21 @@ function boot(){
     }catch(e){}
   }
   async function getSb(){
-    if (!window.CRMO_getSbClient) throw new Error('Supabase client not ready');
-    return await window.CRMO_getSbClient();
+    // Non-blocking: use the shared client if available; otherwise fall back to a local client
+    if (window.CRMO_getSbClient){
+      return await window.CRMO_getSbClient();
+    }
+    if (isSupabaseConfigured() && window.supabase){
+      try{
+        if (!window.__CRMO_SB_FALLBACK){
+          window.__CRMO_SB_FALLBACK = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY, {
+            auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+          });
+        }
+        return window.__CRMO_SB_FALLBACK;
+      }catch(e){}
+    }
+    throw new Error('Supabase client not ready');
   }
   function openCustomer(mode){
     try{
