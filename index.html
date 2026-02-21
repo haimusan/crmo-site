@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<!-- CRMO_v1633 PUBLIC -->
-<!-- CRMO_v1633 -->
+<!-- CRMO_v1634 PUBLIC -->
+<!-- CRMO_v1634 -->
 
 <html dir="rtl" lang="he">
 <head>
 <script>
-/* CRMO v1633: Supabase shim (prevents ReferenceError when supabase-js CDN is blocked) */
+/* CRMO v1634: Supabase shim (prevents ReferenceError when supabase-js CDN is blocked) */
 (function () {
   if (typeof window.supabase === 'undefined') {
     window.supabase = {
@@ -16,6 +16,94 @@
 })();
 var supabase = window.supabase;
 </script>
+
+<script id="crmo-owner-ui-boot-v1634">
+/* CRMO v1634: Owner UI boot (prevents hidden admin bar after refresh; works with/without supabase-js) */
+(function(){
+  const OWNER_EMAILS = ["boochin@gmail.com"];
+  const BAR_ID = "crmo-admin-bar";
+  const STEALTH_STYLE_ID = "crmo-admin-stealth-css";
+
+  function normEmail(x){ return (x||"").toString().trim().toLowerCase(); }
+  function isOwnerEmail(email){
+    const e = normEmail(email);
+    return !!e && OWNER_EMAILS.map(normEmail).includes(e);
+  }
+
+  function readSessionRaw(){
+    return (
+      localStorage.getItem("CRMO_SB_SESSION") ||
+      sessionStorage.getItem("CRMO_SB_SESSION") ||
+      localStorage.getItem("crmo_sb_session") ||
+      sessionStorage.getItem("crmo_sb_session") ||
+      ""
+    );
+  }
+
+  function getEmailFromStoredSession(){
+    try{
+      const raw = readSessionRaw();
+      if(!raw) return "";
+      const obj = JSON.parse(raw);
+      // Support both {user:{email}} and {session:{user:{email}}}
+      const email =
+        (obj && obj.user && obj.user.email) ||
+        (obj && obj.session && obj.session.user && obj.session.user.email) ||
+        (obj && obj.data && obj.data.session && obj.data.session.user && obj.data.session.user.email) ||
+        "";
+      return normEmail(email);
+    }catch(e){
+      return "";
+    }
+  }
+
+  function getEmailHint(){
+    return normEmail(localStorage.getItem("crmo:admin:email")) || getEmailFromStoredSession();
+  }
+
+  function forceShowAdminUI(){
+    try{
+      document.documentElement.classList.add("crmo-owner");
+      const stealth = document.getElementById(STEALTH_STYLE_ID);
+      if(stealth) stealth.remove();
+      const bar = document.getElementById(BAR_ID);
+      if(bar){
+        bar.style.setProperty("display","block","important");
+        bar.style.setProperty("visibility","visible","important");
+        bar.style.setProperty("opacity","1","important");
+        bar.style.setProperty("pointer-events","auto","important");
+      }
+    }catch(e){}
+  }
+
+  function forceHideAdminUI(){
+    try{
+      document.documentElement.classList.remove("crmo-owner");
+      const bar = document.getElementById(BAR_ID);
+      if(bar){
+        bar.style.setProperty("display","none","important");
+      }
+    }catch(e){}
+  }
+
+  // expose helpers globally
+  window.CRMO_forceShowAdminUI = forceShowAdminUI;
+  window.CRMO_forceHideAdminUI = forceHideAdminUI;
+
+  // Best-effort auto-apply on every load (prevents "works once then disappears after F5")
+  function autoApply(){
+    const email = getEmailHint();
+    if(isOwnerEmail(email)){
+      forceShowAdminUI();
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", autoApply, { once: false });
+  window.addEventListener("pageshow", autoApply);
+  window.addEventListener("focus", autoApply);
+})();
+</script>
+
 
 
   
@@ -51,15 +139,15 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
   }catch(e){}
 })();</script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1633";
-window.CRMO_VERSION = 'CRMO_v1633';
-window.CRMO_VERSION_NUMBER = 1633;
+window.CRMO_BUILD_VERSION = "1634";
+window.CRMO_VERSION = 'CRMO_v1634';
+window.CRMO_VERSION_NUMBER = 1634;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";</script>
 <script id="crmo_admin_ui_force_v1629">
-/* v1633: force show/hide admin UI without relying on inner-scope helpers */
+/* v1634: force show/hide admin UI without relying on inner-scope helpers */
 window.CRMO_forceShowAdminUI = function(){
   try{ var st=document.getElementById('crmo-admin-stealth-css'); if(st) st.remove(); }catch(e){}
   try{ document.documentElement.classList.add('crmo-owner'); }catch(e){}
@@ -96,7 +184,7 @@ window.CRMO_forceHideAdminUI = function(){
 </script>
 
 <script id="crmo-role-refresher-stub">
-/* CRMO role refresher stub (v1633)
+/* CRMO role refresher stub (v1634)
    Guarantees window.CRMO_refreshRoleAndAdminUI is ALWAYS a function,
    and NEVER hangs if Supabase SDK is blocked. Uses local session fallback.
 */
@@ -161,7 +249,7 @@ window.CRMO_forceHideAdminUI = function(){
 
 
 <script id="crmo_asset_paths_v1629">
-/* v1633: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
+/* v1634: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
    Fix: compute Supabase asset base AFTER CRMO_SUPABASE_URL defaults are set (in later script),
    so branding/logo/icons load from Supabase Storage when local /assets folder isn't deployed. */
 (function(){
@@ -346,7 +434,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];</script>
 
 <script id="crmo_cloud_config_v1629">
 /*
-  CRMO Cloud Config (v1633)
+  CRMO Cloud Config (v1634)
   Minimal server load/save for crmo_site_config.
   - Cloud ops only when ?cloud=1 (or cloud=true). We also accept params inside hash (/#?cloud=1) for convenience.
   - env=staging routes to config id "main_staging", otherwise "main".
@@ -429,7 +517,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];</script>
       kill.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
     }catch(e){}
   }
-  // Debug / recovery: force logout and clear local auth crumbs (v1633)
+  // Debug / recovery: force logout and clear local auth crumbs (v1634)
   window.CRMO_forceLogout = async function(){
     try{
       var sb = null;
@@ -488,7 +576,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];</script>
   return window.CRMO_IS_OWNER === true;
 }
 
-  /* ===== CRMO RBAC (v1633) ===== */
+  /* ===== CRMO RBAC (v1634) ===== */
   (function(){
     // Hide admin DOM immediately; we will only enable it for owners after role check.
     try{
@@ -497,7 +585,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];</script>
         st.id = 'crmo-admin-stealth-css';
         st.textContent = `
           #crmo-admin-bar, #crmo-admin-editor, #crmo-admin-subbar,
-          #CRMO_v1633_brands_admin_panel,
+          #CRMO_v1634_brands_admin_panel,
           #crmo-header-admin, #crmo-mode-admin,
           #crmo-settings-admin, #crmo-media-admin, #crmo-galleries-admin,
           #crmo-tracking-admin, #crmo-permissions-admin, #crmo-audience-admin,
@@ -604,7 +692,7 @@ function CRMO_adminNodes(){
       '#crmo-admin-bar',
       '#crmo-admin-editor',
       '#crmo-admin-subbar',
-      '#CRMO_v1633_brands_admin_panel',
+      '#CRMO_v1634_brands_admin_panel',
       '[id$="_brands_admin_panel"]',
       '#crmo-header-admin',
       '#crmo-mode-admin',
@@ -642,7 +730,7 @@ function CRMO_adminNodes(){
       CRMO_adminNodes().forEach(function(n){
         if(!n) return;
         if(remove){
-          // v1633: never remove admin nodes (prevents losing toolbar after login). Hide instead.
+          // v1634: never remove admin nodes (prevents losing toolbar after login). Hide instead.
           n.style.display='none';
           n.style.visibility='hidden';
           n.hidden=true;
@@ -665,7 +753,7 @@ function CRMO_adminNodes(){
   }
 
   
-  // v1633: early admin restore (if prior login stored admin email)
+  // v1634: early admin restore (if prior login stored admin email)
   (function(){
     try{
       var e = String(localStorage.getItem('crmo:admin:email')||'').trim().toLowerCase();
@@ -1112,7 +1200,7 @@ document.getElementById('crmo-cloud-fix-stands-folders').onclick = async functio
     mountPanel();
   }
 })();
-// --- v1633: lock + autorun refresher (prevents overwrite & ensures bar shows after refresh) ---
+// --- v1634: lock + autorun refresher (prevents overwrite & ensures bar shows after refresh) ---
 try{
   if(typeof window.CRMO_refreshRoleAndAdminUI === 'function'){
     try{ Object.defineProperty(window,'CRMO_refreshRoleAndAdminUI',{value: window.CRMO_refreshRoleAndAdminUI, writable:false, configurable:false}); }catch(e){}
@@ -1433,12 +1521,12 @@ try{
 })();</script>
 <style id="crmo_route_gallery_styles">
 
-/* v1633: disable tile clear button for usability testing stability */
+/* v1634: disable tile clear button for usability testing stability */
 #te-clear{ display:none !important; }
 
 
 
-/* v1633: danger button style */
+/* v1634: danger button style */
 #te-clear{
   border:1px solid rgba(200,0,0,.55);
   color:#b40000;
@@ -1448,7 +1536,7 @@ try{
 
 
 
-/* CRMO v1633: sticky admin bar + hard reset button */
+/* CRMO v1634: sticky admin bar + hard reset button */
 #crmo-admin-bar{ position: sticky; top: var(--crmo-sticky-top, 0px); z-index: 9999; }
 #crmo-admin-bar .crmo-hard-reset-btn{
   border:1px solid rgba(200,0,0,.6) !important;
@@ -1482,7 +1570,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1633</title>
+<title>CRMO_v1634</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -2133,7 +2221,7 @@ max-width: var(--wrap);
 .contact-bar .coords{ font-size: clamp(14px, 1.4vw, 18px); }
 form textarea.autogrow{ overflow:hidden; resize:none; }
 
-/* ---- CRMO v1633: thumbs css deduped into style#crmo_thumbs_rtl_fix ---- */
+/* ---- CRMO v1634: thumbs css deduped into style#crmo_thumbs_rtl_fix ---- */
 
 .crmo-lb-meta #crmoCaption {
   display: inline-block;
@@ -3051,7 +3139,7 @@ a.ph, .ph { position: relative; }
 }
 </style>
 
-<style id="CRMO_v1633_overrides">
+<style id="CRMO_v1634_overrides">
 header, .site-header, .main-header, #header, .hdr, .global-header{
   position: sticky;
   top: var(--crmo-sticky-top, 0px);
@@ -3071,7 +3159,7 @@ header, .site-header, .main-header, #header, .hdr, .global-header{
   z-index: 100000 !important;
 }
 </style>
-<style id="CRMO_v1633_overrides">
+<style id="CRMO_v1634_overrides">
 header{ position: sticky; top: var(--crmo-sticky-top, 0px); z-index: 999 !important; }
 .gallery-hover-ready .grid .ph .hover-desc,
 .grid .ph .hover-desc,
@@ -3095,7 +3183,7 @@ section .grid > a.ph::after,
 section .grid > .ph::after{ content: none !important; }
 #stands .stands-overlay{ display:block !important; }
 </style>
-<style id="CRMO_v1633_overrides">
+<style id="CRMO_v1634_overrides">
 #stands .grid .ph > :not(img):not(picture):not(.crmo-ov),
 section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
   display: none !important;
@@ -3130,7 +3218,7 @@ section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
 .grid .ph:hover .crmo-ov, .grid .ph:focus-within .crmo-ov{ transform: translateY(0); }
 .grid .ph .crmo-ov *{ color:#000 !important; }
 </style>
-<style id="CRMO_v1633_mobile_1x4">
+<style id="CRMO_v1634_mobile_1x4">
 @media (max-width: 767.98px){
   section .grid{ display:block !important; }
   section .grid .ph{ width:100% !important; display:block !important; }
@@ -3300,11 +3388,11 @@ section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
 #crmo-auth .footnotes .small{font-size:12px;opacity:.85;text-align:center}
 #crmo-auth .footnotes .links{display:flex;gap:8px;justify-content:center}
 #crmo-auth .footnotes .sep{opacity:.5}
-</style><style id="CRMO_v1633_exhibitions_spacing_fix">
+</style><style id="CRMO_v1634_exhibitions_spacing_fix">
 #exhibitions.hair{
   margin-top: var(--vpad);
 }
-</style><style id="CRMO_v1633_center_first_galleries">
+</style><style id="CRMO_v1634_center_first_galleries">
 #intro .wrap > h1, #intro .wrap > h2, #intro .wrap > h3,
 #brands .wrap > h1, #brands .wrap > h2, #brands .wrap > h3,
 #secondary-gallery .wrap > h1, #secondary-gallery .wrap > h2, #secondary-gallery .wrap > h3{
@@ -3316,7 +3404,7 @@ section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
   text-align: center;
   margin-left: auto; margin-right: auto;
 }
-</style><style id="CRMO_v1633_galleries_text_std">
+</style><style id="CRMO_v1634_galleries_text_std">
 #intro .wrap > h1, #intro .wrap > h2, #intro .wrap > h3,
 #brands .wrap > h1, #brands .wrap > h2, #brands .wrap > h3,
 #secondary-gallery .wrap > h1, #secondary-gallery .wrap > h2, #secondary-gallery .wrap > h3,
@@ -3334,23 +3422,23 @@ section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
   text-align: center;
   margin-left: auto; margin-right: auto;
 }
-</style><style id="CRMO_v1633_secondary_std">
+</style><style id="CRMO_v1634_secondary_std">
 #secondary-gallery .wrap > h2{ text-align:center; }
 #secondary-gallery .wrap > p{ text-align:center; margin-left:auto; margin-right:auto; }
-</style><style id="CRMO_v1633_brands_divider_fix">
+</style><style id="CRMO_v1634_brands_divider_fix">
 #brands.hair{
   border-top: 1px solid var(--line);
   padding-top: var(--vpad);
   margin-top: var(--vpad);
 }
-</style><style id="CRMO_v1633_rubik_light">
+</style><style id="CRMO_v1634_rubik_light">
 :root{
   --ff-body: "Rubik", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   --ff-head: "Rubik", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 body{ font-family: var(--ff-body); font-weight: 300; }
 h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
-</style><style id="CRMO_v1633_gallery_typo_spacing">
+</style><style id="CRMO_v1634_gallery_typo_spacing">
 :root{ --gap-ht: 0.75rem; }
 #intro .wrap > h1.keyline, #intro .wrap > h2.keyline, #intro .wrap > h3.keyline,
 #brands .wrap > h1.keyline, #brands .wrap > h2.keyline, #brands .wrap > h3.keyline,
@@ -3371,7 +3459,7 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
   margin-top: 0;
   margin-left: auto; margin-right: auto;
 }
-</style><style id="CRMO_v1633_secondary_gap_fix">
+</style><style id="CRMO_v1634_secondary_gap_fix">
 #secondary-gallery .wrap > h1.keyline,
 #secondary-gallery .wrap > h2.keyline,
 #secondary-gallery .wrap > h3.keyline{
@@ -3380,7 +3468,7 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
 #secondary-gallery .wrap > p.desc{
   margin-top: 0 !important;
 }
-</style><style id="CRMO_v1633_secondary_divider_and_gap">
+</style><style id="CRMO_v1634_secondary_divider_and_gap">
 #secondary-gallery.hair{
   border-top: 1px solid var(--line);
   padding-top: var(--vpad);
@@ -3395,7 +3483,7 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
 #secondary-gallery .wrap > p.desc{
   margin-top: 0 !important;
 }
-</style><style id="CRMO_v1633_inter_section_gap_fix">
+</style><style id="CRMO_v1634_inter_section_gap_fix">
 :root{ --sec-gap: var(--vpad); }
 #brands .wrap > *:last-child,
 #secondary-gallery .wrap > *:last-child{
@@ -3407,7 +3495,7 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
 }
 #brands.hair{ border-top: 1px solid var(--line); padding-top: var(--vpad); margin-top: var(--vpad); }
 #secondary-gallery.hair{ border-top: 1px solid var(--line); padding-top: var(--vpad); margin-top: var(--vpad); }
-</style><style id="CRMO_v1633_brands_gap_fix">
+</style><style id="CRMO_v1634_brands_gap_fix">
 #brands .wrap > h1.keyline,
 #brands .wrap > h2.keyline,
 #brands .wrap > h3.keyline{
@@ -3417,23 +3505,23 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
   margin-top: 0 !important;
   margin-left: auto; margin-right: auto;
 }
-</style><style id="CRMO_v1633_small_hair_rule">
+</style><style id="CRMO_v1634_small_hair_rule">
 #small.hair{
   border-top: 1px solid var(--line);
   padding-top: var(--vpad);
   margin-top: var(--vpad);
 }
-</style><style id="CRMO_v1633_small_divider_contrast">
+</style><style id="CRMO_v1634_small_divider_contrast">
 #small.hair{
   border-top: 1px solid var(--line, rgba(0,0,0,.08)) !important;
   padding-top: var(--vpad) !important;
   margin-top: var(--vpad) !important;
 }
-</style><style id="CRMO_v1633_packages_gallery_styles">
+</style><style id="CRMO_v1634_packages_gallery_styles">
 #packages .wrap > h1, #packages .wrap > h2, #packages .wrap > h3{ text-align: center; }
 #packages .wrap > p{ text-align: center; margin-left:auto; margin-right:auto; }
 #packages.hair{ border-top: 1px solid var(--line); padding-top: var(--vpad); margin-top: var(--vpad); }
-</style><style id="CRMO_v1633_galleries_uniformity">
+</style><style id="CRMO_v1634_galleries_uniformity">
 :root{ --gap-ht: 0.75rem; }
 section .wrap > h1.keyline, section .wrap > h2.keyline, section .wrap > h3.keyline{
   text-align: center;
@@ -3450,13 +3538,13 @@ section.hair{
   margin-top: var(--vpad);
 }
 section .wrap > *:last-child{ margin-bottom: 0; }
-</style><style id="CRMO_v1633_stands_uniformity">
+</style><style id="CRMO_v1634_stands_uniformity">
 #stands .wrap > h1.keyline, #stands .wrap > h2.keyline, #stands .wrap > h3.keyline{
   text-align:center; margin-bottom: var(--gap-ht, 0.75rem);
 }
 #stands .wrap > p.desc{ text-align:center; margin-top:0; margin-left:auto; margin-right:auto; }
 #stands .gallery-grid{  }
-</style><style id="CRMO_v1633_contactbar_bump">
+</style><style id="CRMO_v1634_contactbar_bump">
 .contact-bar .icons a img{ width: clamp(36px, 3.3vw, 51px) !important; height:auto !important; }
 .contact-bar .contact-text,
 .contact-bar .coords{ font-size: clamp(21px, 1.65vw, 27px) !important; }
@@ -3466,7 +3554,7 @@ section .wrap > *:last-child{ margin-bottom: 0; }
 @media (max-width:700px){
   .contact-bar{ gap: 16px !important; }
 }
-</style><style id="CRMO_v1633_contactbar_bump2">
+</style><style id="CRMO_v1634_contactbar_bump2">
 .contact-bar .icons a img{ width: clamp(47px, 4.29vw, 66px) !important; height:auto !important; }
 .contact-bar .contact-text,
 .contact-bar .coords{ font-size: clamp(27px, 2.2vw, 35px) !important; }
@@ -3476,7 +3564,7 @@ section .wrap > *:last-child{ margin-bottom: 0; }
 @media (max-width:700px){
   .contact-bar{ gap: 18px !important; }
 }
-</style><style id="CRMO_v1633_login_overrides">
+</style><style id="CRMO_v1634_login_overrides">
 #login-section h2, #crmo-auth header h3, #crmo-auth .title, .login-title{
   display:none !important;
 }
@@ -3516,7 +3604,7 @@ section .wrap > *:last-child{ margin-bottom: 0; }
   opacity:1 !important; pointer-events:auto !important;
 }
 #login-section, #crmo-auth{ text-align:center !important; }
-</style><style id="CRMO_v1633_login_polish">
+</style><style id="CRMO_v1634_login_polish">
 #login-section .header .head-grid{
   display:flex !important;
   flex-direction: row-reverse !important;
@@ -3812,7 +3900,7 @@ section .wrap > *:last-child{ margin-bottom: 0; }
   margin-bottom: 8px;
   text-align: center;
 }
-</style><style id="CRMO_v1633_stands_subcopy">
+</style><style id="CRMO_v1634_stands_subcopy">
 #stands .stands-copy-shell{
   max-width: 100%;
   margin: 1.5rem auto 0;
@@ -4347,7 +4435,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
     transform: translateY(0);
   }
 </style>
-<style id="CRMO_v1633_hover_fonts_unify">
+<style id="CRMO_v1634_hover_fonts_unify">
 .grid .ph .crmo-ov{
   font-family:'Rubik',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif !important;
   font-weight:400 !important;
@@ -4369,7 +4457,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
   line-height:1.1;
 }
 </style>
-<style id="CRMO_v1633_hover_desc_5_lines">
+<style id="CRMO_v1634_hover_desc_5_lines">
 .grid .ph .crmo-ov .desc{
   white-space: pre-line;
   display: -webkit-box;
@@ -4378,7 +4466,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
   overflow: hidden;
 }
 </style>
-<style id="CRMO_v1633_multi_project_ui">
+<style id="CRMO_v1634_multi_project_ui">
 #tile-editor .field-multi-project{
   margin-top:10px;
   padding:8px 10px;
@@ -4458,7 +4546,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
   left:12px;
 }
 </style>
-<style id="CRMO_v1633_cosmetic_css">
+<style id="CRMO_v1634_cosmetic_css">
 #tile-editor .te-header{ position:relative; padding-left:44px; }
 #tile-editor .te-close-x{
   position:absolute;
@@ -4574,12 +4662,12 @@ section:not(#brands):not(#logos) .grid .ph:hover{
   opacity:1 !important;
 }
 </style>
-<style id="CRMO_v1633_multi_upload_ui">
+<style id="CRMO_v1634_multi_upload_ui">
 #tile-editor #te-multi-upload{
   margin-top:4px;
 }
 </style>
-<style id="CRMO_v1633_multi_project_ui_css">
+<style id="CRMO_v1634_multi_project_ui_css">
 #tile-editor .mp-block{
   margin-top: 12px;
   padding: 10px 12px;
@@ -4828,7 +4916,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
 }
 #tile-editor .mp-add:hover{ background:rgba(0,0,0,0.03); }
 </style>
-<script id="CRMO_v1633_multi_project_ui">
+<script id="CRMO_v1634_multi_project_ui">
 (function(){
   var mpThumbs = {};
   window.CRMO_mpThumbs = mpThumbs;
@@ -4887,7 +4975,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
               el.style.display = (v==='1') ? '' : 'none';
             });
           }catch(e){}
-          // v1633+: אל תמחק/תאפס טקסטים לכל תת-תמונה כשמכבים את הסימון; רק מסתירים.
+          // v1634+: אל תמחק/תאפס טקסטים לכל תת-תמונה כשמכבים את הסימון; רק מסתירים.
         }catch(e){}
       }, {passive:true});
     }
@@ -5594,7 +5682,7 @@ editor.addEventListener('click', function(ev){
     });
   }
 })();</script>
-<style id="crmo_thumbs_rtl_fix">/* ---- CRMO v1633: thumbs responsive (single source of truth) ---- */
+<style id="crmo_thumbs_rtl_fix">/* ---- CRMO v1634: thumbs responsive (single source of truth) ---- */
 #crmoThumbs{
   width: 100% !important;
   max-width: 100%;
@@ -5822,7 +5910,7 @@ body.role-guest .tile-like-btn{
   cursor:default;
   pointer-events:none;
 }
-/* v1633: show the top view-mode bar for all roles */
+/* v1634: show the top view-mode bar for all roles */
 #crmo-role-toggle{ display:flex !important; }
 
 #crmo-role-toggle{
@@ -5909,7 +5997,7 @@ body.role-admin .tile-edit-btn{
   right:auto;
 }
 </style>
-<style id="CRMO_v1633_stands_align">
+<style id="CRMO_v1634_stands_align">
 #stands .stands-main-copy .keyline,
 #stands .subcats-copy .keyline{
   margin-top: 0;
@@ -5921,7 +6009,7 @@ body.role-admin .tile-edit-btn{
   margin-inline: auto;
 }
 </style>
-<style id="CRMO_v1633_layers_hint">
+<style id="CRMO_v1634_layers_hint">
 .tile-admin-right::before{
   content:'';
 }
@@ -5960,7 +6048,7 @@ body.role-admin .tile-edit-wrapper.tile-single .tile-admin-right::before{
   content:'';
 }
 </style>
-<style id="CRMO_v1633_layer_icon_fix">
+<style id="CRMO_v1634_layer_icon_fix">
 body.role-admin .tile-edit-wrapper .tile-layer-btn{
   display:inline-flex !important;
 }
@@ -5994,7 +6082,7 @@ body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
   opacity:1;
 }
 </style>
-<style id="CRMO_v1633_brand_dropdown_css">
+<style id="CRMO_v1634_brand_dropdown_css">
 .te-brand-field,
 .tm-brand-field{
   position:relative;
@@ -6140,7 +6228,7 @@ body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
 }
 </style>
 
-<style id="CRMO_v1633_cosmetics">
+<style id="CRMO_v1634_cosmetics">
 #tile-editor .te-close-x{
   background:transparent !important;
   border:none !important;
@@ -6366,7 +6454,7 @@ body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
   }
 </style>
 
-<style id="crmo-stands-subcats-one-row-v1633">
+<style id="crmo-stands-subcats-one-row-v1634">
 @media (min-width: 900px){
   html body main #stands nav.subcats{
     width: min(1400px, 98vw) !important;
@@ -6389,7 +6477,7 @@ body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
 </style>
 
 
-<style id="crmo-v1633-layout">
+<style id="crmo-v1634-layout">
 #stands nav.subcats,
 section[id^="stands-"] nav.subcats{
   width: 90% !important;
@@ -6424,7 +6512,7 @@ section[id^="stands-"] nav.subcats{
 }
 </style>
 
-<style id="crmo-stands-subcats-shrink-v1633">
+<style id="crmo-stands-subcats-shrink-v1634">
 @media (min-width: 900px){
   html body main #stands nav.subcats{
     width: fit-content !important;
@@ -6445,7 +6533,7 @@ section[id^="stands-"] nav.subcats{
 }
 </style>
 
-<style id="CRMO_v1633_overrides">
+<style id="CRMO_v1634_overrides">
 #tile-editor .te-close-x{ color:#d00; }
 #tile-editor .mp-row{ cursor:default; }
 #tile-editor .mp-remove{
@@ -6510,7 +6598,7 @@ section[id^="stands-"] nav.subcats{
 #tile-editor .mp-drag-handle:active{ cursor:grabbing; }
 </style>
 
-<style id="CRMO_v1633_header_buttons_admin_css">
+<style id="CRMO_v1634_header_buttons_admin_css">
 body:not(.role-admin) #crmo-header-admin{ display:none !important; }
 #crmo-header-admin{
   border-top: 1px solid var(--line, rgba(0,0,0,.08));
@@ -6590,11 +6678,11 @@ body:not(.role-admin) #crmo-header-admin{ display:none !important; }
 }
 body:not(.role-admin) #crmo-admin-bar{ display:none !important; }
 
-/* v1633: owner override to unhide admin UI (supersedes earlier display:none!important rules) */
+/* v1634: owner override to unhide admin UI (supersedes earlier display:none!important rules) */
 html.crmo-owner #crmo-admin-bar,
 html.crmo-owner #crmo-admin-editor,
 html.crmo-owner #crmo-admin-subbar,
-html.crmo-owner #CRMO_v1633_brands_admin_panel,
+html.crmo-owner #CRMO_v1634_brands_admin_panel,
 html.crmo-owner [id$="_brands_admin_panel"],
 html.crmo-owner #crmo-header-admin,
 html.crmo-owner #crmo-mode-admin,
@@ -6796,7 +6884,7 @@ body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
 </style>
 
 
-<style id="CRMO_v1633_future_admin_tabs_css">
+<style id="CRMO_v1634_future_admin_tabs_css">
 body:not(.role-admin) .crmo-future-panel{ display:none !important; }
 body.role-admin .crmo-future-panel{
   position: fixed;
@@ -6824,7 +6912,7 @@ body.role-admin .crmo-future-panel{
   font-size: 13px;
 }
 </style>
-<style id="CRMO_v1633_report_css">
+<style id="CRMO_v1634_report_css">
 #crmo-report-admin .crmo-report-wrap{
   display:grid;
   gap:12px;
@@ -6948,7 +7036,7 @@ body.role-admin .crmo-future-panel{
   font-size:13px;
 }
 </style>
-<style id="CRMO_v1633_ui_polish">
+<style id="CRMO_v1634_ui_polish">
 #crmo-role-toggle .crmo-role-tab{
   background:#ededed;
   color:rgba(0,0,0,.78);
@@ -6996,7 +7084,7 @@ body.role-admin .crmo-future-panel{
 }
 </style>
 
-<style id="CRMO_v1633_ui_polish">
+<style id="CRMO_v1634_ui_polish">
 #crmo-role-toggle .crmo-role-tab{
   background:#f2f2f2;
   color:rgba(0,0,0,.76);
@@ -7037,7 +7125,7 @@ body.role-ux #crmo-settings-admin{
 </style>
 
 
-<style id="CRMO_v1633_permissions_css">
+<style id="CRMO_v1634_permissions_css">
 #crmo-permissions-admin .crmo-perms-grid{
   display:grid;
   gap:12px;
@@ -7669,7 +7757,7 @@ html.crmo-usability-public #crmo-role-toggle{
 </style>
 
 
-<style id="CRMO_v1633_admin_dedupe_css">
+<style id="CRMO_v1634_admin_dedupe_css">
 #crmo-header-admin .crmo-header-admin-head-top,
 #crmo-galleries-admin .crmo-galleries-admin-head-top{
   display:none !important;
@@ -7677,7 +7765,7 @@ html.crmo-usability-public #crmo-role-toggle{
 </style>
 
 
-<style id="CRMO_v1633_galleries_admin_gap_fix_css">
+<style id="CRMO_v1634_galleries_admin_gap_fix_css">
 body.role-admin #crmo-galleries-admin{
   padding-top: 0 !important;
   background: #f7f7f7 !important;
@@ -7689,7 +7777,7 @@ body.role-admin #crmo-galleries-admin .wrap{
 }
 </style>
 
-<style id="CRMO_v1633_internal_editor_layers">
+<style id="CRMO_v1634_internal_editor_layers">
 #crmo-stands-tags-editor,
 #crmo-master-tags-editor,
 #tiles-manager-overlay.tm-overlay,
@@ -7705,7 +7793,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
   pointer-events: none !important;
 }
 </style>
-<style id="CRMO_v1633_footer_and_accessibility_edit">
+<style id="CRMO_v1634_footer_and_accessibility_edit">
 #crmo-footer{
   border-top: 1px solid var(--line);
   padding: 52px 0 56px 0;
@@ -8116,7 +8204,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 }
 </style>
 
-<style id="CRMO_v1633_login_modal_position">
+<style id="CRMO_v1634_login_modal_position">
 #crmo-auth{
   top: clamp(12px, 6vh, 56px) !important;
   transform: translate(-50%, 0) !important;
@@ -8144,7 +8232,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 }
 </style>
 
-<style id="CRMO_v1633_login_modal_position_fix">
+<style id="CRMO_v1634_login_modal_position_fix">
 #login-modal .crmo-login-card{
   top: clamp(10px, 4vh, 44px) !important;
   transform: translate(-50%, 0) !important;
@@ -8173,7 +8261,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 </style>
 
 
-<style id="CRMO_v1633_login_modal_pin_top">
+<style id="CRMO_v1634_login_modal_pin_top">
 #login-backdrop{ z-index: 300000 !important; }
 #login-modal{ z-index: 300001 !important; }
 #login-modal .crmo-login-card{
@@ -8216,7 +8304,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 }
 </style>
 
-<style id="CRMO_v1633_dev_visibility_css">
+<style id="CRMO_v1634_dev_visibility_css">
   #crmo-adminbar-dev{ display:none; }
   #crmo-dev-admin{ display:none; }
   body.role-master #crmo-adminbar-dev{ display:flex; }
@@ -8247,7 +8335,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 </style>
 
 
-<style id="CRMO_v1633_role_bar_swap_css">
+<style id="CRMO_v1634_role_bar_swap_css">
   #crmo-role-toggle{
     position: sticky;
     top: 0;
@@ -8267,7 +8355,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 </style>
 
 
-<style id="CRMO_v1633_ui_standardization">
+<style id="CRMO_v1634_ui_standardization">
 #crmo-role-toggle{
   background:#f7f7f7;
   border-bottom:1px solid rgba(0,0,0,.08);
@@ -8466,7 +8554,7 @@ body:not(.role-admin) .brands-manager-bar{ display:none; }
 </style>
 
 
-<style id="CRMO_v1633_brands_tiles_limit">
+<style id="CRMO_v1634_brands_tiles_limit">
 #brands .gallery-grid.brands > .brandcell:nth-child(n+19){
   display: none !important;
 }
@@ -8480,7 +8568,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
 </style>
 
 
-<style id="CRMO_v1633_brands_admin_panel">
+<style id="CRMO_v1634_brands_admin_panel">
 #brands .brands-manager-bar{ position: relative; }
 #brands .crmo-brands-admin-panel{
   margin-top: 10px;
@@ -8518,7 +8606,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
 </style>
 
 
-<style id="CRMO_v1633_brands_gallery_modal_match">
+<style id="CRMO_v1634_brands_gallery_modal_match">
 #crmo-brands-gallery-editor{
   position:fixed;
   inset:0;
@@ -8550,7 +8638,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
   cursor:pointer;
 }
 </style>
-<style id="CRMO_v1633_brands_modal_tuning">
+<style id="CRMO_v1634_brands_modal_tuning">
 #crmo-brands-gallery-editor .tm-subbar{justify-content:flex-end;}
 #crmo-brands-gallery-editor #crmo-brands-counter{margin-right:auto;}
 #crmo-brands-gallery-editor .tm-tiles-wrapper{
@@ -8580,7 +8668,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
 </style>
 
 
-<style id="CRMO_v1633_admin_fixed_stack">
+<style id="CRMO_v1634_admin_fixed_stack">
 #crmo-role-toggle{ padding-bottom: 10px !important; }
 body.role-admin #crmo-admin-bar{
   position: fixed !important;
@@ -8617,7 +8705,7 @@ body.role-admin header{
 }
 </style>
 
-<style id="CRMO_v1633_subbar_css">
+<style id="CRMO_v1634_subbar_css">
 #crmo-admin-bar .crmo-admin-subbar{
   display:flex;
   align-items:flex-end;
@@ -8652,7 +8740,7 @@ body.role-admin header{
 </style>
 
 <style id="crmo_mobile_nav_css">
-/* v1633: Mobile topbar + drawer; hide main header on mobile; touch-friendly */
+/* v1634: Mobile topbar + drawer; hide main header on mobile; touch-friendly */
 .crmo-mobile-topbar{display:none; position:sticky; top:0; z-index:10050; background:#fff; border-bottom:1px solid rgba(0,0,0,.08); -webkit-tap-highlight-color: transparent;}
 .crmo-mobile-topbar .wrap{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px;}
 .crmo-mobile-topbar .crmo-mobile-left{display:flex; align-items:center; gap:10px; min-width:0;}
@@ -8684,8 +8772,8 @@ html[dir="rtl"] .crmo-mobile-panel{right:0; left:auto;}
 }
 </style>
 
-<style id="CRMO_v1633_admin_visibility_fix">
-/* v1633: show admin UI only when authenticated role is owner/admin/etc */
+<style id="CRMO_v1634_admin_visibility_fix">
+/* v1634: show admin UI only when authenticated role is owner/admin/etc */
 body.role-admin #crmo-admin-bar{ display:block !important; }
 body.role-admin #crmo-header-admin .crmo-header-admin-toggle,
 body.role-admin #crmo-galleries-admin .crmo-galleries-admin-toggle{ display:flex !important; }
@@ -8728,7 +8816,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 }
 </style>
 
-<style id="CRMO_v1633_auth_modal_ui_fix">
+<style id="CRMO_v1634_auth_modal_ui_fix">
 /* Ensure auth modals are always clickable and centered above any overlays */
 .crmo-auth-modal{ z-index: 2000005 !important; }
 .crmo-auth-modal .crmo-auth-backdrop{ z-index: 2000005 !important; }
@@ -8784,7 +8872,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 
 </div>
 
-<script id="CRMO_v1633_admin_bar_js">
+<script id="CRMO_v1634_admin_bar_js">
 document.addEventListener('DOMContentLoaded', function(){
   var items = [
     { btnId: 'crmo-adminbar-content',    panelId: 'crmo-content-selector' },
@@ -8951,7 +9039,7 @@ var bar = document.getElementById('crmo-admin-bar');
   sync();
 });</script>
 
-<script id="CRMO_v1633_persistent_subbar_js">
+<script id="CRMO_v1634_persistent_subbar_js">
 (function(){
   function byId(id){ return document.getElementById(id); }
   function isAdmin(){ return document.body && document.body.classList && document.body.classList.contains('role-admin'); }
@@ -9212,7 +9300,7 @@ var bar = document.getElementById('crmo-admin-bar');
 </div>
 </header>
 
-<!-- v1633: Admin bar grouped navigation (Content/Media/Marketing/Tracking/System) -->
+<!-- v1634: Admin bar grouped navigation (Content/Media/Marketing/Tracking/System) -->
 <div id="crmo-content-selector" class="crmo-admin-selector is-collapsed" aria-label="תוכן">
   <div class="wrap">
     <div class="crmo-admin-selector-head">
@@ -9289,7 +9377,7 @@ var bar = document.getElementById('crmo-admin-bar');
     <div id="crmo-header-admin-list" class="crmo-header-admin-list" role="list"></div>
   </div>
 </div>
-<script id="CRMO_v1633_header_buttons_admin_js">
+<script id="CRMO_v1634_header_buttons_admin_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var nav = document.querySelector('header nav.nav') || document.querySelector('header nav');
@@ -9794,7 +9882,7 @@ function render(){
     </div>
   </div>
 </div>
-<script id="CRMO_v1633_permissions_js">
+<script id="CRMO_v1634_permissions_js">
 document.addEventListener('DOMContentLoaded', async function(){
   try{
     var ADMINS_KEY = "CRMO_ADMINS_v1";
@@ -10340,10 +10428,10 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 </div>
 
 
-<!-- CRMO Auth modal replaced in v1633 (see end of body) -->
+<!-- CRMO Auth modal replaced in v1634 (see end of body) -->
 
 
-<!-- CRMO Customer auth modal (v1633) -->
+<!-- CRMO Customer auth modal (v1634) -->
 <div id="crmo-auth-modal-client" class="crmo-auth-modal" hidden aria-hidden="true">
   <div class="crmo-auth-backdrop" data-close="1"></div>
   <div class="crmo-auth-panel crmo-client-login" role="dialog" aria-modal="true" aria-label="כניסת לקוחות">
@@ -10437,7 +10525,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 </div>
 
 
-<!-- CRMO User hover menu (v1633) -->
+<!-- CRMO User hover menu (v1634) -->
 <div id="crmo-user-menu" class="crmo-user-menu" data-open="0" hidden aria-hidden="true">
   <button type="button" class="crmo-auth-btn crmo-user-menu-btn" id="crmo-user-menu-profile">
     <span class="ico">👤</span>
@@ -10449,7 +10537,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
   </button>
 </div>
 
-<!-- CRMO Profile modal (v1633) -->
+<!-- CRMO Profile modal (v1634) -->
 <div id="crmo-profile-modal" class="crmo-auth-modal" hidden aria-hidden="true">
   <div class="crmo-auth-backdrop" data-close="1"></div>
   <div class="crmo-auth-panel crmo-client-login crmo-client-profile" role="dialog" aria-modal="true" aria-label="הפרופיל שלי">
@@ -10495,7 +10583,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
   </div>
 </div>
 
-<!-- CRMO Profile popup editor (v1633) -->
+<!-- CRMO Profile popup editor (v1634) -->
 <div id="crmo-profile-editor" class="crmo-auth-modal" hidden aria-hidden="true">
   <div class="crmo-auth-backdrop" data-close="1"></div>
   <div class="crmo-auth-panel" role="dialog" aria-modal="true" aria-label="עריכת פרופיל">
@@ -10520,7 +10608,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
     </div>
   </div>
 </div>
-<!-- CRMO Client auth editor (v1633) -->
+<!-- CRMO Client auth editor (v1634) -->
 <div id="crmo-client-auth-editor" class="crmo-auth-modal" hidden aria-hidden="true">
   <div class="crmo-auth-backdrop" data-close="1"></div>
   <div class="crmo-auth-panel" role="dialog" aria-modal="true" aria-label="עריכת כניסה והרשמה">
@@ -10551,7 +10639,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
   </div>
 </div>
 
-<!-- CRMO Admin editor modal (v1633) -->
+<!-- CRMO Admin editor modal (v1634) -->
 <div id="crmo-admin-editor" class="crmo-auth-modal" hidden aria-hidden="true">
   <div class="crmo-auth-backdrop" data-close="1"></div>
   <div class="crmo-auth-panel" role="dialog" aria-modal="true" aria-label="עריכת אדמין">
@@ -14648,7 +14736,7 @@ document.addEventListener('DOMContentLoaded', function(){
     try{ if(stage) stage.appendChild(slotNumEl); }catch(e){}
   }
 
-  // v1633 hotfix: make lightbox resilient (missing nodes / legacy markup)
+  // v1634 hotfix: make lightbox resilient (missing nodes / legacy markup)
   if (!overlay || !img || !cap || !prev || !next || !closeBtn) {
     return;
   }
@@ -14964,7 +15052,7 @@ function CRMO_lbGetMeta(item){
       let desc = (td && td.desc) ? String(td.desc)
         : (el && el.getAttribute ? String(el.getAttribute('data-desc') || '') : '');
 
-      // v1633: per-subimage captions when "טקסט נפרד לכל תת-תמונה" enabled
+      // v1634: per-subimage captions when "טקסט נפרד לכל תת-תמונה" enabled
       try{
         const fm = (item && item.filesMeta && typeof item.filesMeta === 'object') ? item.filesMeta
           : ((td && td.filesMeta && typeof td.filesMeta === 'object') ? td.filesMeta : null);
@@ -14991,7 +15079,7 @@ function CRMO_lbGetMeta(item){
         (el && el.getAttribute && (el.getAttribute('data-link-disabled') === '1'))
       );
 
-      // v1633: prevent title from duplicating desc/link (keep title line clean)
+      // v1634: prevent title from duplicating desc/link (keep title line clean)
       const __origTitle = title || '';
       try{
         let __t = String(title || '');
@@ -15085,7 +15173,7 @@ function CRMO_lbGetMeta(item){
         }
 
         if (!src){
-          // Slot mode (v1633): allow navigating even when tile is empty.
+          // Slot mode (v1634): allow navigating even when tile is empty.
           try{ imgEl.removeAttribute('src'); imgEl.src = ''; imgEl.style.display = 'none'; }catch(e){}
           const projEmpty = (item && typeof item.projectIndex === 'number') ? item.projectIndex : (curIdx + 1);
           try{ slotNumEl.textContent = String(projEmpty); slotNumEl.classList.add('show'); }catch(e){}
@@ -15154,7 +15242,7 @@ function open(grid, idx){
     fileIdx = 0;
     // Refresh item list for navigation (work 1-6 etc.)
     try{ curItems = ensureDataset(grid) || []; }catch(e){ curItems = (datasets.get(grid) || []); }
-    // v1633: open also for empty slots (shows slot number)
+    // v1634: open also for empty slots (shows slot number)
     setImage();
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden','false');
@@ -15742,7 +15830,7 @@ const items = ensureDataset(tempGrid);
 
   try{ window.CRMO_openUserAuth = open; }catch(e){}
 })();</script>
-<style id="CRMO_v1633_inline_login">
+<style id="CRMO_v1634_inline_login">
 #login-section .header{padding:18px 0;border-bottom:1px solid #eee}
 #login-section .head-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
 #login-section .title-wrap{max-width:max(560px,48vw);margin-inline:auto 0}
@@ -17761,7 +17849,7 @@ document.addEventListener('DOMContentLoaded', function () {
     content = {};
   }
   window.CREAMO_CONTENT = content;
-  // --- CRMO_v1633: lightbox thumbs filtering + contain fit ---
+  // --- CRMO_v1634: lightbox thumbs filtering + contain fit ---
   (function(){
     try{
       window.CRMO_getTileUploadFolder = function(){
@@ -18521,7 +18609,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }catch(e){}
 });</script>
-<script id="CRMO_v1633_multi_layers_state">
+<script id="CRMO_v1634_multi_layers_state">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var wrappers = document.querySelectorAll('.tile-edit-wrapper');
@@ -19410,7 +19498,7 @@ if(sess0 && (sess0.role === 'admin' || sess0.role === 'master' || sess0.role ===
     __crmo_init();
   }
 })();</script>
-<script id="CRMO_v1633_capabilities_js">
+<script id="CRMO_v1634_capabilities_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     function getRole(){
@@ -19651,7 +19739,7 @@ document.addEventListener('DOMContentLoaded', function(){
     window.addEventListener('crmo:role-changed', function(){ setTimeout(updateDeleteLabels, 0); });
   }catch(e){}
 });</script>
-<script id="CRMO_v1633_history_ui_js">
+<script id="CRMO_v1634_history_ui_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     function getRole(){
@@ -21233,7 +21321,7 @@ window.CRMO_MasterGalleries = {
   };
 })();</script>
 
-<!-- CRMO_v1633: inline multi-gallery tiles manager -->
+<!-- CRMO_v1634: inline multi-gallery tiles manager -->
 <style id="CRMO_tiles_manager_css">
   .tiles-manager-bar{
     margin: 10px 0 8px;
@@ -22312,7 +22400,7 @@ function ensureGalleryState(key){
               var imageSrc = "";
               var anchor = w.querySelector('a.ph');
               if (anchor){
-                // v1633: mirror file keys to DOM attributes so lightbox can resolve sources
+                // v1634: mirror file keys to DOM attributes so lightbox can resolve sources
         try{
           var filesArr = (data && Array.isArray(data.files) && data.files.length) ? data.files : (data && data.imageName ? [String(data.imageName)] : ['single']);
           var csv = filesArr.map(function(x){ return String(x||'').trim(); }).filter(function(x){return x;}).join(',');
@@ -24077,7 +24165,7 @@ document.addEventListener("DOMContentLoaded", function(){
         openOverlayForSection(section);
       }, {passive:false});
     });
-    /* v1633: Drag & Drop חכם לפי החוקים
+    /* v1634: Drag & Drop חכם לפי החוקים
        - מצב חיצוני: תמיד לאריח 1 (יחיד=רגיל, מרובה=רב-שכבתי)
        - בתוך עורך הגלריה: גרירה מרובה ממלאת אריחים אחד אחרי השני */
     function tmIsAdminRole(){
@@ -24170,7 +24258,7 @@ document.addEventListener("DOMContentLoaded", function(){
       d.imageName = (file && file.name) ? file.name : "";
       d.extraImages = [];
       d.multi = false;
-      // v1633: ensure lightbox knows about the file key
+      // v1634: ensure lightbox knows about the file key
       d.files = (d.imageName ? [String(d.imageName)] : ['single']);
       d.filesMeta = d.filesMeta && typeof d.filesMeta === 'object' ? d.filesMeta : {};
 
@@ -24188,7 +24276,7 @@ document.addEventListener("DOMContentLoaded", function(){
       d.imageSrc = first && first.src ? first.src : "";
       d.imageName = first && first.file && first.file.name ? first.file.name : "";
       d.extraImages = [];
-      // v1633: populate files keys for lightbox thumbs
+      // v1634: populate files keys for lightbox thumbs
       d.files = [];
       d.filesMeta = d.filesMeta && typeof d.filesMeta === 'object' ? d.filesMeta : {};
       if (d.imageName) d.files.push(String(d.imageName));
@@ -26116,7 +26204,7 @@ if (document.readyState === 'loading'){
 })();</script>
 
 
-<script id="crmo-v1633-prod">
+<script id="crmo-v1634-prod">
 (function(){
   try{
     var host = (location && location.hostname) ? location.hostname.toLowerCase() : "";
@@ -26130,7 +26218,7 @@ if (document.readyState === 'loading'){
 })();</script>
 
 
-<script id="CRMO_v1633_stands_subcats_autowidth">
+<script id="CRMO_v1634_stands_subcats_autowidth">
 (function(){
   function onReady(fn){
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
@@ -26520,7 +26608,7 @@ document.addEventListener('click', function(ev){
 })();</script>
 
 
-<script id="CRMO_v1633_footer_accessibility_and_section_editor">
+<script id="CRMO_v1634_footer_accessibility_and_section_editor">
 (function(){
   function qs(sel, root){ return (root||document).querySelector(sel); }
   function qsa(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
@@ -27509,7 +27597,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
     initSimpleEditor();
   });
 })();</script>
-<script id="CRMO_v1633_internal_editor_lock">
+<script id="CRMO_v1634_internal_editor_lock">
 (function(){
   function isVisible(el){
     if(!el) return false;
@@ -27578,8 +27666,8 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
   });
 })();</script>
 
-<!-- CRMO Usability Feedback (v1633) -->
-<style id="CRMO_v1633_usability_feedback_css">
+<!-- CRMO Usability Feedback (v1634) -->
+<style id="CRMO_v1634_usability_feedback_css">
   .crmo-usability-fab{
     position:fixed; bottom:18px; left:18px;
     z-index:999999;
@@ -27746,7 +27834,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
   </div>
 </div>
 
-<script id="CRMO_v1633_usability_feedback_js">
+<script id="CRMO_v1634_usability_feedback_js">
 document.addEventListener('DOMContentLoaded', async function(){
   try{
     if(!window.CRMO_USABILITY_MODE) return;
@@ -27759,7 +27847,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     var btnBuild = document.getElementById('crmo-usability-build');
     var btnCopy = document.getElementById('crmo-usability-copy');
     var btnDown = document.getElementById('crmo-usability-download');
-    // v1633: usability feedback FAB only in UX review role
+    // v1634: usability feedback FAB only in UX review role
     var START_KEY = 'CRMO_USABILITY_START_v1';
     var CHANGES_KEY = 'CRMO_USABILITY_CHANGED_KEYS_v1';
     function now(){ return Date.now(); }
@@ -27972,7 +28060,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 });</script>
 
 
-<script id="CRMO_v1633_report_js">
+<script id="CRMO_v1634_report_js">
 document.addEventListener('DOMContentLoaded', async function(){
   try{
     var panel = document.getElementById('crmo-report-admin');
@@ -28198,7 +28286,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 });</script>
 
 
-<script id="CRMO_v1633_hash_subgallery">
+<script id="CRMO_v1634_hash_subgallery">
 (function(){
   function applyHash(retry){
     try{
@@ -29044,7 +29132,7 @@ try{
   }, true);
 })();</script>
 
-<script id="CRMO_v1633_brands_admin_panel_js">
+<script id="CRMO_v1634_brands_admin_panel_js">
 (function(){
   try{
     var btn = document.querySelector('#brands .brands-manager-bar .tiles-manager-open');
@@ -29101,7 +29189,7 @@ try{
 
 
 <!-- =========================================================
-     Supabase patch (v1633)
+     Supabase patch (v1634)
      מטרת התיקון: במקום לשמור תמונות כ-base64 (שמפוצץ את localStorage),
      מעלים את התמונה ל-Supabase Storage ושומרים רק URL.
      ========================================================= -->
@@ -29192,14 +29280,14 @@ try{
   window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK = false;
 
 <script>
-/* CRMO v1633: usability offline guard (prevents auto cloud pull) */
+/* CRMO v1634: usability offline guard (prevents auto cloud pull) */
 (function(){
   try{
     // Default: offline usability. To allow cloud, open with ?cloud=1
     var allowCloud = /(?:\?|&)cloud=1(?:&|$)/.test(location.search);
     if(!allowCloud){
       sessionStorage.setItem('CRMO_FORCE_OFFLINE','1');
-      sessionStorage.setItem('crmo_remote_pulled','1'); // blocks auto pull in v1633 logic
+      sessionStorage.setItem('crmo_remote_pulled','1'); // blocks auto pull in v1634 logic
       window.CRMO_FORCE_OFFLINE = true;
     }else{
       sessionStorage.removeItem('CRMO_FORCE_OFFLINE');
@@ -29207,14 +29295,14 @@ try{
     }
   }catch(e){}
 })();
-/* CRMO v1633: usability offline guard (prevents auto cloud pull) */
+/* CRMO v1634: usability offline guard (prevents auto cloud pull) */
 (function(){
   try{
     // Default: offline usability. To allow cloud, open with ?cloud=1
     var allowCloud = /(?:\?|&)cloud=1(?:&|$)/.test(location.search);
     if(!allowCloud){
       sessionStorage.setItem('CRMO_FORCE_OFFLINE','1');
-      sessionStorage.setItem('crmo_remote_pulled','1'); // blocks auto pull in v1633 logic
+      sessionStorage.setItem('crmo_remote_pulled','1'); // blocks auto pull in v1634 logic
       window.CRMO_FORCE_OFFLINE = true;
     }else{
       sessionStorage.removeItem('CRMO_FORCE_OFFLINE');
@@ -29493,7 +29581,7 @@ if (window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK){
       throw err;
     }
   };
-  /* v1633: folders per gallery in Supabase Storage
+  /* v1634: folders per gallery in Supabase Storage
      חשוב: ב-Supabase Storage "ספריות" הן וירטואליות (prefix). כדי שספריה תופיע,
      צריך לפחות קובץ אחד מתחתיה. לכן אנחנו יוצרים קובץ קטן בשם .keep.
   */
@@ -30959,7 +31047,7 @@ function boot(){
   }, true);
 })();</script>
 
-<!-- CRMO Privacy modal (v1633) -->
+<!-- CRMO Privacy modal (v1634) -->
 <div id="crmo-privacy-modal" class="crmo-auth-modal" hidden aria-hidden="true">
   <div class="crmo-auth-backdrop" data-close="1"></div>
   <div class="crmo-auth-panel" role="dialog" aria-modal="true" aria-label="פרטיות ונתונים">
@@ -31235,7 +31323,7 @@ function boot(){
 })();</script>
 
 
-<script id="CRMO_v1633_role_bootstrap">
+<script id="CRMO_v1634_role_bootstrap">
 (async function(){
   function byId(id){ return document.getElementById(id); }
   function setRoleClasses(role){
@@ -31688,7 +31776,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 })();</script>
 
 <script>
-/* CRMO v1633: Hard reset (Local only) */
+/* CRMO v1634: Hard reset (Local only) */
 async function CRMO_clearLocalDataAndReload(){
   try{
     // Clear LocalStorage keys that may affect CRMO (including legacy preview keys)
@@ -32387,9 +32475,9 @@ async function CRMO_clearLocalDataAndReload(){
 
 <script id="crmo_v1629_unified_tile_editor">
 /*
-  v1633: Unify tile editing paths (hive + tiles manager) to one editor (#tile-editor),
+  v1634: Unify tile editing paths (hive + tiles manager) to one editor (#tile-editor),
   and make "Clear tile" authoritative by clearing both DOM and the galleryState/content sources-of-truth.
-  Keeps: Grid (hive) shows only general title/desc; per-thumbnail captions remain Lightbox-only (as per v1633 decision).
+  Keeps: Grid (hive) shows only general title/desc; per-thumbnail captions remain Lightbox-only (as per v1634 decision).
 */
 (function(){
   function findEditingWrapper(){
@@ -32707,7 +32795,7 @@ async function CRMO_clearLocalDataAndReload(){
 
 
 <script id="crmo_auth_global_fallback_v1629">
-/* CRMO_v1633: global auth modal fallback
+/* CRMO_v1634: global auth modal fallback
    Ensures login/register modals can open even if earlier setup didn't run. */
 (function(){
   function show(el){ if(!el) return false; el.hidden = false; el.style.display = 'block'; el.setAttribute('aria-hidden','false'); return true; }
@@ -32780,7 +32868,7 @@ async function CRMO_clearLocalDataAndReload(){
 })();</script>
 
 
-<script id="CRMO_v1633_auth_modal_behavior_fix">
+<script id="CRMO_v1634_auth_modal_behavior_fix">
 (function(){
   function isOpen(modal){
     try{ return !!modal && modal.hidden === false && modal.getAttribute('aria-hidden') === 'false'; }catch(e){ return false; }
@@ -32829,7 +32917,7 @@ async function CRMO_clearLocalDataAndReload(){
 
 
 <script>
-/* CRMO v1633: ensure client login/register toggle works even if earlier init didn't run */
+/* CRMO v1634: ensure client login/register toggle works even if earlier init didn't run */
 (function(){
   function ensure(){
     var modal = document.getElementById('crmo-auth-modal-client');
@@ -32922,7 +33010,7 @@ async function CRMO_clearLocalDataAndReload(){
 
 
 
-<!-- CRMO Client Auth Wiring v1633 -->
+<!-- CRMO Client Auth Wiring v1634 -->
 <script>
 (async function(){
   const CLIENT_MODAL_ID = "crmo-auth-modal-client";
@@ -33075,7 +33163,7 @@ if (!sb) {
     throw new Error(msg);
   }
 
-  // Persist minimal session for the app's admin UI (used by v1633+ fallbacks)
+  // Persist minimal session for the app's admin UI (used by v1634+ fallbacks)
   try { window.localStorage.setItem("CRMO_SB_SESSION", JSON.stringify(data)); } catch(e) {}
   try { window.sessionStorage.setItem("CRMO_SB_SESSION", JSON.stringify(data)); } catch(e) {}
   try { window.localStorage.setItem("crmo:admin:email", email.toLowerCase()); } catch(e) {}
@@ -33187,6 +33275,42 @@ if (!sb) {
     };
   };
 })();</script>
+
+
+<script id="crmo-refresh-ui-patch-v1634">
+/* CRMO v1634: ensure CRMO_refreshRoleAndAdminUI always applies owner UI */
+(function(){
+  function applyOwnerUIIfNeeded(result){
+    try{
+      if(result && result.owner){
+        if(window.CRMO_forceShowAdminUI) window.CRMO_forceShowAdminUI();
+        else {
+          document.documentElement.classList.add("crmo-owner");
+          const bar = document.getElementById("crmo-admin-bar");
+          if(bar) bar.style.setProperty("display","block","important");
+        }
+      }
+    }catch(e){}
+    return result;
+  }
+
+  // If function exists, wrap it. If not, define a minimal one.
+  const orig = window.CRMO_refreshRoleAndAdminUI;
+  if(typeof orig === "function"){
+    window.CRMO_refreshRoleAndAdminUI = async function(){
+      const res = await orig.apply(this, arguments);
+      return applyOwnerUIIfNeeded(res);
+    };
+  } else {
+    window.CRMO_refreshRoleAndAdminUI = async function(){
+      const email = (localStorage.getItem("crmo:admin:email")||"").toLowerCase().trim();
+      const owner = (email === "boochin@gmail.com");
+      applyOwnerUIIfNeeded({owner, email, uid:null, via:"ui-patch"});
+      return {owner, email, uid:null, via:"ui-patch"};
+    };
+  }
+})();
+</script>
 
 </body>
 </html>
