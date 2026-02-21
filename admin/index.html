@@ -1,43 +1,59 @@
 <!DOCTYPE html>
-<!-- CRMO_v1616 ADMIN -->
-<!-- CRMO_v1616 -->
+<!-- CRMO_v1617 ADMIN -->
+<!-- CRMO_v1617 -->
 
 <html dir="rtl" lang="he">
 <head>
-  <base href="../">
   
+  <base href="../">
   <script id="crmo-mode-admin">
     // CRMO dual-mode: admin entry (served from /admin/)
     window.CRMO_MODE = "admin";
     window.CRMO_ADMIN_ENTRY = "/admin/";
   </script>
-  <script id="crmo-admin-gatekeeper">
-(function() {
-  function toPublic() {
-    try {
-      var target = new URL("../index.html", window.location.href).toString();
-      window.location.replace(target);
-    } catch (e) {
-      window.location.href = "../index.html";
-    }
-  }
+    <script id="crmo-admin-gatekeeper">
+    // Admin Gatekeeper v1617: waits for Supabase, then checks owner once (prevents redirect loops)
+    (function(){
+      const toPublic = () => {
+        try { window.location.replace("../index.html"); } catch(e){ window.location.href = "../index.html"; }
+      };
 
-  window.addEventListener("load", function() {
-    setTimeout(async function() {
-      try {
-        if (typeof window.CRMO_refreshRoleAndAdminUI === "function") {
-          var result = await window.CRMO_refreshRoleAndAdminUI();
-          if (!result || !result.owner) toPublic();
-        } else {
-          console.warn("[CRMO] Gatekeeper: CRMO_refreshRoleAndAdminUI missing; skipping redirect.");
+      window.addEventListener("load", async () => {
+        try{
+          // Wait for Supabase script to actually be ready (do NOT redirect early)
+          const waiter = (typeof window.CRMO_waitForSupabaseReady === "function")
+            ? window.CRMO_waitForSupabaseReady
+            : async function(){
+                const t0 = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+                while (((typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now()) - t0 < 12000){
+                  try{ if(window.supabase && typeof window.supabase.createClient === "function") return true; }catch(_e){}
+                  await new Promise(r=>setTimeout(r,80));
+                }
+                return false;
+              };
+
+          const ok = await waiter();
+          if (!ok){
+            console.warn("[CRMO] Supabase not ready (timeout). Redirecting to public.");
+            return toPublic();
+          }
+
+          if (typeof window.CRMO_refreshRoleAndAdminUI !== "function"){
+            console.warn("[CRMO] Missing role refresher. Redirecting to public.");
+            return toPublic();
+          }
+
+          const r = await window.CRMO_refreshRoleAndAdminUI();
+          const isOwner = !!(r && (r.owner === true || r.role === "owner" || window.CRMO_IS_OWNER === true));
+          if (!isOwner) return toPublic();
+          // owner stays in admin
+        }catch(e){
+          console.warn("[CRMO] Gatekeeper error:", e);
+          return toPublic();
         }
-      } catch (err) {
-        console.warn("[CRMO] Gatekeeper error; skipping redirect.", err);
-      }
-    }, 800);
-  });
-})();
-</script>
+      });
+    })();
+  </script>
 <script id="crmo-window-supabase-expose">
   // Ensure Supabase library is exposed for diagnostics
   try{ if(typeof window.supabase === 'undefined' && typeof supabase !== 'undefined'){ window.supabase = supabase; } }catch(e){}
@@ -45,8 +61,7 @@
 
 <script id="crmo_sb_keys_in_head">
 window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
-window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
-</script>
+window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";</script>
 
 
 
@@ -64,17 +79,15 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
     if(r.charAt(0) !== '/') r = '/' + r;
     history.replaceState(null, '', r);
   }catch(e){}
-})();
-</script>
+})();</script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1616";
-window.CRMO_VERSION = 'CRMO_v1616';
-window.CRMO_VERSION_NUMBER = 1611;
+window.CRMO_BUILD_VERSION = "1617";
+window.CRMO_VERSION = 'CRMO_v1617';
+window.CRMO_VERSION_NUMBER = 1617;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
-window.CRMO_STUDIO_TITLE = "CRMO";
-</script>
+window.CRMO_STUDIO_TITLE = "CRMO";</script>
 
 <script id="crmo_asset_paths_v1557">
 /* v1556: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
@@ -191,8 +204,7 @@ window.CRMO_STUDIO_TITLE = "CRMO";
     rewriteNow();
   }
   setTimeout(rewriteNow, 50);
-})();
-</script>
+})();</script>
 
 <script>window.CRMO_STUDIO_TITLE = "CRMO";</script>
 
@@ -219,8 +231,7 @@ window.CRMO_STUDIO_TITLE = "CRMO";
     window.CRMO_OFFLINE_MODE = true;
     window.CRMO_USABILITY_MODE = true;
   }
-})();
-</script>
+})();</script>
 
 <script id="crmo_title_and_footer_version">
 (function(){
@@ -251,8 +262,7 @@ window.CRMO_STUDIO_TITLE = "CRMO";
   }
   // run once again after layout just in case something swaps the bars later
   setTimeout(apply, 0);
-})();
-</script>
+})();</script>
 <script id="crmo_sb_defaults">
 /* Supabase defaults (public) */
 window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
@@ -261,8 +271,7 @@ window.CRMO_SUPABASE_BUCKET = "assets";
 window.CRMO_SUPABASE_CONFIG_TABLE = "crmo_site_config";
 window.CRMO_SUPABASE_CONFIG_ID = "main";
 window.CRMO_SUPABASE_REQUIRE_LOGIN = true;
-window.CRMO_SUPABASE_ADMIN_EMAILS = [];
-</script>
+window.CRMO_SUPABASE_ADMIN_EMAILS = [];</script>
 
 <script id="crmo_cloud_config_v1553">
 /*
@@ -1000,8 +1009,7 @@ document.getElementById('crmo-cloud-fix-stands-folders').onclick = async functio
   }else{
     mountPanel();
   }
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_upload_hint_v1472">
@@ -1125,8 +1133,7 @@ document.getElementById('crmo-cloud-fix-stands-folders').onclick = async functio
       console.warn('[CRMO] debug failed:', e);
     }
   };
-})();
-</script>
+})();</script>
 
 
 
@@ -1186,8 +1193,7 @@ document.getElementById('crmo-cloud-fix-stands-folders').onclick = async functio
       else if (console && console.warn) console.warn('[CRMO] window.error:', err);
     }catch(e){}
   });
-})();
-</script>
+})();</script>
 
 <script id="crmo_storage_fetch_debug_v1478">
 (function(){
@@ -1263,8 +1269,7 @@ document.getElementById('crmo-cloud-fix-stands-folders').onclick = async functio
       return { ok:false, error: String(e && e.message ? e.message : e), net: window.__CRMO_LAST_STORAGE_NET__ };
     }
   };
-})();
-</script>
+})();</script>
 <script id="crmo_storage_ns">
 (function(){
   try{
@@ -1299,8 +1304,7 @@ document.getElementById('crmo-cloud-fix-stands-folders').onclick = async functio
   }catch(e){
     window.CRMO_STORAGE_NS_PATH = '/';
   }
-})();
-</script>
+})();</script>
 <style id="crmo_route_gallery_styles">
 
 /* v1547: disable tile clear button for usability testing stability */
@@ -1352,7 +1356,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO Admin Dashboard – v1616</title>
+<title>CRMO Admin Dashboard – v1617</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -2381,8 +2385,7 @@ form textarea.autogrow{ overflow:hidden; resize:none; }
       }catch(e){}
     };
   }catch(e){}
-})();
-</script>
+})();</script>
 <script>
 (function(){try{
   var path = String(location.pathname || '');
@@ -2402,8 +2405,7 @@ form textarea.autogrow{ overflow:hidden; resize:none; }
   if(og) og.setAttribute('content', title);
   var tw = document.querySelector('meta[name="twitter:title"]');
   if(tw) tw.setAttribute('content', title);
-}catch(e){}})();
-</script>
+}catch(e){}})();</script>
 <style>
 #brands-subhead{ padding-bottom: 10px !important; margin-bottom: 0 !important; }
 #brands{ padding-top: 10px !important; margin-top: 0 !important; }
@@ -5465,8 +5467,7 @@ editor.addEventListener('click', function(ev){
       setTimeout(setupMultiProject, 0);
     });
   }
-})();
-</script>
+})();</script>
 <style id="crmo_thumbs_rtl_fix">/* ---- CRMO v1444: thumbs responsive (single source of truth) ---- */
 #crmoThumbs{
   width: 100% !important;
@@ -8176,8 +8177,7 @@ document.addEventListener('DOMContentLoaded', function(){
       tile.appendChild(d);
     });
   }catch(e){}
-});
-</script>
+});</script>
 <style>
 .brands-manager-bar{ margin: 10px 0 8px; text-align:right; }
 body:not(.role-admin) .brands-manager-bar{ display:none; }
@@ -8792,8 +8792,7 @@ var bar = document.getElementById('crmo-admin-bar');
     });
   }catch(e){}
   sync();
-});
-</script>
+});</script>
 
 <script id="CRMO_v1416_persistent_subbar_js">
 (function(){
@@ -8994,8 +8993,7 @@ var bar = document.getElementById('crmo-admin-bar');
       mo.observe(document.body, { attributes:true, attributeFilter:['class'] });
     }
   }catch(e){}
-})();
-</script>
+})();</script>
 
 <script>
 (function(){
@@ -9018,8 +9016,7 @@ var bar = document.getElementById('crmo-admin-bar');
       }
     }catch(e){}
   };
-})();
-</script>
+})();</script>
 
 
 <style id="crmo-user-menu-css">
@@ -9525,8 +9522,7 @@ function render(){
     ensureLogoInItems();
     render();
 }catch(e){}
-});
-</script>
+});</script>
 <div id="crmo-galleries-admin" class="is-collapsed" aria-label="ניהול גלריות">
   <div class="wrap">
     <div class="crmo-galleries-admin-actions">
@@ -10039,8 +10035,7 @@ function openEditor(mode, item){
     renderTesters();
     updateDemoUI();
   }catch(e){}
-});
-</script>
+});</script>
 
 
 <div id="crmo-settings-admin" class="crmo-future-panel is-collapsed" aria-label="הגדרות">
@@ -10182,8 +10177,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
         fill();
         bind();
       }catch(e){}
-    })();
-</script>
+    })();</script>
 
   </div>
 </div>
@@ -14029,8 +14023,7 @@ document.addEventListener('DOMContentLoaded', function(){
     el.addEventListener('input', resize);
     resize();
   });
-});
-</script>
+});</script>
 <!-- v93: Project modal -->
 <script>
 (function(){
@@ -14083,8 +14076,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if(e.key==='ArrowLeft') show(idx-1);
     if(e.key==='ArrowRight') show(idx+1);
   });
-})();
-</script>
+})();</script>
 <style>
 #crmo-modal{ position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; align-items:center; justify-content:center; z-index:1200 }
 #crmo-modal.open{ display:flex }
@@ -14132,13 +14124,10 @@ document.addEventListener('DOMContentLoaded', function(){
     q('.gallery .ph, .grid .ph, .works .ph, .portfolio .ph, .gall .ph').forEach(ensureCaption);
   }
   document.addEventListener('DOMContentLoaded', fix);
-})();
-</script>
+})();</script>
 <script>
-(function(){function f(){var s=['#brands','.brands','.brand-logos','.brands-logos','.logos-grid','.logos','.clients','.clients-logos'];for(var i=0;i<s.length;i++){var el=document.querySelector(s[i]);if(el)return el;}return null;}document.addEventListener('DOMContentLoaded',function(){var r=f();if(!r)return;if(!r.querySelector('.brands-lead')){var d=document.createElement('div');d.className='brands-lead brands-anchor';d.innerHTML='';r.insertBefore(d,r.firstElementChild||null);}if(!r.id)r.id='brands';Array.from(document.querySelectorAll('a,[role="link"]')).forEach(function(a){var t=(a.textContent||'').trim();if(/המותגים שלנו/.test(t)){a.setAttribute('href','#brands');}});});})();
-</script>
+(function(){function f(){var s=['#brands','.brands','.brand-logos','.brands-logos','.logos-grid','.logos','.clients','.clients-logos'];for(var i=0;i<s.length;i++){var el=document.querySelector(s[i]);if(el)return el;}return null;}document.addEventListener('DOMContentLoaded',function(){var r=f();if(!r)return;if(!r.querySelector('.brands-lead')){var d=document.createElement('div');d.className='brands-lead brands-anchor';d.innerHTML='';r.insertBefore(d,r.firstElementChild||null);}if(!r.id)r.id='brands';Array.from(document.querySelectorAll('a,[role="link"]')).forEach(function(a){var t=(a.textContent||'').trim();if(/המותגים שלנו/.test(t)){a.setAttribute('href','#brands');}});});})();</script>
 <script>
-
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function(){
@@ -14172,8 +14161,7 @@ document.addEventListener('DOMContentLoaded', function(){
       console.warn('stands copy shell failed', e);
     }
   }
-});
-</script>
+});</script>
 <script>
 document.addEventListener('click', function(e){
   var el = e.target;
@@ -14183,8 +14171,7 @@ document.addEventListener('click', function(e){
     e.stopPropagation();
     return false;
   }
-}, true);
-</script>
+}, true);</script>
 <script>
 (function(){
   document.documentElement.classList.add('gallery-hover-ready');
@@ -14210,8 +14197,7 @@ document.addEventListener('click', function(e){
     }
     ov.textContent = txt;
   });
-})();
-</script>
+})();</script>
 <script>
 (function(){
   document.documentElement.classList.add('gallery-hover-ready');
@@ -14251,16 +14237,14 @@ document.addEventListener('click', function(e){
       }, {capture:true});
     }
   });
-})();
-</script>
+})();</script>
 <script>
 (function(){
   document.querySelectorAll('section .grid .ph').forEach(function(ph){
     var fit = (ph.getAttribute('data-fit')||'').toLowerCase();
     if (fit === 'contain'){ ph.classList.add('fit-contain'); }
   });
-})();
-</script><script>
+})();</script><script>
 (function(){
   try{
     var headerLink = document.querySelector('header nav a');
@@ -14279,8 +14263,7 @@ document.addEventListener('click', function(e){
       a.style.display = 'inline-block';
     });
   }catch(e){}
-})();
-</script>
+})();</script>
 <style>
 #login-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:saturate(1.2) blur(2px);display:none;z-index:2000}
 #login-modal{position:fixed;inset:auto 50% 8% 50%;transform:translateX(50%);max-width:920px;width:92vw;background:#fff;color:#111;border:1px solid #e5e5ea;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35);display:none;z-index:2001}
@@ -14343,8 +14326,7 @@ document.addEventListener('click', function(e){
     ev.preventDefault();
     openLogin();
   }, true);
-})();
-</script>
+})();</script>
 <script id="v163_ratio_script">
 (function(){
   'use strict';
@@ -14363,8 +14345,7 @@ document.addEventListener('click', function(e){
       w.appendChild(img);
     });
   });
-})();
-</script><script id="v171_center_caption_js">
+})();</script><script id="v171_center_caption_js">
 (function(){
   var containers = document.querySelectorAll('.tile, .work-card, .gallery-item, .ph');
   containers.forEach(function(box){
@@ -14376,8 +14357,7 @@ document.addEventListener('click', function(e){
       }
     }
   });
-})();
-</script><script id="v171_active_badge_js">
+})();</script><script id="v171_active_badge_js">
 (function(){
   var badge = document.getElementById('stands-active-filter');
   var bar = document.getElementById('stands-filters');
@@ -14388,8 +14368,7 @@ document.addEventListener('click', function(e){
     var t = (btn.textContent||'').trim();
     if(t) badge.textContent = t;
   });
-})();
-</script>
+})();</script>
 <script id="crmo-v245-brands-anchor-fix">
 document.addEventListener('DOMContentLoaded', function(){
   try{
@@ -14425,8 +14404,7 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     }, true);
   }catch(e){ /* no-op */ }
-});
-</script>
+});</script>
 <script id="v259-overlay-js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
@@ -14463,8 +14441,7 @@ document.addEventListener('DOMContentLoaded', function(){
       });
     });
   }catch(e){ /* silent */ }
-});
-</script>
+});</script>
 <!-- CRMO Lightbox mount -->
 <div aria-hidden="true" class="crmo-lb-overlay" id="crmoLB">
 <div class="crmo-lb-frame">
@@ -15239,8 +15216,7 @@ const items = ensureDataset(tempGrid);
       }
     }
     return out;
-  }
-</script>
+  }</script>
 <script id="crmo_extended_gallery_js">
 (function(){
   function setupExtendedGalleryOverlay(){
@@ -15300,11 +15276,9 @@ const items = ensureDataset(tempGrid);
       }
     }
   };
-})();
-</script>
+})();</script>
 
 <script>
-
 </script><script>
 (function(){
   if (window.__crmo_v375_injected__) return;
@@ -15445,8 +15419,7 @@ const items = ensureDataset(tempGrid);
     refill('secondary-gallery');
   }
   document.addEventListener('DOMContentLoaded', reorderMixGalleries);
-})();
-</script><script>
+})();</script><script>
 (function(){
   const o = document.getElementById('crmo-auth-overlay');
   const v = document.getElementById('crmo-tab-visitors');
@@ -15461,8 +15434,7 @@ const items = ensureDataset(tempGrid);
     }
   });
   open.observe(o, {attributes:true, attributeFilter:['style']});
-})();
-</script><script>
+})();</script><script>
 (function(){
   function isBrandsOrLogos(el){
     let n = el;
@@ -15507,8 +15479,7 @@ const items = ensureDataset(tempGrid);
   document.addEventListener('DOMContentLoaded', ()=>{
     try{ applyAll(); }catch(e){}
   });
-})();
-</script><script>
+})();</script><script>
 (function(){
   const KEY_USER='crmo:user';
   const get = (id)=>document.getElementById(id);
@@ -15613,8 +15584,7 @@ const items = ensureDataset(tempGrid);
   }
 
   try{ window.CRMO_openUserAuth = open; }catch(e){}
-})();
-</script>
+})();</script>
 <style id="CRMO_v396_inline_login">
 #login-section .header{padding:18px 0;border-bottom:1px solid #eee}
 #login-section .head-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
@@ -17606,11 +17576,9 @@ const items = ensureDataset(tempGrid);
       "assets": []
     }
   ]
-}
-</script>
+}</script>
 <script id="crmo-gallery-meta-store" type="application/json">
-{}
-</script>
+{}</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -18376,8 +18344,7 @@ window.CRMO_tilesManagerSyncFromDom(currentTile);
   window.CRMO_isLegacyTileEditorOpen = function(){
     try{ var p = document.getElementById('tile-editor'); return !!(p && p.classList && p.classList.contains('open')); }catch(e){ return false; }
   };
-  });
-</script>
+  });</script>
 <div class="whatsapp-float" dir="ltr" id="whatsapp-float">
 <button aria-label="סגירת כפתור WhatsApp" class="whatsapp-float-close" type="button">×</button>
 <a aria-label="צ'אט ב־WhatsApp" class="whatsapp-float-btn" href="https://wa.me/972523346374" rel="noopener" target="_blank">
@@ -18396,8 +18363,7 @@ document.addEventListener('DOMContentLoaded', function(){
       }, {passive:true});
     }
   }catch(e){}
-});
-</script>
+});</script>
 <script id="CRMO_v713_multi_layers_state">
 document.addEventListener('DOMContentLoaded', function(){
   try{
@@ -18430,8 +18396,7 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     });
   }catch(e){}
-});
-</script>
+});</script>
 <script id="crmo-role-toggle-js">
 (function(){
   function __crmo_init(){
@@ -19287,8 +19252,7 @@ if(sess0 && (sess0.role === 'admin' || sess0.role === 'master' || sess0.role ===
   }else{
     __crmo_init();
   }
-})();
-</script>
+})();</script>
 <script id="CRMO_v1263_capabilities_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
@@ -19529,8 +19493,7 @@ document.addEventListener('DOMContentLoaded', function(){
     updateDeleteLabels();
     window.addEventListener('crmo:role-changed', function(){ setTimeout(updateDeleteLabels, 0); });
   }catch(e){}
-});
-</script>
+});</script>
 <script id="CRMO_v1263_history_ui_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
@@ -19779,8 +19742,7 @@ document.addEventListener('DOMContentLoaded', function(){
     window.addEventListener('crmo:role-changed', function(){ setTimeout(rerenderAll, 0); });
     window.addEventListener('crmo:role-changed', function(){ setTimeout(updateUxTools, 0); });
   }catch(e){}
-});
-</script>
+});</script>
 
 
 <!-- Brand editor modal -->
@@ -20091,8 +20053,7 @@ try{
       editor.hidden = true;
     }
   });
-})();
-</script>
+})();</script>
 <script>
 (function(){
   function normalizeBrandNameLocal(str){
@@ -20126,8 +20087,7 @@ try{
     syncBrandClickability();
   }
   window.CRMO_syncBrandClickability = syncBrandClickability;
-})();
-</script>
+})();</script>
 
 
 <script>
@@ -20421,8 +20381,7 @@ function firstTileTemplate(){
       }, 0);
     }catch(e){}
   });
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_master_galleries_v1129">
@@ -21115,8 +21074,7 @@ window.CRMO_MasterGalleries = {
     getActiveSub: getActiveSubId,
     removeMaster: removeMaster
   };
-})();
-</script>
+})();</script>
 
 <!-- CRMO_v768: inline multi-gallery tiles manager -->
 <style id="CRMO_tiles_manager_css">
@@ -24372,8 +24330,7 @@ document.addEventListener("DOMContentLoaded", function(){
     try{ crmoUpdateExpandButtonsForAll(); }catch(e){}
     setCurrentGallery("intro");
   });
-})();
-</script>
+})();</script>
 
 <script id="crmo_brand_dd_init_v1074">
 document.addEventListener('DOMContentLoaded', function(){
@@ -24382,8 +24339,7 @@ document.addEventListener('DOMContentLoaded', function(){
       window.CRMO_updateBrandDropdowns();
     }
   }catch(e){}
-});
-</script>
+});</script>
 
 
 <style id="crmo-stands-multigallery-css">
@@ -24440,8 +24396,7 @@ document.addEventListener('DOMContentLoaded', function(){
       window.CRMO_standsGetCurrentKey = function(){ return currentKey; };
     }catch(e){}
   }catch(e){}
-});
-</script>
+});</script>
 
 
 <script>
@@ -26001,8 +25956,7 @@ if (document.readyState === 'loading'){
   }else{
     build();
   }
-})();
-</script>
+})();</script>
 
 
 <script id="crmo-v1157-prod">
@@ -26016,8 +25970,7 @@ if (document.readyState === 'loading'){
       if(rt) rt.remove();
     }
   }catch(e){}
-})();
-</script>
+})();</script>
 
 
 <script id="CRMO_v1159_stands_subcats_autowidth">
@@ -26104,8 +26057,7 @@ if (document.readyState === 'loading'){
     }catch(e){}
     window.addEventListener("resize", schedule, {passive:true});
   });
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_tile_link_button_js">
@@ -26317,8 +26269,7 @@ if (document.readyState === 'loading'){
       if(w) ensureBtn(w);
     }catch(e){}
   });
-})();
-</script>
+})();</script>
 
 
 <script>
@@ -26409,8 +26360,7 @@ document.addEventListener('click', function(ev){
   } else {
     init();
   }
-})();
-</script>
+})();</script>
 
 
 <script id="CRMO_v1229_footer_accessibility_and_section_editor">
@@ -27401,8 +27351,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
     initAccessibilityToggle();
     initSimpleEditor();
   });
-})();
-</script>
+})();</script>
 <script id="CRMO_v1229_internal_editor_lock">
 (function(){
   function isVisible(el){
@@ -27470,8 +27419,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
     try{ obs.observe(document.body, {childList:true, subtree:true}); }catch(e){}
     setInterval(sync, 600);
   });
-})();
-</script>
+})();</script>
 
 <!-- CRMO Usability Feedback (v1260) -->
 <style id="CRMO_v1260_usability_feedback_css">
@@ -27864,8 +27812,7 @@ document.addEventListener('DOMContentLoaded', function(){
       });
     }
   }catch(e){}
-});
-</script>
+});</script>
 
 
 <script id="CRMO_v1265_report_js">
@@ -28091,8 +28038,7 @@ document.addEventListener('DOMContentLoaded', function(){
       }catch(e){}
     refresh();
   }catch(e){}
-});
-</script>
+});</script>
 
 
 <script id="CRMO_v1286_hash_subgallery">
@@ -28136,8 +28082,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }else{
     setTimeout(onReady, 0);
   }
-})();
-</script>
+})();</script>
 
 
 <!-- Brands gallery manager (separate from regular galleries manager) -->
@@ -28811,8 +28756,7 @@ try{
     }catch(e){}
   };
 }catch(e){}
-})();
-</script>
+})();</script>
 
 <script>
 (function(){
@@ -28941,8 +28885,7 @@ try{
     if(idx < 0) idx = 0;
     if(window.__CRMO_openBrandTileEditor) window.__CRMO_openBrandTileEditor(idx);
   }, true);
-})();
-</script>
+})();</script>
 
 <script id="CRMO_v1358_brands_admin_panel_js">
 (function(){
@@ -28981,8 +28924,7 @@ try{
       try{ localStorage.setItem(KEY, '1'); }catch(e){}
     }, {passive:false});
   }catch(e){}
-})();
-</script>
+})();</script>
 
 
 <script id="CRMO_brand_editor_esc_guard_v1374">
@@ -28998,8 +28940,7 @@ try{
     try{ if(ev.stopImmediatePropagation) ev.stopImmediatePropagation(); }catch(e){}
     editor.hidden = true;
   }, true); // capture
-})();
-</script>
+})();</script>
 
 
 <!-- =========================================================
@@ -29108,8 +29049,7 @@ try{
       window.CRMO_FORCE_OFFLINE = false;
     }
   }catch(e){}
-})();
-</script>
+})();</script>
 
 </script>
 
@@ -30195,8 +30135,7 @@ function boot(){
   }
   var mo = new MutationObserver(function(){ setup(); });
   mo.observe(document.documentElement, {childList:true, subtree:true});
-})();
-</script>
+})();</script>
 
 
 <script>
@@ -30836,8 +30775,7 @@ function boot(){
       }
     }
   }, true);
-})();
-</script>
+})();</script>
 
 <!-- CRMO Privacy modal (v1427) -->
 <div id="crmo-privacy-modal" class="crmo-auth-modal" hidden aria-hidden="true">
@@ -30910,8 +30848,7 @@ function boot(){
   }else{
     run();
   }
-})();
-</script>
+})();</script>
 
 <script id="crmo_mobile_nav_js_v1446">
 (function(){
@@ -31113,8 +31050,7 @@ function boot(){
   }else{
     init();
   }
-})();
-</script>
+})();</script>
 
 
 <script id="CRMO_v1451_role_bootstrap">
@@ -31248,8 +31184,7 @@ try{
     }
     window.addEventListener('load', function(){ attempt(0); });
   })();
-}catch(e){}
-</script>
+}catch(e){}</script>
 
 <script id="crmo_debug_helpers_v1490">
 (function(){
@@ -31428,8 +31363,7 @@ try{
   try {
     setTimeout(function(){ window.CRMO_hydrateFromDb(false); }, 300);
   } catch(e) {}
-})();
-</script>
+})();</script>
 <script id="crmo_asset_fallbacks_v1488">
 (function(){
   var PLACEHOLDER_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">'+ '<rect width="800" height="450" fill="#ffffff"/>'+ '<rect x="1" y="1" width="798" height="448" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="2"/>'+ '</svg>';
@@ -31476,8 +31410,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
       if (did) t.__crmoFallbackApplied = true;
     }catch(e){}
   }, true);
-})();
-</script>
+})();</script>
 <script id="crmo_internal_icon_use_user_svgs_js_v1505">
 (function(){
   var EDIT_DATA = "data:image/svg+xml;charset=utf-8,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%0A%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20200%20200%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3Cstyle%3E%0A%20%20%20%20%20%20.cls-1%20%7B%0A%20%20%20%20%20%20%20%20fill%3A%20%23fff%3B%0A%20%20%20%20%20%20%20%20stroke%3A%20%23231f20%3B%0A%20%20%20%20%20%20%20%20stroke-miterlimit%3A%2010%3B%0A%20%20%20%20%20%20%20%20stroke-width%3A%201.42px%3B%0A%20%20%20%20%20%20%7D%0A%20%20%20%20%3C/style%3E%0A%20%20%3C/defs%3E%0A%20%20%3Cg%20id%3D%22BG%22%3E%0A%20%20%20%20%3Crect%20class%3D%22cls-1%22%20width%3D%22200%22%20height%3D%22200%22/%3E%0A%20%20%3C/g%3E%0A%20%20%3Cg%20id%3D%22Layer_1%22%20data-name%3D%22Layer%201%22%3E%0A%20%20%20%20%3Cg%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M175.03%2C48.38c0-5.62-2.19-10.9-6.16-14.87l-1.32-1.32c-3.97-3.97-9.25-6.16-14.87-6.16s-10.9%2C2.19-14.87%2C6.16l-100.09%2C100.09h0l-.13.13c-.28.28-.48.62-.6%2C1l-8.61%2C28.69s0%2C.03-.01.05l-3.25%2C10.83c-.25.84-.02%2C1.75.6%2C2.37.45.45%2C1.06.7%2C1.68.7.23%2C0%2C.46-.03.68-.1l10.83-3.25s.03%2C0%2C.05-.01l28.68-8.61c.38-.11.72-.32%2C1-.6l84.72-84.72h0s0%2C0%2C0%2C0l15.49-15.49c3.97-3.97%2C6.16-9.25%2C6.16-14.87ZM67.1%2C158.29l-24.32-24.32L124%2C52.74l24.32%2C24.32-81.23%2C81.23ZM40.48%2C138.4l22.19%2C22.19-23.72%2C7.12-5.59-5.59%2C7.12-23.72ZM31.81%2C167.3l1.96%2C1.96-2.8.84.84-2.8ZM151.69%2C73.69l-24.32-24.32%2C13.81-13.81c3.07-3.07%2C7.16-4.76%2C11.5-4.76s8.43%2C1.69%2C11.5%2C4.76l1.32%2C1.32c6.34%2C6.34%2C6.34%2C16.66%2C0%2C23l-13.81%2C13.81Z%22/%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M130.08%2C70.98c-.93-.93-2.44-.93-3.37%2C0l-66.24%2C66.24c-.93.93-.93%2C2.44%2C0%2C3.37.47.47%2C1.07.7%2C1.68.7s1.22-.23%2C1.68-.7l66.24-66.24c.93-.93.93-2.44%2C0-3.37Z%22/%3E%0A%20%20%20%20%3C/g%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E";
@@ -31570,8 +31503,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
     tries++;
     if(tries > 40) clearInterval(t);
   }, 500);
-})();
-</script>
+})();</script>
 
 <script>
 /* CRMO v1547: Hard reset (Local only) */
@@ -31619,8 +31551,7 @@ function CRMO_clearLocalDataAndReload(){
       location.reload();
     }
   })();
-}
-</script>
+}</script>
 
 
 <script id="crmo_clear_wrapper_v1533">
@@ -31640,8 +31571,7 @@ function CRMO_clearLocalDataAndReload(){
     }catch(e){}
     return _orig.apply(this, arguments);
   };
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_v1534_banner">
@@ -31671,8 +31601,7 @@ function CRMO_clearLocalDataAndReload(){
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', addBanner);
   else addBanner();
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_clear_wrapper_v1534">
@@ -31711,8 +31640,7 @@ function CRMO_clearLocalDataAndReload(){
       location.reload();
     };
   }
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_v1534_no_seed_after_clear">
@@ -31731,8 +31659,7 @@ function CRMO_clearLocalDataAndReload(){
       }
     });
   }catch(e){}
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_v1537_hover_and_multicheck_patch">
@@ -31861,8 +31788,7 @@ function CRMO_clearLocalDataAndReload(){
     const obs = new MutationObserver(()=>refreshAll());
     obs.observe(document.body, {subtree:true, childList:true});
   }catch(e){}
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_v1538_hover_sync">
@@ -31957,8 +31883,7 @@ function CRMO_clearLocalDataAndReload(){
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', attachObserver);
   else attachObserver();
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_v1539_tile_editor_fixes">
@@ -32114,8 +32039,7 @@ function CRMO_clearLocalDataAndReload(){
       window.mpApplyMultiProjectChanges = wrapped;
     }
   }catch(e){}
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_v1540_gate_logic">
@@ -32173,8 +32097,7 @@ function CRMO_clearLocalDataAndReload(){
     try{ window.CRMO_syncGateText(wrapper); }catch(e){}
     // Do not use per-thumbnail meta in grid anymore.
   };
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_v1540_clear_tile_fix">
@@ -32277,8 +32200,7 @@ function CRMO_clearLocalDataAndReload(){
       window.CRMO_clearTileFully(tile);
     }catch(e){}
   }, true);
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_v1543_unified_tile_editor">
@@ -32583,8 +32505,7 @@ function CRMO_clearLocalDataAndReload(){
     hideTmModal();
     attachOpenWatcher();
   }
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_v1547_disable_te_clear">
@@ -32600,8 +32521,7 @@ function CRMO_clearLocalDataAndReload(){
       }
     }catch(e){}
   }, true);
-})();
-</script>
+})();</script>
 
 
 <script id="crmo_auth_global_fallback_v1584">
@@ -32675,8 +32595,7 @@ function CRMO_clearLocalDataAndReload(){
       t = t.parentElement;
     }
   }, true);
-})();
-</script>
+})();</script>
 
 
 <script id="CRMO_v1584_auth_modal_behavior_fix">
@@ -32724,8 +32643,7 @@ function CRMO_clearLocalDataAndReload(){
       }
     }
   }, true);
-})();
-</script>
+})();</script>
 
 
 <script>
@@ -32815,8 +32733,7 @@ function CRMO_clearLocalDataAndReload(){
       }catch(e){}
     };
   }catch(e){}
-})();
-</script>
+})();</script>
 
 
 
@@ -33027,8 +32944,7 @@ function CRMO_clearLocalDataAndReload(){
       })()
     };
   };
-})();
-</script>
+})();</script>
 
 </body>
 </html>
