@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<!-- CRMO_v1623 PUBLIC -->
-<!-- CRMO_v1623 -->
+<!-- CRMO_v1624 PUBLIC -->
+<!-- CRMO_v1624 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -37,81 +37,70 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
   }catch(e){}
 })();</script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1623";
-window.CRMO_VERSION = 'CRMO_v1623';
-window.CRMO_VERSION_NUMBER = 1623;
+window.CRMO_BUILD_VERSION = "1624";
+window.CRMO_VERSION = 'CRMO_v1624';
+window.CRMO_VERSION_NUMBER = 1624;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";</script>
 <script id="crmo-role-refresher-stub">
-/* CRMO role refresher stub (v1623)
+/* CRMO role refresher stub (v1624)
    Guarantees window.CRMO_refreshRoleAndAdminUI is ALWAYS a function,
-   even if later scripts fail or load order changes.
+   and NEVER hangs if Supabase SDK is blocked. Uses local session fallback.
 */
 (function(){
   try{
-    if (typeof window.CRMO_refreshRoleAndAdminUI === "function") return;
-
     window.CRMO_refreshRoleAndAdminUI = async function(){
-  try{ window.__CRMO_refreshRoleAndAdminUI_impl = window.CRMO_refreshRoleAndAdminUI; }catch(e){}
-
       try{
-        // Wait briefly for Supabase to exist
-        const t0 = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
-        while (((typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now()) - t0 < 12000){
-          try{ if(window.supabase && typeof window.supabase.createClient === "function") break; }catch(_e){}
-          await new Promise(r=>setTimeout(r,80));
-        }
-
-        if(!window.supabase || typeof window.supabase.createClient !== "function"){
-          window.CRMO_IS_OWNER = false;
-          try{ localStorage.removeItem("crmo:admin:email"); }catch(e){}
-          try{ window.CRMO_disableAdminDom && window.CRMO_disableAdminDom(); }catch(e){}
-          return { role:null, owner:false, reason:"supabase_not_ready" };
-        }
-
-        let sb = null;
+        // ===== 1) Fast path: local stored session from fetch-auth =====
+        var sess = null;
         try{
-          if(window.CRMO_getSbClient){
-            sb = await Promise.race([window.CRMO_getSbClient(), new Promise(function(_r,_j){ setTimeout(function(){ _j(new Error('timeout getSbClient')); }, 6000); })]);
-          }
-        }catch(_e){}
-        if(!sb){
-          sb = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
+          var raw = localStorage.getItem('CRMO_SB_SESSION');
+          if(raw) sess = JSON.parse(raw);
+        }catch(e){ sess = null; }
+        if(sess && sess.user){ try{ window.CRMO_SB_SESSION = sess; }catch(e){} }
+
+        var email = '';
+        var uid = '';
+        try{ email = (sess && sess.user && sess.user.email) ? String(sess.user.email).trim().toLowerCase() : ''; }catch(e){}
+        try{ uid   = (sess && sess.user && sess.user.id)    ? String(sess.user.id).trim() : ''; }catch(e){}
+
+        if(!email){ try{ email = String(localStorage.getItem('crmo:admin:email')||'').trim().toLowerCase(); }catch(e){} }
+        var ownerEmails = ['boochin@gmail.com'];
+        var storedOwnerUid = '';
+        try{ storedOwnerUid = String(localStorage.getItem('crmo:owner:uid')||'').trim(); }catch(e){}
+
+        var isOwner = false;
+        if(email && ownerEmails.indexOf(email) !== -1) isOwner = true;
+        if(uid && storedOwnerUid && uid === storedOwnerUid) isOwner = true;
+
+        if(isOwner){
+          try{ window.CRMO_IS_OWNER = true; }catch(e){}
+          try{ localStorage.setItem('crmo:admin:email', email || 'boochin@gmail.com'); }catch(e){}
+          try{ if(uid) localStorage.setItem('crmo:owner:uid', uid); }catch(e){}
+          try{ if(typeof CRMO_enableAdminDom === 'function') CRMO_enableAdminDom(); }catch(e){}
+          return { owner:true, email: email||null, uid: uid||null, via:'local-session' };
         }
 
-        const ses = await sb.auth.getSession();
-        const session = ses && ses.data ? ses.data.session : null;
-        const user = session && session.user ? session.user : null;
-        const email = (user && user.email) ? String(user.email).toLowerCase() : "";
-        const uid = (user && user.id) ? String(user.id) : "";
-
-        const ownerEmails = ["boochin@gmail.com"];
-        const storedOwnerUid = (function(){ try{ return localStorage.getItem("crmo:owner:uid") || ""; }catch(e){ return ""; } })();
-
-        const isOwner = (ownerEmails.indexOf(email) !== -1) || (!!storedOwnerUid && storedOwnerUid === uid) || (window.CRMO_IS_OWNER === true);
-
-        if (isOwner){
-          window.CRMO_IS_OWNER = true;
-          try{ if(uid) localStorage.setItem("crmo:owner:uid", uid); }catch(e){}
-          try{ if(email) localStorage.setItem("crmo:admin:email", email); }catch(e){}
-          try{ window.CRMO_enableAdminDom && window.CRMO_enableAdminDom(); }catch(e){}
-          return { role:"owner", owner:true, email:email, uid:uid, source:"stub" };
-        }else{
-          window.CRMO_IS_OWNER = false;
-          try{ localStorage.removeItem("crmo:admin:email"); }catch(e){}
-          try{ window.CRMO_disableAdminDom && window.CRMO_disableAdminDom(); }catch(e){}
-          return { role:null, owner:false, email:email, uid:uid, source:"stub" };
+        // ===== 2) Optional: if Supabase SDK exists, you can do deeper checks =====
+        if(window.supabase && window.CRMO_getSbClient){
+          try{
+            // Don't hang forever
+            await Promise.race([
+              window.CRMO_getSbClient(),
+              new Promise(function(_, rej){ setTimeout(function(){ rej(new Error('timeout_getSbClient')); }, 6000); })
+            ]);
+          }catch(_e){ /* ignore */ }
         }
-      }catch(e){
-        try{ console.warn("[CRMO] role refresher stub error:", e); }catch(_e){}
-        return { role:null, owner:false, reason:"stub_error", error:String(e && e.message || e) };
+
+        try{ if(typeof CRMO_disableAdminDom === 'function') CRMO_disableAdminDom(); }catch(e){}
+        return { owner:false, email: email||null, uid: uid||null, via:'local-session', reason: email ? 'not_owner' : 'no_session' };
+      }catch(err){
+        try{ if(typeof CRMO_disableAdminDom === 'function') CRMO_disableAdminDom(); }catch(e){}
+        throw err;
       }
     };
-
-    // small diagnostic
-    try{ window.CRMO__role_refresher_stub = true; }catch(e){}
   }catch(e){}
 })();
 </script>
