@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<!-- CRMO_v1625 PUBLIC -->
-<!-- CRMO_v1625 -->
+<!-- CRMO_v1626 PUBLIC -->
+<!-- CRMO_v1626 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -37,15 +37,15 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
   }catch(e){}
 })();</script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1625";
-window.CRMO_VERSION = 'CRMO_v1625';
-window.CRMO_VERSION_NUMBER = 1625;
+window.CRMO_BUILD_VERSION = "1626";
+window.CRMO_VERSION = 'CRMO_v1626';
+window.CRMO_VERSION_NUMBER = 1626;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";</script>
 <script id="crmo-role-refresher-stub">
-/* CRMO role refresher stub (v1625)
+/* CRMO role refresher stub (v1626)
    Guarantees window.CRMO_refreshRoleAndAdminUI is ALWAYS a function,
    and NEVER hangs if Supabase SDK is blocked. Uses local session fallback.
 */
@@ -533,7 +533,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];</script>
       CRMO_enableAdminDom();
     }else{
       try{ localStorage.removeItem('crmo:admin:email'); }catch(e){}
-      CRMO_disableAdminDom(true); // remove from DOM for stealth
+      CRMO_disableAdminDom(false); // remove from DOM for stealth
     }
     return { role: role, owner: isOwner, email: emailLower, uid: uid };
   }catch(e){
@@ -551,6 +551,7 @@ function CRMO_adminNodes(){
       '#crmo-admin-editor',
       '#crmo-admin-subbar',
       '#CRMO_v1623_brands_admin_panel',
+      '[id$="_brands_admin_panel"]',
       '#crmo-header-admin',
       '#crmo-mode-admin',
       '#crmo-settings-admin',
@@ -587,7 +588,10 @@ function CRMO_adminNodes(){
       CRMO_adminNodes().forEach(function(n){
         if(!n) return;
         if(remove){
-          n.remove();
+          // v1626: never remove admin nodes (prevents losing toolbar after login). Hide instead.
+          n.style.display='none';
+          n.style.visibility='hidden';
+          n.hidden=true;
         }else{
           n.style.display='none';
           n.style.visibility='hidden';
@@ -606,7 +610,19 @@ function CRMO_adminNodes(){
     }catch(e){}
   }
 
-  // Quiet background role check at startup (no UI messages)
+  
+  // v1626: early admin restore (if prior login stored admin email)
+  (function(){
+    try{
+      var e = String(localStorage.getItem('crmo:admin:email')||'').trim().toLowerCase();
+      if(e === 'boochin@gmail.com'){
+        try{ window.CRMO_IS_OWNER = true; }catch(_e){}
+        try{ CRMO_enableAdminDom(); }catch(_e){}
+      }
+    }catch(_e){}
+  })();
+
+// Quiet background role check at startup (no UI messages)
   (function(){
     function boot(){
       window.CRMO_refreshRoleAndAdminUI();
@@ -32950,7 +32966,7 @@ if (!sb) {
     throw new Error(msg);
   }
 
-  // Persist minimal session for the app's admin UI (used by v1625+ fallbacks)
+  // Persist minimal session for the app's admin UI (used by v1626+ fallbacks)
   try { storage.setItem("CRMO_SB_SESSION", JSON.stringify(data)); } catch(e) {}
   try { window.localStorage.setItem("crmo:admin:email", email.toLowerCase()); } catch(e) {}
 
