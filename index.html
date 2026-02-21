@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<!-- CRMO_v1624 PUBLIC -->
-<!-- CRMO_v1624 -->
+<!-- CRMO_v1625 PUBLIC -->
+<!-- CRMO_v1625 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -37,15 +37,15 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
   }catch(e){}
 })();</script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1624";
-window.CRMO_VERSION = 'CRMO_v1624';
-window.CRMO_VERSION_NUMBER = 1624;
+window.CRMO_BUILD_VERSION = "1625";
+window.CRMO_VERSION = 'CRMO_v1625';
+window.CRMO_VERSION_NUMBER = 1625;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";</script>
 <script id="crmo-role-refresher-stub">
-/* CRMO role refresher stub (v1624)
+/* CRMO role refresher stub (v1625)
    Guarantees window.CRMO_refreshRoleAndAdminUI is ALWAYS a function,
    and NEVER hangs if Supabase SDK is blocked. Uses local session fallback.
 */
@@ -32901,8 +32901,67 @@ async function CRMO_clearLocalDataAndReload(){
 
     try{
       const storage = (rememberCb && rememberCb.checked) ? window.localStorage : window.sessionStorage;
-      const sb = getSb(storage);
-      window.__CRMO_CLIENT_SB = sb;
+
+
+// If supabase-js is blocked (window.supabase undefined), use REST Auth (GoTrue) so login/signup still works.
+let sb = null;
+try {
+  sb = getSb(storage);
+  window.__CRMO_CLIENT_SB = sb;
+} catch(e) {
+  const em = String(e && (e.message || e) || "");
+  if (em.includes("Supabase") || em.includes("ספריית Supabase")) {
+    sb = null;
+  } else {
+    throw e;
+  }
+}
+
+if (!sb) {
+  const url = String(window.CRMO_SUPABASE_URL || "").trim().replace(/\/+$/, "");
+  const key = String(window.CRMO_SUPABASE_ANON_KEY || "").trim();
+  if (!url || !key) throw new Error("חסרים פרטי חיבור (URL/KEY)");
+
+  const headers = {
+    "Content-Type": "application/json",
+    "apikey": key,
+    "Authorization": "Bearer " + key
+  };
+
+  const payload = (mode === "signup")
+    ? {
+        email, password,
+        data: {
+          first_name: (firstEl?.value||"").trim(),
+          last_name: (lastEl?.value||"").trim()
+        }
+      }
+    : { email, password };
+
+  const endpoint = (mode === "signup")
+    ? (url + "/auth/v1/signup")
+    : (url + "/auth/v1/token?grant_type=password");
+
+  const resp = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify(payload) });
+  let data = {};
+  try { data = await resp.json(); } catch(_) {}
+  if (!resp.ok) {
+    const msg = data?.msg || data?.message || data?.error_description || data?.error || "שגיאת התחברות";
+    throw new Error(msg);
+  }
+
+  // Persist minimal session for the app's admin UI (used by v1625+ fallbacks)
+  try { storage.setItem("CRMO_SB_SESSION", JSON.stringify(data)); } catch(e) {}
+  try { window.localStorage.setItem("crmo:admin:email", email.toLowerCase()); } catch(e) {}
+
+  setError(mode === "signup"
+    ? (data?.access_token ? "נרשמת והתחברת! טוען..." : "נרשמת! ייתכן שנדרש אישור במייל.")
+    : "התחברת! טוען...");
+  setTimeout(() => location.reload(), 700);
+  return;
+}
+
+// supabase-js path
 
       const { error } = (mode === "signup")
         ? await sb.auth.signUp({
