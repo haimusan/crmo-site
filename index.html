@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- CRMO_v1673 single -->
+<!-- CRMO_v1674 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1673">
+  <script id="crmo-storage-sanitize-v1674">
 (function(){
   try{
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
@@ -18,7 +18,7 @@
 </script>
   
   
-<script id="crmo-safe-session-v1673">
+<script id="crmo-safe-session-v1674">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -68,7 +68,7 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 <script id="crmo_build_info">
 window.CRMO_BUILD_VERSION = "1671";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1673';
+window.CRMO_VERSION = 'CRMO_v1674';
 window.CRMO_VERSION_NUMBER = 1671;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
@@ -1364,7 +1364,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1673</title>
+<title>CRMO_v1674</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -6438,6 +6438,7 @@ body:not(.role-admin) #crmo-header-admin{ display:none !important; }
   background:#f7f7f7;
 }
 #crmo-admin-bar .wrap{ padding: 0; }
+#crmo-adminbar-hardreset{ margin-right:auto !important; }
 #crmo-admin-bar .crmo-admin-tabs{
   display:flex;
   align-items:flex-end;
@@ -8922,7 +8923,7 @@ main{
 </script>
 
 
-<style id="crmo_hide_header_version_v1673">
+<style id="crmo_hide_header_version_v1674">
   #crmo-header-version, .crmo-header-version{ display:none !important; }
 </style>
 </head>
@@ -8985,9 +8986,9 @@ main{
           vEl.id = 'crmo-version-badge';
           vEl.className = 'crmo-role-tab crmo-version-badge';
           vEl.setAttribute('data-static','1');
-          vEl.textContent = 'v1673';
+          vEl.textContent = 'v1674';
         } else {
-          vEl.textContent = 'v1673';
+          vEl.textContent = 'v1674';
         }
 
         var whoEl = bar.querySelector('#crmo-who-badge');
@@ -9162,7 +9163,7 @@ main{
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1673</span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1674</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
@@ -26583,7 +26584,7 @@ if (document.readyState === 'loading'){
     var isProd = (host === "www.crmo.co.il" || host === "crmo.co.il" || host.endsWith(".crmo.co.il"));
     if(isProd){
       
-      // v1673: do not override title or remove role bar; admin UI handles visibility.
+      // v1674: do not override title or remove role bar; admin UI handles visibility.
 }
   }catch(e){}
 })();
@@ -32214,7 +32215,7 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_v1673_record_badge">
+<script id="crmo_v1674_record_badge">
 (function(){
   function isOwnerNow(){
     try{
