@@ -1,10 +1,23 @@
 <!DOCTYPE html>
-<!-- CRMO_v1653 -->
+<!-- CRMO_v1654 -->
 
 <html dir="rtl" lang="he">
 <head>
+  <script id="crmo-storage-sanitize-v1654">
+  (function(){
+    try{
+      var k = 'crmo:admin:email';
+      var v = String(localStorage.getItem(k) || '');
+      if(v && v.toLowerCase().indexOf('boochin@gmail.com') !== -1){
+        localStorage.removeItem(k);
+        console.warn('[CRMO 1654] sanitized stored admin email (removed gmail)');
+      }
+    }catch(_e){}
+  })();
+  </script>
   
-<script id="crmo-safe-session-v1653">
+  
+<script id="crmo-safe-session-v1654">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -26,8 +39,8 @@
 <script id="crmo-early-owner-peek-v1642">
   (function(){
     try{
-      const OWNER_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
-  const OWNER_EMAIL_PRIMARY = "boochin@gmail.com";
+      const OWNER_EMAILS = ["boochin@walla.co.il","boochin@gmail.com"];
+  const OWNER_EMAIL_PRIMARY = "boochin@walla.co.il";
   var OWNER_EMAIL = OWNER_EMAIL_PRIMARY;
       const getSessStr = () => (localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || "");
       const getEmail = () => {
@@ -93,7 +106,7 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 </script>
 <script id="crmo_build_info">
 window.CRMO_BUILD_VERSION = "1653";
-window.CRMO_VERSION = 'CRMO_v1653';
+window.CRMO_VERSION = 'CRMO_v1654';
 window.CRMO_VERSION_NUMBER = 1653;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
@@ -1377,7 +1390,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO v1653 | PUBLIC</title>
+<title>CRMO v1654 | PUBLIC</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8647,7 +8660,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   setTimeout(unlockIfStuck, 1200);
 })();
 </script>
-<script id="crmo-auth-ui-state-v1653">
+<script id="crmo-auth-ui-state-v1654">
 (function(){
   function readSessionStr(){
     return localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || '';
@@ -19017,7 +19030,7 @@ async function attemptCustomerLogin(){
         }
         closeCustomerAuth();
         try{ window.CRMO_refreshRoleAndAdminUI && window.CRMO_refreshRoleAndAdminUI(); }catch(_e){}
-        try{ setTimeout(function(){ location.reload(); }, 50); }catch(_e){}
+        try{ setTimeout(function(){ if(window.CRMO_applyAuthUIState) window.CRMO_applyAuthUIState(); }, 50); }catch(_e){}
       }catch(e){
         var msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : String(e||'');
         if(msg === 'SUPABASE_NOT_CONFIGURED') msg = 'עוד לא חיברו את האתר להרשמה 😅 נסה שוב עוד מעט.';
@@ -19327,7 +19340,7 @@ async function attemptCustomerRegister(){
         }
         closeCustomerAuth();
         try{ window.CRMO_refreshRoleAndAdminUI && window.CRMO_refreshRoleAndAdminUI(); }catch(_e){}
-        try{ setTimeout(function(){ location.reload(); }, 50); }catch(_e){}
+        try{ setTimeout(function(){ if(window.CRMO_applyAuthUIState) window.CRMO_applyAuthUIState(); }, 50); }catch(_e){}
       }catch(e){
         var msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : String(e||'');
         if(msg === 'SUPABASE_NOT_CONFIGURED') msg = 'עוד לא חיברו את האתר להרשמה 😅 נסה שוב עוד מעט.';
@@ -19438,7 +19451,7 @@ async function attemptCustomerRegister(){
         if(!t) return;
         if(t.getAttribute && t.getAttribute('data-close') === '1') closeCustomerAuth();
         try{ window.CRMO_refreshRoleAndAdminUI && window.CRMO_refreshRoleAndAdminUI(); }catch(_e){}
-        try{ setTimeout(function(){ location.reload(); }, 50); }catch(_e){}
+        try{ setTimeout(function(){ if(window.CRMO_applyAuthUIState) window.CRMO_applyAuthUIState(); }, 50); }catch(_e){}
       });
     }
     var closeBtnsClient = document.querySelectorAll('#crmo-auth-modal-client .crmo-auth-close, #crmo-auth-cancel-client');
@@ -33280,8 +33293,8 @@ function CRMO_clearLocalDataAndReload(){
 
 <script id="crmo_auth_ui_bridge_v1642">
 (function(){
-  const OWNER_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
-  const OWNER_EMAIL_PRIMARY = "boochin@gmail.com";
+  const OWNER_EMAILS = ["boochin@walla.co.il","boochin@gmail.com"];
+  const OWNER_EMAIL_PRIMARY = "boochin@walla.co.il";
   var OWNER_EMAIL = OWNER_EMAIL_PRIMARY;
 
   function _getSessionStr(){
