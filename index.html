@@ -1,9 +1,58 @@
 <!DOCTYPE html>
-<!-- CRMO_v1664 single -->
+<!-- CRMO_v1665 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1664">
+  
+<style id="crmo-fixed-stack-css-v1665">
+:root{
+  --crmo-rolebar-h: 0px;
+  --crmo-adminbar-h: 0px;
+  --crmo-subbar-h: 0px;
+  --crmo-header-h: 0px;
+  --crmo-fixed-stack-h: 0px;
+}
+
+/* Force stack order */
+#crmo-role-toggle{
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1000000 !important;
+}
+#crmo-admin-bar{
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: var(--crmo-rolebar-h, 0px) !important;
+  z-index: 999999 !important;
+}
+#crmo-admin-subbar{
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: calc(var(--crmo-rolebar-h, 0px) + var(--crmo-adminbar-h, 0px)) !important;
+  z-index: 999998 !important;
+}
+header{
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: calc(var(--crmo-rolebar-h, 0px) + var(--crmo-adminbar-h, 0px) + var(--crmo-subbar-h, 0px)) !important;
+  z-index: 999997 !important;
+}
+
+/* Push content below the whole fixed stack */
+body{
+  padding-top: var(--crmo-fixed-stack-h, 0px) !important;
+}
+
+/* Prevent old sticky rules from interfering */
+#crmo-admin-bar{ position: fixed !important; }
+header{ position: fixed !important; }
+</style>
+<script id="crmo-storage-sanitize-v1665">
 (function(){
   try{
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
@@ -18,7 +67,7 @@
 </script>
   
   
-<script id="crmo-safe-session-v1664">
+<script id="crmo-safe-session-v1665">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -66,10 +115,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1664";
+window.CRMO_BUILD_VERSION = "1665";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1664';
-window.CRMO_VERSION_NUMBER = 1664;
+window.CRMO_VERSION = 'CRMO_v1665';
+window.CRMO_VERSION_NUMBER = 1665;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1359,7 +1408,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO v1664 | SINGLE</title>
+<title>CRMO v1665 | SINGLE</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8629,7 +8678,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   setTimeout(unlockIfStuck, 1200);
 })();
 </script>
-<script id="crmo-auth-ui-state-v1664">
+<script id="crmo-auth-ui-state-v1665">
 (function(){
   const OWNER_EMAILS = ["boochin@walla.co.il","boochin@gmail.com"];
 
@@ -8663,7 +8712,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     }catch(e){}
   }
 
-  function applyUI(owner){
+  function applyUI(owner, email){
     setOwnerClasses(owner);
 
     const icon = document.getElementById("crmo-user-indicator");
@@ -8687,6 +8736,21 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     setDisplay(roleBar, owner);
     setDisplay(adminBar, owner);
     setDisplay(subbar, owner);
+
+    // Version + connected email badge (debug)
+    try{
+      var vEl = document.getElementById("crmo-top-version");
+      if(vEl){
+        var base = "v1665 single";
+        var em = (email || "").toString().trim().toLowerCase();
+        vEl.textContent = owner && em ? (base + " | " + em) : base;
+      }
+    }catch(e){}
+
+    // Notify stack reflow / listeners
+    try{
+      window.dispatchEvent(new Event("crmo-auth-changed"));
+    }catch(e){}
 
     try{
       window.dispatchEvent(new Event("resize"));
@@ -8733,10 +8797,10 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     if(key !== lastKey){
       lastKey = key;
       lastOwner = owner;
-      applyUI(owner);
       try{
         document.documentElement.setAttribute("data-crmo-auth-email", r.email || "");
       }catch(e){}
+      applyUI(owner, r.email || "");
       try{
         if(owner){
           localStorage.setItem("crmo:admin:email", r.email || "");
@@ -8746,10 +8810,16 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
       }catch(e){}
     }else{
       // still re-apply when needed (layout)
-      applyUI(lastOwner);
+      applyUI(lastOwner, (document.documentElement.getAttribute("data-crmo-auth-email")||""));
     }
   }
 
+
+  // Public hook used across the codebase
+  window.CRMO_applyAuthUIState = function(){
+    try{ refresh(); }catch(e){}
+    return true;
+  };
   function hookAuthState(){
     if(inited) return;
     inited = true;
@@ -8803,7 +8873,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 </script>
 
 
-<style id="CRMO_v1664_fixed_stack">
+<style id="CRMO_v1665_fixed_stack">
 :root{
   --crmo-rolebar-h: 0px;
   --crmo-adminbar-h: 0px;
@@ -8843,115 +8913,69 @@ body.role-admin main{
 }
 .crmo-header-version{font-size:12px;border:1px solid #ddd;border-radius:999px;padding:4px 10px;line-height:1;white-space:nowrap;color:#666;background:#fff;}
 </style>
-<script id="CRMO_v1664_sticky_measure">
+<script id="CRMO_v1665_sticky_measure">
+<script id="crmo-fixed-stack-controller-v1665">
 (function(){
-  function px(n){ return (Math.max(0, Math.round(n||0))) + "px"; }
-  function measure(){
-    try{
-      const roleBar = document.getElementById("crmo-role-toggle");
-      const adminBar = document.getElementById("crmo-admin-bar");
-      const subbar = document.getElementById("crmo-admin-subbar");
-      const header = document.querySelector("header");
-
-      const isAdmin = document.body && document.body.classList.contains("role-admin");
-      const rh = (isAdmin && roleBar && roleBar.offsetParent !== null) ? roleBar.getBoundingClientRect().height : 0;
-      const ah = (isAdmin && adminBar && adminBar.offsetParent !== null) ? adminBar.getBoundingClientRect().height : 0;
-      const sh = (isAdmin && subbar && subbar.offsetParent !== null) ? subbar.getBoundingClientRect().height : 0;
-      const hh = (header && header.offsetParent !== null) ? header.getBoundingClientRect().height : 72;
-
-      document.documentElement.style.setProperty("--crmo-rolebar-h", px(rh));
-      document.documentElement.style.setProperty("--crmo-adminbar-h", px(ah));
-      document.documentElement.style.setProperty("--crmo-subbar-h", px(sh));
-      document.documentElement.style.setProperty("--crmo-header-h", px(hh));
-    }catch(e){}
+  function isVisible(el){
+    if(!el) return false;
+    if(el.hidden) return false;
+    const cs = getComputedStyle(el);
+    return cs.display !== 'none' && cs.visibility !== 'hidden';
   }
 
-  measure();
-  window.addEventListener("resize", function(){ try{ measure(); }catch(e){} });
-  window.addEventListener("scroll", function(){ try{ measure(); }catch(e){} }, {passive:true});
-  document.addEventListener("DOMContentLoaded", function(){ try{ measure(); }catch(e){} });
-  window.addEventListener("pageshow", function(){ try{ measure(); }catch(e){} });
-  window.addEventListener("focus", function(){ try{ measure(); }catch(e){} });
-
-  // measure after auth UI toggles
-  window.addEventListener("storage", function(){ try{ measure(); }catch(e){} });
-  setInterval(function(){ try{ measure(); }catch(e){} }, 1500);
-})();
-</script>
-
-</head>
-<body class="gallery-hover-ready role-guest">
-
-<script id="crmo-rolebar-fallback-v1646">
-(function(){
-  function ensureRoleBar(){
-    try{
-      var bar = document.getElementById('crmo-role-toggle');
-      if(!bar){
-        // try to find existing bar by content/buttons
-        var cand = null;
-        var divs = document.querySelectorAll('div,nav,section,header');
-        for(var i=0;i<divs.length;i++){
-          var n = divs[i];
-          if(!n || !n.textContent) continue;
-          if(n.textContent.indexOf('תצוגה') !== -1 && n.querySelector('button') && n.querySelector('[data-role]')){
-            cand = n;
-            break;
-          }
-        }
-        if(cand){
-          cand.id = 'crmo-role-toggle';
-          bar = cand;
-        }
-      }
-      if(!bar){
-        // create the original bar markup (no new UI, just restore missing node)
-        bar = document.createElement('div');
-        bar.setAttribute('dir','rtl');
-        bar.id = 'crmo-role-toggle';
-        bar.innerHTML =
-          '<span>תצוגה:</span>' +
-          '<button class="crmo-role-tab" data-role="master" type="button">בעלים</button>' +
-          '<button class="crmo-role-tab" data-role="admin" type="button">מנהל</button>' +
-          '<button class="crmo-role-tab" data-role="client" type="button">לקוח</button>' +
-          '<button class="crmo-role-tab" data-role="user" type="button">משתמש רשום</button>' +
-          '<button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>' +
-          '<button class="crmo-role-tab" data-role="guest" type="button">צופה</button>' +
-          '<button class="crmo-role-tab" data-role="ux" type="button">ביקורת UXV</button>';
-        document.body.insertBefore(bar, document.body.firstChild);
-      }
-    }catch(e){}
+  function h(el){
+    if(!isVisible(el)) return 0;
+    const r = el.getBoundingClientRect();
+    return Math.max(0, Math.round(r.height));
   }
 
-  // Apply visibility based on signed-in state (single source of truth = CRMO_SB_SESSION presence)
-  function applyBars(){
+  window.CRMO_reflowFixedStack = function(){
     try{
-      var sess = localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || '';
-      var signedIn = !!sess;
-      var roleBar = document.getElementById('crmo-role-toggle');
-      var adminBar = document.getElementById('crmo-admin-bar');
-      var subbar = document.getElementById('crmo-admin-subbar') || document.getElementById('crmo-admin-sub') || document.getElementById('crmo-admin-subbar-v2');
-      // Role bar only when signed in
-      if(roleBar) roleBar.style.display = signedIn ? 'flex' : 'none';
-      // Admin bars only when signed in (admin bar may already be hidden by CSS)
-      if(adminBar) adminBar.style.display = signedIn ? '' : 'none';
-      if(subbar) subbar.style.display = signedIn ? '' : 'none';
+      const roleBar = document.getElementById('crmo-role-toggle');
+      const adminBar = document.getElementById('crmo-admin-bar');
+      const subbar  = document.getElementById('crmo-admin-subbar');
+      const header  = document.querySelector('header');
+
+      const rb = h(roleBar);
+      const ab = h(adminBar);
+      const sb = h(subbar);
+      const hh = header ? h(header) : 0;
+
+      const root = document.documentElement;
+      root.style.setProperty('--crmo-rolebar-h', rb + 'px');
+      root.style.setProperty('--crmo-adminbar-h', ab + 'px');
+      root.style.setProperty('--crmo-subbar-h',  sb + 'px');
+      root.style.setProperty('--crmo-header-h',  hh + 'px');
+      root.style.setProperty('--crmo-fixed-stack-h', (rb + ab + sb + hh) + 'px');
+
+      // Force correct tops (in case other CSS overwrites)
+      if(roleBar){ roleBar.style.top = '0px'; }
+      if(adminBar){ adminBar.style.top = rb + 'px'; }
+      if(subbar){ subbar.style.top = (rb + ab) + 'px'; }
+      if(header){ header.style.top = (rb + ab + sb) + 'px'; }
     }catch(e){}
+  };
+
+  function tick(){
+    window.CRMO_reflowFixedStack();
   }
 
-  document.addEventListener('DOMContentLoaded', function(){
-    ensureRoleBar();
-    applyBars();
+  document.addEventListener('DOMContentLoaded', tick);
+  window.addEventListener('resize', tick);
+  window.addEventListener('orientationchange', tick);
+  window.addEventListener('scroll', function(){ /* keep light */ }, { passive:true });
+
+  // When auth state toggles, the bars appear/disappear; reflow after paint
+  window.addEventListener('crmo-auth-changed', function(){
+    try{
+      requestAnimationFrame(function(){ requestAnimationFrame(tick); });
+    }catch(e){ setTimeout(tick, 50); }
   });
 
-  // In case scripts remove/replace later
-  window.addEventListener('pageshow', function(){ ensureRoleBar(); applyBars(); });
-  window.addEventListener('storage', function(e){
-    if(e && e.key === 'CRMO_SB_SESSION'){ ensureRoleBar(); applyBars(); }
-  });
-
-  // Expose helper for manual debug
-  window.CRMO_ensureRoleBar = function(){ ensureRoleBar(); applyBars(); return true; };
+  // Safety: reflow a couple of times after load
+  setTimeout(tick, 50);
+  setTimeout(tick, 400);
+  setTimeout(tick, 1200);
 })();
 </script>
 
@@ -33406,7 +33430,7 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_auth_ui_bridge_v1664">
+<script id="crmo_auth_ui_bridge_v1665">
 (function(){
   window.CRMO_refreshRoleAndAdminUI = function(){
     try{ if(window.CRMO_applyAuthUIState) window.CRMO_applyAuthUIState(); }catch(e){}
