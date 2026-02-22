@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- CRMO_v1668 single -->
+<!-- CRMO_v1669 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1668">
+  <script id="crmo-storage-sanitize-v1669">
 (function(){
   try{
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
@@ -18,7 +18,7 @@
 </script>
   
   
-<script id="crmo-safe-session-v1668">
+<script id="crmo-safe-session-v1669">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -66,10 +66,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1668";
+window.CRMO_BUILD_VERSION = "1669";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1668';
-window.CRMO_VERSION_NUMBER = 1668;
+window.CRMO_VERSION = 'CRMO_v1669';
+window.CRMO_VERSION_NUMBER = 1669;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -230,12 +230,13 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       var type = String(window.CRMO_BUILD_TYPE || "").trim();
       var tag = String(window.CRMO_VERSION || (n ? ("CRMO_v" + n) : ""));
       var label = ('v' + n + (type ? (' ' + type) : ''));
+      var vOnly = ('v' + n);
 
-      var top = document.getElementById("crmo-top-version");
+      var top = document.getElementById("crmo-version-badge");
       var hv = document.getElementById("crmo-header-version");
       if(hv) hv.textContent = "";
       if (top){
-        top.textContent = label;
+        top.textContent = vOnly;
         if(tag) top.setAttribute('title', tag);
       }
       var foot = document.getElementById("crmo-footer-version");
@@ -249,7 +250,11 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       if (n) document.documentElement.setAttribute("data-crmo-build", n);
       if (tag) document.documentElement.setAttribute("data-crmo-version", tag);
 
-      try{ document.title = 'CRMO v' + n + (type ? (' | ' + type.toUpperCase()) : ''); }catch(e){}
+      try{
+        var pn = String(location.pathname||'');
+        var isIndex = (pn === '/' || pn === '' || pn.endsWith('/index.html') || pn.endsWith('/'));
+        document.title = isIndex ? 'CRMO | sales oriented design' : ('CRMO_v' + n);
+      }catch(e){}
     }catch(e){}
   }
   if (document.readyState === "loading") {
@@ -1359,7 +1364,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO v1668 | SINGLE</title>
+<title>CRMO_v1669</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -5780,6 +5785,9 @@ body.role-guest .tile-like-btn{
 .tile-edit-wrapper.tile-multi-off .tile-layer-btn .icon-layer-on{
   display:none;
 }
+
+.crmo-version-badge{pointer-events:none;opacity:.95;}
+.crmo-auth-provider{pointer-events:none;min-width:58px;text-align:center;}
 </style>
 <style id="crmo_admin_icons_fix">
 body.role-admin .tile-edit-btn{
@@ -8913,7 +8921,7 @@ main{
 </script>
 
 
-<style id="crmo_hide_header_version_v1668">
+<style id="crmo_hide_header_version_v1669">
   #crmo-header-version, .crmo-header-version{ display:none !important; }
 </style>
 </head>
@@ -8948,13 +8956,15 @@ main{
         bar.id = 'crmo-role-toggle';
         bar.innerHTML =
           '<span>תצוגה:</span>' +
+          '<span id="crmo-auth-provider-badge" class="crmo-role-tab crmo-auth-provider" data-static="1"></span>' +
           '<button class="crmo-role-tab" data-role="master" type="button">בעלים</button>' +
           '<button class="crmo-role-tab" data-role="admin" type="button">מנהל</button>' +
           '<button class="crmo-role-tab" data-role="client" type="button">לקוח</button>' +
           '<button class="crmo-role-tab" data-role="user" type="button">משתמש רשום</button>' +
           '<button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>' +
           '<button class="crmo-role-tab" data-role="guest" type="button">צופה</button>' +
-          '<button class="crmo-role-tab" data-role="ux" type="button">ביקורת UXV</button>';
+          '<button class="crmo-role-tab" data-role="ux" type="button">ביקורת UXV</button>' +
+          '<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1669</span>';
         document.body.insertBefore(bar, document.body.firstChild);
       }
     }catch(e){}
@@ -8965,6 +8975,16 @@ main{
     try{
       var sess = localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || '';
       var signedIn = !!sess;
+      var provEl = document.getElementById('crmo-auth-provider-badge');
+      try{
+        var email = '';
+        try{ email = String(localStorage.getItem('crmo:admin:email')||'').toLowerCase(); }catch(e){}
+        if(!email) try{ email = String(sessionStorage.getItem('crmo:admin:email')||'').toLowerCase(); }catch(e){}
+        var prov = '';
+        if(email.includes('@walla')) prov = 'walla';
+        else if(email.includes('@gmail.')) prov = 'google';
+        if(provEl){ provEl.textContent = prov; provEl.style.display = signedIn ? '' : 'none'; }
+      }catch(e){ if(provEl){ provEl.textContent=''; provEl.style.display = signedIn ? 'none' : 'none'; } }
       var roleBar = document.getElementById('crmo-role-toggle');
       var adminBar = document.getElementById('crmo-admin-bar');
       var subbar = document.getElementById('crmo-admin-subbar') || document.getElementById('crmo-admin-sub') || document.getElementById('crmo-admin-subbar-v2');
@@ -8995,6 +9015,7 @@ main{
 
 <div dir="rtl" id="crmo-role-toggle">
 <span>תצוגה:</span>
+<span id="crmo-auth-provider-badge" class="crmo-role-tab crmo-auth-provider" data-static="1"></span>
 <button class="crmo-role-tab" data-role="master" type="button">בעלים</button>
 <button class="crmo-role-tab" data-role="admin" type="button">מנהל</button>
 <button class="crmo-role-tab" data-role="client" type="button">לקוח</button>
@@ -9002,8 +9023,7 @@ main{
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-
-<span id="crmo-top-version" style="opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;"></span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1669</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
@@ -26423,10 +26443,9 @@ if (document.readyState === 'loading'){
     var host = (location && location.hostname) ? location.hostname.toLowerCase() : "";
     var isProd = (host === "www.crmo.co.il" || host === "crmo.co.il" || host.endsWith(".crmo.co.il"));
     if(isProd){
-      document.title = "CRMO | Sales Oriented Design";
-      var rt = document.getElementById("crmo-role-toggle");
-      if(rt) rt.remove();
-    }
+      
+      // v1669: do not override title or remove role bar; admin UI handles visibility.
+}
   }catch(e){}
 })();
 </script>
