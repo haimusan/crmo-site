@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- CRMO_v1670 single -->
+<!-- CRMO_v1671 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1670">
+  <script id="crmo-storage-sanitize-v1671">
 (function(){
   try{
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
@@ -18,7 +18,7 @@
 </script>
   
   
-<script id="crmo-safe-session-v1670">
+<script id="crmo-safe-session-v1671">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -66,10 +66,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1670";
+window.CRMO_BUILD_VERSION = "1671";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1670';
-window.CRMO_VERSION_NUMBER = 1670;
+window.CRMO_VERSION = 'CRMO_v1671';
+window.CRMO_VERSION_NUMBER = 1671;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1364,7 +1364,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1670</title>
+<title>CRMO_v1671</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -5709,6 +5709,7 @@ body.role-guest .tile-like-btn{
 }
 /* v1551: show the top view-mode bar for all roles */
 #crmo-role-toggle{ display:flex !important; }
+#crmo-role-toggle .crmo-who-unknown{ background:#c00 !important; color:#fff !important; border-color:#c00 !important; }
 
 #crmo-role-toggle{
   position:fixed;
@@ -8921,7 +8922,7 @@ main{
 </script>
 
 
-<style id="crmo_hide_header_version_v1670">
+<style id="crmo_hide_header_version_v1671">
   #crmo-header-version, .crmo-header-version{ display:none !important; }
 </style>
 </head>
@@ -8964,8 +8965,8 @@ main{
           '<button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>' +
           '<button class="crmo-role-tab" data-role="guest" type="button">צופה</button>' +
           '<button class="crmo-role-tab" data-role="ux" type="button">ביקורת UXV</button>' +
-          '<span id="crmo-who-badge" class="crmo-role-tab crmo-who-badge" data-static="1">מי מחובר: —</span>' +
-          '<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1670</span>';
+          '<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1671</span>' +
+          '<span id="crmo-who-badge" class="crmo-role-tab crmo-who-badge crmo-who-unknown" data-static="1">מי מחובר: לא מזוהה</span>';
         document.body.insertBefore(bar, document.body.firstChild);
       }
     }catch(e){}
@@ -8974,38 +8975,72 @@ main{
   // Apply visibility based on signed-in state (single source of truth = CRMO_SB_SESSION presence)
   function applyBars(){
     try{
-      var sess = localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || '';
-      var signedIn = !!sess;
-      var provEl = document.getElementById('crmo-auth-provider-badge');
-      var email = '';
-      try{
-        try{ email = String(localStorage.getItem('crmo:admin:email')||'').toLowerCase(); }catch(e){}
-        if(!email) try{ email = String(sessionStorage.getItem('crmo:admin:email')||'').toLowerCase(); }catch(e){}
-        var prov = '';
-        if(email.includes('@walla')) prov = 'walla';
-        else if(email.includes('@gmail.')) prov = 'google';
-        if(provEl){ provEl.textContent = prov; provEl.style.display = signedIn ? '' : 'none'; }
-        var whoEl = document.getElementById('crmo-who-badge');
-        if(whoEl){
-          if(signedIn){
-            whoEl.textContent = (email ? ('מי מחובר: ' + email) : 'מי מחובר: —');
-            whoEl.style.display = '';
-          } else {
-            whoEl.textContent = 'מי מחובר: לא מחובר';
-            whoEl.style.display = 'none';
-          }
-        }
-
-      }catch(e){ if(provEl){ provEl.textContent=''; provEl.style.display = signedIn ? 'none' : 'none'; } }
-      try{ var whoEl2 = document.getElementById('crmo-who-badge'); if(whoEl2){ whoEl2.textContent = signedIn ? 'מי מחובר: —' : 'מי מחובר: לא מחובר'; whoEl2.style.display = signedIn ? '' : 'none'; } }catch(e){}
+      var owners = ['boochin@gmail.com','boochin@walla.co.il'];
       var roleBar = document.getElementById('crmo-role-toggle');
       var adminBar = document.getElementById('crmo-admin-bar');
       var subbar = document.getElementById('crmo-admin-subbar') || document.getElementById('crmo-admin-sub') || document.getElementById('crmo-admin-subbar-v2');
-      // Role bar only when signed in
-      if(roleBar) roleBar.style.display = signedIn ? 'flex' : 'none';
-      // Admin bars only when signed in (admin bar may already be hidden by CSS)
-      if(adminBar) adminBar.style.display = signedIn ? '' : 'none';
-      if(subbar) subbar.style.display = signedIn ? '' : 'none';
+
+      function setWho(email, isOwner){
+        var whoEl = document.getElementById('crmo-who-badge');
+        if(!whoEl) return;
+        var txt = 'מי מחובר: ' + (email ? email : 'לא מזוהה');
+        whoEl.textContent = txt;
+        if(isOwner){
+          whoEl.classList.remove('crmo-who-unknown');
+        }else{
+          whoEl.classList.add('crmo-who-unknown');
+        }
+        whoEl.style.display = '';
+      }
+
+      function setProvider(email, signedIn){
+        var provEl = document.getElementById('crmo-auth-provider-badge');
+        if(!provEl) return;
+        var prov = '';
+        if(email && email.indexOf('@walla') !== -1) prov = 'walla';
+        else if(email && email.indexOf('@gmail') !== -1) prov = 'google';
+        provEl.textContent = prov;
+        provEl.style.display = signedIn ? '' : 'none';
+      }
+
+      function applyState(email){
+        email = String(email||'').toLowerCase();
+        var signedIn = !!email;
+        var isOwner = signedIn && owners.indexOf(email) !== -1;
+
+        // who badge: always present inside the role bar; if for any reason we can't identify, show red "לא מזוהה"
+        setWho(isOwner ? email : '', isOwner);
+
+        // provider badge only when signed in
+        setProvider(email, signedIn);
+
+        // show/hide admin UI strictly by owner status
+        if(roleBar) roleBar.style.display = isOwner ? 'flex' : 'none';
+        if(adminBar) adminBar.style.display = isOwner ? '' : 'none';
+        if(subbar) subbar.style.display = isOwner ? '' : 'none';
+
+        // Hard reset roles if not owner
+        try{
+          if(!isOwner){
+            document.body.classList.remove('role-admin','role-master','role-ux','role-user');
+          }
+        }catch(e){}
+      }
+
+      // Prefer Supabase session as the single source of truth
+      if(window.supabase && window.supabase.auth && typeof window.supabase.auth.getUser === 'function'){
+        window.supabase.auth.getUser().then(function(res){
+          var email = '';
+          try{ email = res && res.data && res.data.user && res.data.user.email ? res.data.user.email : ''; }catch(e){}
+          applyState(email);
+        }).catch(function(){ applyState(''); });
+      }else{
+        // Fallback: last known email (won't enable owner unless it matches)
+        var email = '';
+        try{ email = String(localStorage.getItem('crmo:admin:email')||''); }catch(e){}
+        if(!email) try{ email = String(sessionStorage.getItem('crmo:admin:email')||''); }catch(e){}
+        applyState(email);
+      }
     }catch(e){}
   }
 
@@ -9036,7 +9071,7 @@ main{
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1670</span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1671</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
@@ -26457,7 +26492,7 @@ if (document.readyState === 'loading'){
     var isProd = (host === "www.crmo.co.il" || host === "crmo.co.il" || host.endsWith(".crmo.co.il"));
     if(isProd){
       
-      // v1670: do not override title or remove role bar; admin UI handles visibility.
+      // v1671: do not override title or remove role bar; admin UI handles visibility.
 }
   }catch(e){}
 })();
