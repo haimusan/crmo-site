@@ -1,40 +1,56 @@
 <!DOCTYPE html>
-<!-- CRMO_v1650 -->
+<!-- CRMO_v1651 -->
 
 <html dir="rtl" lang="he">
 <head>
   <base href="../">
   
-  <script id="crmo-admin-rescue-early-v1650">
-  /* RESCUE MODE 1650 ACTIVE */
-  (function(){
+  <script id="crmo-admin-boot-v1651">
+/* RESCUE MODE 1651 ACTIVE */
+(function(){
+  // Hard Block redirects (best-effort)
+  try{ window.__CRMO_LOCATION_BLOCK__ = function(){}; }catch(e){}
+        try{ window.__CRMO_BLOCKED_HREF__ = ''; }catch(e){}
+        try{ window.location.replace = function(){}; }catch(e){}
+  try{ window.location.assign = function(){}; }catch(e){}
+  try{ window.location.reload = function(){}; }catch(e){}
+  try{ if(!window.location.hash) window.__CRMO_BLOCKED_HREF__ = '#'; }catch(e){}
+
+  // Rescue Mode - run immediately (no Supabase / no DOM wait)
+  var OWNER_EMAIL = "boochin@gmail.com";
+  var localEmail = "";
+  try{ localEmail = (localStorage.getItem('crmo:admin:email') || "").trim().toLowerCase(); }catch(e){}
+  var isRescue = (localEmail && localEmail === OWNER_EMAIL.toLowerCase());
+
+  if (isRescue) {
+    try{ window.__CRMO_RESCUE_OWNER__ = true; }catch(e){}
+    try{ document.documentElement.classList.add('crmo-owner','crmo-pending-login'); }catch(e){}
+
+    var css = ""
+      + "#crmo-role-toggle, #crmo-admin-bar, #crmo-admin-subbar {"
+      + "  display: flex !important;"
+      + "  visibility: visible !important;"
+      + "  opacity: 1 !important;"
+      + "}"
+      + "#crmo-admin-bar {"
+      + "  position: sticky !important;"
+      + "  top: 0 !important;"
+      + "  z-index: 999999 !important;"
+      + "}";
+
     try {
-      var OWNER_EMAIL = "boochin@gmail.com";
-      var localEmail = (localStorage.getItem('crmo:admin:email') || "").trim().toLowerCase();
-      var isRescue = (localEmail && localEmail === OWNER_EMAIL.toLowerCase());
-      if (isRescue) {
-        document.documentElement.classList.add('crmo-owner','crmo-pending-login');
-        window.CRMO_RESCUE_MODE = true;
-        window.CRMO_RESCUE_EMAIL = OWNER_EMAIL;
-        // Force-show bars immediately (pending login)
-        var st = document.getElementById('crmo-rescue-style');
-        if (!st) {
-          st = document.createElement('style');
-          st.id = 'crmo-rescue-style';
-          st.textContent = `
-            #crmo-role-toggle, #crmo-admin-bar {
-              display:flex !important; visibility:visible !important; opacity:1 !important;
-            }
-            #crmo-admin-subbar, .crmo-admin-tabs, .crmo-admin-tab-panel {
-              display:block !important; visibility:visible !important; opacity:1 !important;
-            }
-          `;
-          document.head.appendChild(st);
-        }
-      }
-    } catch(e) {}
-  })();
-  </script>
+      document.write('<style id="crmo-rescue-css-v1651">' + css + '</style>');
+    } catch(e) {
+      try {
+        var st = document.createElement('style');
+        st.id = 'crmo-rescue-css-v1651';
+        st.textContent = css;
+        (document.head || document.documentElement).appendChild(st);
+      } catch(e2) {}
+    }
+  }
+})();
+</script>
 <script id="crmo-early-owner-peek-v1642">
   (function(){
     try{
@@ -102,9 +118,9 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1650";
-window.CRMO_VERSION = 'CRMO_v1650';
-window.CRMO_VERSION_NUMBER = 1650;
+window.CRMO_BUILD_VERSION = "1651";
+window.CRMO_VERSION = 'CRMO_v1651';
+window.CRMO_VERSION_NUMBER = 1651;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -414,7 +430,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
       kill.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
     }catch(e){}
     try{ sessionStorage.clear(); }catch(e){}
-    try{ location.reload(); }catch(e){}
+    try{ window.__CRMO_LOCATION_BLOCK__(); }catch(e){}
   };
 
 
@@ -695,7 +711,7 @@ try {
       localStorage.setItem('crmo:meta:lastHydrateAt', String(Date.now()));
     }catch(e){}
     // Reload to re-hydrate UI from localStorage
-    location.reload();
+    window.__CRMO_LOCATION_BLOCK__();
     return r;
   }
 
@@ -879,7 +895,7 @@ try {
         }
 
         // Reload to rehydrate UI
-        setTimeout(function(){ location.reload(); }, 150);
+        setTimeout(function(){ window.__CRMO_LOCATION_BLOCK__(); }, 150);
       }catch(e){
         setMsg(String((e && e.message) ? e.message : e), true);
       }
@@ -1400,7 +1416,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO v1650 | ADMIN</title>
+<title>CRMO v1651 | ADMIN</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8670,7 +8686,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   setTimeout(unlockIfStuck, 1200);
 })();
 </script>
-<script id="crmo-auth-ui-state-v1646">
+<script id="crmo-auth-ui-state-v1651">
 (function(){
   function readSessionStr(){
     return localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || '';
@@ -8757,6 +8773,21 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   window.addEventListener('storage', function(e){
     if(e && e.key === 'CRMO_SB_SESSION') { try{apply();}catch(err){} }
   });
+
+// Poll for same-tab session changes (login/logout writes happen in-page)
+var __crmo_lastSignedIn = null;
+try{ __crmo_lastSignedIn = fastSignedIn(); }catch(e){}
+try{
+  setInterval(function(){
+    try{
+      var now = fastSignedIn();
+      if(now !== __crmo_lastSignedIn){
+        __crmo_lastSignedIn = now;
+        apply();
+      }
+    }catch(e){}
+  }, 1000);
+}catch(e){}
 })();
 </script>
 
@@ -10419,13 +10450,13 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
           }
           saveCfg({ url:url, anonKey:anonKey, bucket:bucket, configTable:configTable, configId:configId, requireLogin:requireLogin, adminEmails:adminEmails });
           msg('<div style="color:#067647;font-weight:800">נשמר! מרענן את הדף…</div>');
-          setTimeout(function(){ location.reload(); }, 600);
+          setTimeout(function(){ window.__CRMO_LOCATION_BLOCK__(); }, 600);
         });
         if(clearBtn) clearBtn.addEventListener('click', function(){
           if(!confirm('לנקות את הגדרות Supabase שנשמרו במכשיר הזה?')) return;
           try{ localStorage.removeItem(cfgKey()); }catch(e){}
           msg('נמחק. מרענן…');
-          setTimeout(function(){ location.reload(); }, 400);
+          setTimeout(function(){ window.__CRMO_LOCATION_BLOCK__(); }, 400);
         });
 }else{
               alert('אם אין פאנל למטה — גלול מעט או רענן את הדף.');
@@ -19025,7 +19056,7 @@ async function attemptCustomerLogin(){
         }
         closeCustomerAuth();
         try{ window.CRMO_refreshRoleAndAdminUI && window.CRMO_refreshRoleAndAdminUI(); }catch(_e){}
-        try{ setTimeout(function(){ location.reload(); }, 50); }catch(_e){}
+        try{ setTimeout(function(){ window.__CRMO_LOCATION_BLOCK__(); }, 50); }catch(_e){}
       }catch(e){
         var msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : String(e||'');
         if(msg === 'SUPABASE_NOT_CONFIGURED') msg = 'עוד לא חיברו את האתר להרשמה 😅 נסה שוב עוד מעט.';
@@ -19335,7 +19366,7 @@ async function attemptCustomerRegister(){
         }
         closeCustomerAuth();
         try{ window.CRMO_refreshRoleAndAdminUI && window.CRMO_refreshRoleAndAdminUI(); }catch(_e){}
-        try{ setTimeout(function(){ location.reload(); }, 50); }catch(_e){}
+        try{ setTimeout(function(){ window.__CRMO_LOCATION_BLOCK__(); }, 50); }catch(_e){}
       }catch(e){
         var msg = (e && (e.message || e.error_description)) ? String(e.message || e.error_description) : String(e||'');
         if(msg === 'SUPABASE_NOT_CONFIGURED') msg = 'עוד לא חיברו את האתר להרשמה 😅 נסה שוב עוד מעט.';
@@ -19446,7 +19477,7 @@ async function attemptCustomerRegister(){
         if(!t) return;
         if(t.getAttribute && t.getAttribute('data-close') === '1') closeCustomerAuth();
         try{ window.CRMO_refreshRoleAndAdminUI && window.CRMO_refreshRoleAndAdminUI(); }catch(_e){}
-        try{ setTimeout(function(){ location.reload(); }, 50); }catch(_e){}
+        try{ setTimeout(function(){ window.__CRMO_LOCATION_BLOCK__(); }, 50); }catch(_e){}
       });
     }
     var closeBtnsClient = document.querySelectorAll('#crmo-auth-modal-client .crmo-auth-close, #crmo-auth-cancel-client');
@@ -19464,14 +19495,14 @@ async function attemptCustomerRegister(){
             try{ localStorage.setItem('USABILITY_PREVIEW_v1','1'); }catch(e){}
             clearSession();
           }catch(e){}
-          try{ location.reload(); }catch(e){}
+          try{ window.__CRMO_LOCATION_BLOCK__(); }catch(e){}
           return;
         }
         try{
           if(localStorage.getItem('USABILITY_PREVIEW_v1') === '1'){
             try{ localStorage.removeItem('USABILITY_PREVIEW_v1'); }catch(e){}
             try{ localStorage.setItem('USABILITY_PREVIEW_NEXT_ROLE', role || 'guest'); }catch(e){}
-            try{ location.reload(); }catch(e){}
+            try{ window.__CRMO_LOCATION_BLOCK__(); }catch(e){}
             return;
           }
         }catch(e){}
@@ -29803,7 +29834,7 @@ async function CRMO_cloudPullIfNewer() {
 // Expose for manual debugging
 window.CRMO_cloudPullLatest = async function(){
   const did = await CRMO_cloudPullIfNewer();
-  if (did) location.reload();
+  if (did) window.__CRMO_LOCATION_BLOCK__();
   return { ok: true, applied: !!did };
 };
 // --------------------------------------------------------------------------
@@ -30166,7 +30197,7 @@ var ok = await isAdminAllowed();
           try{
             if(!sessionStorage.getItem('crmo_remote_pulled')){
               sessionStorage.setItem('crmo_remote_pulled','1');
-              location.reload();
+              window.__CRMO_LOCATION_BLOCK__();
             }
           }catch(e){}
         }
@@ -30183,7 +30214,7 @@ var ok = await isAdminAllowed();
       try{
         if(!sessionStorage.getItem('crmo_remote_pulled')){
           sessionStorage.setItem('crmo_remote_pulled','1');
-          location.reload();
+          window.__CRMO_LOCATION_BLOCK__();
         }
       }catch(e){}
     }
@@ -31671,7 +31702,7 @@ try{
         if (window.localStorage) window.localStorage.setItem(flagKey, String(window.CRMO_BUILD_VERSION||''));
       } catch(e) {}
       if (applied > 0) {
-        setTimeout(function(){ try{ location.reload(); }catch(e){} }, 50);
+        setTimeout(function(){ try{ window.__CRMO_LOCATION_BLOCK__(); }catch(e){} }, 50);
       }
       return { ok:true, applied: applied, cfgId };
     } catch(e) {
@@ -31869,9 +31900,9 @@ function CRMO_clearLocalDataAndReload(){
       var u = new URL(location.href);
       u.searchParams.set('cleared','1');
       u.searchParams.set('r', Date.now().toString());
-      location.replace(u.toString());
+      window.__CRMO_LOCATION_BLOCK__(u.toString());
     }catch(e){
-      location.reload();
+      window.__CRMO_LOCATION_BLOCK__();
     }
   })();
 }
@@ -31963,7 +31994,7 @@ function CRMO_clearLocalDataAndReload(){
           }
         }
       }catch(e){}
-      location.reload();
+      window.__CRMO_LOCATION_BLOCK__();
     };
   }
 })();
@@ -33201,7 +33232,7 @@ function CRMO_clearLocalDataAndReload(){
       if (!ses?.data?.session) throw new Error("התחברות הושלמה אבל לא נוצר סשן. נסה לרענן.");
 
       setError(mode === "signup" ? "נרשמת! בדוק אישור במייל (אם נדרש)." : "התחברת! טוען...");
-      setTimeout(() => location.reload(), 700);
+      setTimeout(() => window.__CRMO_LOCATION_BLOCK__(), 700);
     }catch(err){
       setError("שגיאה: " + (err?.message || "לא ניתן להתחבר"));
     }finally{
@@ -33315,6 +33346,14 @@ function CRMO_clearLocalDataAndReload(){
     try{ el.style.setProperty('visibility', 'hidden', 'important'); }catch(e){}
   }
 
+  function _forceShow(el, display){
+  if(!el) return;
+  var d = display || 'flex';
+  try{ el.style.setProperty('display', d, 'important'); }catch(e){}
+  try{ el.style.setProperty('visibility', 'visible', 'important'); }catch(e){}
+  try{ el.style.setProperty('opacity', '1', 'important'); }catch(e){}
+}
+
   function _setHeaderLock(){
     try{
       const header = document.querySelector('header');
@@ -33345,6 +33384,9 @@ function CRMO_clearLocalDataAndReload(){
   }
 
   function _hideAllAdminUI(){
+    /* RESCUE MODE 1651 ACTIVE */
+    try{ if(window.__CRMO_RESCUE_OWNER__) return; }catch(e){}
+
     try{ document.documentElement.classList.remove('crmo-owner'); }catch(e){}
     try{ document.body.classList.remove('role-admin','role-master'); }catch(e){}
 
@@ -33368,22 +33410,77 @@ _forceHide(_qs('crmo-role-toggle'));
   }
 
   window.CRMO_refreshRoleAndAdminUI = async function(){
-    const sessStr = _getSessionStr();
-    const email = _parseSessionEmail(sessStr) || (function(){ try{ return localStorage.getItem('crmo:admin:email')||''; }catch(e){ return ''; } })();
-    const isLoggedIn = !!sessStr && !!email;
-    const isOwner = (String(email).toLowerCase() === OWNER_EMAIL);
+  var OWNER_EMAIL = "boochin@gmail.com".toLowerCase();
 
-    if(isLoggedIn && isOwner){
-      _showOwnerUI(email);
-      return { owner:true, email: email, via:'session' };
+  // Read local email immediately (for Rescue)
+  var localEmail = "";
+  try{ localEmail = (localStorage.getItem('crmo:admin:email') || "").trim().toLowerCase(); }catch(e){}
+
+  // Session from storage (legacy)
+  var sessStr = "";
+  try{ sessStr = _getSessionStr() || ""; }catch(e){ sessStr = ""; }
+  var sessionEmail = "";
+  try{ sessionEmail = _parseSessionEmail(sessStr) || ""; }catch(e){ sessionEmail = ""; }
+
+  var email = (sessionEmail || localEmail || "").trim().toLowerCase();
+  var hasStoredSession = !!sessStr;
+
+  // RESCUE MODE: allow UI to stay visible even without session (no redirects, no hide)
+  var isRescueOwner = (!hasStoredSession && localEmail && localEmail === OWNER_EMAIL);
+  if(isRescueOwner){
+    try{ window.__CRMO_RESCUE_OWNER__ = true; }catch(e){}
+    try{ document.documentElement.classList.add('crmo-owner','crmo-pending-login'); }catch(e){}
+    _forceShow(_qs('crmo-role-toggle'), 'flex');
+    _forceShow(_qs('crmo-admin-bar'), 'flex');
+    _forceShow(_qs('crmo-admin-subbar'), 'flex');
+    return { owner:true, email: localEmail, uid:null, via:'rescue-no-session' };
+  }
+
+  // Try Supabase session safely (v1/v2) - never throw, never redirect, never refresh
+  var sbSession = null;
+  try {
+    if(window.supabase && window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY){
+      var client = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
+      if(client && client.auth){
+        if(typeof client.auth.getSession === 'function'){
+          var r = await client.auth.getSession();
+          sbSession = (r && r.data) ? (r.data.session || null) : null;
+        } else if(typeof client.auth.session === 'function') {
+          sbSession = client.auth.session() || null;
+        }
+      }
+    } else {
+      // Supabase not ready - stay calm
+      // (No console error; Rescue is handled above)
     }
+  } catch(e) {
+    sbSession = null;
+  }
 
-    // Not logged in (or not owner): show PUBLIC only
-    _hideAllAdminUI();
-    return { owner:false, email: email||null, via: isLoggedIn ? 'not-owner' : 'no-session' };
-  
-  try{ if(window.CRMO_applyAuthUIState) window.CRMO_applyAuthUIState(); }catch(e){}
+  // If Supabase returned a session, persist it to storage
+  if(sbSession && sbSession.user && sbSession.user.email){
+    try{ localStorage.setItem('CRMO_SB_SESSION', JSON.stringify(sbSession)); }catch(e){}
+    try{ sessionStorage.setItem('CRMO_SB_SESSION', JSON.stringify(sbSession)); }catch(e){}
+    try{ localStorage.setItem('crmo:admin:email', sbSession.user.email); }catch(e){}
+    email = String(sbSession.user.email).trim().toLowerCase();
+    sessStr = JSON.stringify(sbSession);
+    hasStoredSession = true;
+  }
+
+  var isLoggedIn = !!hasStoredSession && !!email;
+  var isOwner = (email === OWNER_EMAIL);
+
+  if(isLoggedIn && isOwner){
+    _showOwnerUI(email);
+    return { owner:true, email: email, uid: (sbSession && sbSession.user ? sbSession.user.id : null) || null, via: (sbSession ? 'supabase-session' : 'stored-session') };
+  }
+
+  // Public / non-owner
+  _hideAllAdminUI();
+  return { owner:false, email: email||null, uid: (sbSession && sbSession.user ? sbSession.user.id : null) || null, via: isLoggedIn ? 'not-owner' : 'no-session' };
 };
+
+
 
   function _auto(){ try{ window.CRMO_refreshRoleAndAdminUI(); }catch(e){} }
 

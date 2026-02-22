@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1650 -->
+<!-- CRMO_v1651 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -70,9 +70,9 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1650";
-window.CRMO_VERSION = 'CRMO_v1650';
-window.CRMO_VERSION_NUMBER = 1650;
+window.CRMO_BUILD_VERSION = "1651";
+window.CRMO_VERSION = 'CRMO_v1651';
+window.CRMO_VERSION_NUMBER = 1651;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1355,7 +1355,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO v1650 | PUBLIC</title>
+<title>CRMO v1651 | PUBLIC</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8625,7 +8625,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   setTimeout(unlockIfStuck, 1200);
 })();
 </script>
-<script id="crmo-auth-ui-state-v1646">
+<script id="crmo-auth-ui-state-v1651">
 (function(){
   function readSessionStr(){
     return localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || '';
@@ -8712,6 +8712,21 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   window.addEventListener('storage', function(e){
     if(e && e.key === 'CRMO_SB_SESSION') { try{apply();}catch(err){} }
   });
+
+// Poll for same-tab session changes (login/logout writes happen in-page)
+var __crmo_lastSignedIn = null;
+try{ __crmo_lastSignedIn = fastSignedIn(); }catch(e){}
+try{
+  setInterval(function(){
+    try{
+      var now = fastSignedIn();
+      if(now !== __crmo_lastSignedIn){
+        __crmo_lastSignedIn = now;
+        apply();
+      }
+    }catch(e){}
+  }, 1000);
+}catch(e){}
 })();
 </script>
 
