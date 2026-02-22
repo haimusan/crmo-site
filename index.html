@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- CRMO_v1676 single -->
+<!-- CRMO_v1677 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1676">
+  <script id="crmo-storage-sanitize-v1677">
 (function(){
   try{
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
@@ -18,7 +18,7 @@
 </script>
   
   
-<script id="crmo-safe-session-v1676">
+<script id="crmo-safe-session-v1677">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -68,7 +68,7 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 <script id="crmo_build_info">
 window.CRMO_BUILD_VERSION = "1671";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1676';
+window.CRMO_VERSION = 'CRMO_v1677';
 window.CRMO_VERSION_NUMBER = 1671;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
@@ -1364,7 +1364,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1676</title>
+<title>CRMO_v1677</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8510,8 +8510,8 @@ body.role-admin header{
 #crmo-admin-bar .crmo-admin-subtab-btn:focus{ outline: 2px solid rgba(0,0,0,.18); outline-offset: 2px; }
 </style>
 
-<style id="CRMO_v1676_admin_tabs_ralign_css">
-/* v1676: align admin tabs + sub-tabs to start at the right edge of the content (RTL) */
+<style id="CRMO_v1677_admin_tabs_ralign_css">
+/* v1677: align admin tabs + sub-tabs to start at the right edge of the content (RTL) */
 #crmo-admin-bar .crmo-admin-tabs,
 #crmo-admin-bar .crmo-admin-subbar{
   width: 100% !important;
@@ -8885,6 +8885,52 @@ main{
   padding-top: calc(var(--crmo-fixed-top) + var(--crmo-header-h)) !important;
 }
 </style>
+
+<style id="CRMO_v1677_admin_container_align">
+:root{
+  --crmo-adminbars-maxw: 1200px;
+  --crmo-adminbars-pr: 18px;
+  --crmo-adminbars-pl: 18px;
+}
+
+/* Constrain admin bars to the same container width as the site content */
+body.role-admin #crmo-admin-bar > .wrap{
+  max-width: var(--crmo-adminbars-maxw) !important;
+  width: min(100%, var(--crmo-adminbars-maxw)) !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Align tabs to the container right edge (RTL) while keeping RECORD on the left */
+body.role-admin #crmo-admin-bar .crmo-admin-tabs{
+  padding-right: var(--crmo-adminbars-pr) !important;
+  padding-left: var(--crmo-adminbars-pl) !important;
+  box-sizing: border-box !important;
+}
+body.role-admin #crmo-adminbar-hardreset{
+  margin-right: auto !important; /* pushes the tabs group to the right */
+}
+body.role-admin #crmo-admin-bar .crmo-admin-tabs-group{
+  display: flex !important;
+  flex-direction: row-reverse !important; /* start from the right edge */
+  align-items: flex-end !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  width: auto !important;
+}
+
+/* Subbar: same container padding and right-start alignment */
+body.role-admin #crmo-admin-subbar{
+  padding-right: var(--crmo-adminbars-pr) !important;
+  padding-left: var(--crmo-adminbars-pl) !important;
+  box-sizing: border-box !important;
+}
+body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
+  justify-content: flex-start !important;
+  flex-direction: row-reverse !important; /* start from the right edge */
+}
+</style>
+
 <script id="CRMO_v1667_sticky_measure">
 (function(){
   function px(n){ return (Math.max(0, Math.round(n||0))) + "px"; }
@@ -8939,13 +8985,13 @@ main{
 </script>
 
 
-<style id="crmo_hide_header_version_v1676">
+<style id="crmo_hide_header_version_v1677">
   #crmo-header-version, .crmo-header-version{ display:none !important; }
 </style>
 
 <style>
 
-/* v1676: RTL alignment for admin tabs + sub-tabs within the same wrap width */
+/* v1677: RTL alignment for admin tabs + sub-tabs within the same wrap width */
 #crmo-admin-bar .crmo-admin-tabs,
 #crmo-admin-bar .crmo-admin-subbar{
   direction: rtl !important;
@@ -9021,9 +9067,9 @@ main{
           vEl.id = 'crmo-version-badge';
           vEl.className = 'crmo-role-tab crmo-version-badge';
           vEl.setAttribute('data-static','1');
-          vEl.textContent = 'v1676';
+          vEl.textContent = 'v1677';
         } else {
-          vEl.textContent = 'v1676';
+          vEl.textContent = 'v1677';
         }
 
         var whoEl = bar.querySelector('#crmo-who-badge');
@@ -9198,13 +9244,14 @@ main{
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1676</span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1677</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
         <div class="crmo-admin-bar-row crmo-admin-tabs" dir="rtl">
       
       <button type="button" class="crmo-admin-bar-btn crmo-hard-reset-btn" id="crmo-adminbar-hardreset" title="ניקוי קשיח (בדיקות שמישות)" onclick="CRMO_clearLocalDataAndReload()">ניקוי קשיח</button>
+<div class="crmo-admin-tabs-group" dir="rtl">
 <button type="button" class="crmo-admin-bar-btn" id="crmo-adminbar-content" aria-controls="crmo-content-selector" aria-expanded="false">
         <span class="crmo-admin-bar-icon" aria-hidden="true">+</span>
         תוכן
@@ -9225,7 +9272,9 @@ main{
         <span class="crmo-admin-bar-icon" aria-hidden="true">+</span>
         מערכת
       </button>
-    </div>
+    
+</div>
+</div>
 
     <div class="crmo-admin-bar-row crmo-admin-subbar is-hidden" id="crmo-admin-subbar" dir="rtl" aria-label="תפריט משנה"></div>
 
@@ -26619,7 +26668,7 @@ if (document.readyState === 'loading'){
     var isProd = (host === "www.crmo.co.il" || host === "crmo.co.il" || host.endsWith(".crmo.co.il"));
     if(isProd){
       
-      // v1676: do not override title or remove role bar; admin UI handles visibility.
+      // v1677: do not override title or remove role bar; admin UI handles visibility.
 }
   }catch(e){}
 })();
@@ -32250,7 +32299,7 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_v1676_record_badge">
+<script id="crmo_v1677_record_badge">
 (function(){
   function isOwnerNow(){
     try{
