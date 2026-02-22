@@ -1,26 +1,42 @@
 <!DOCTYPE html>
-<!-- CRMO_v1651 -->
+<!-- CRMO_v1653 -->
 
 <html dir="rtl" lang="he">
 <head>
   <base href="../">
   
-  <script id="crmo-admin-boot-v1651">
-/* RESCUE MODE 1651 ACTIVE */
+  
+<script id="crmo-safe-session-v1653">
 (function(){
-  // Hard Block redirects (best-effort)
-  try{ window.__CRMO_LOCATION_BLOCK__ = function(){}; }catch(e){}
-        try{ window.__CRMO_BLOCKED_HREF__ = ''; }catch(e){}
-        try{ window.location.replace = function(){}; }catch(e){}
-  try{ window.location.assign = function(){}; }catch(e){}
-  try{ window.location.reload = function(){}; }catch(e){}
-  try{ if(!window.location.hash) window.__CRMO_BLOCKED_HREF__ = '#'; }catch(e){}
+  window.CRMO_safeGetSession = async function(client){
+    try{
+      if(!client || !client.auth) return null;
+      if(typeof client.auth.getSession === 'function'){
+        const r = await client.auth.getSession();
+        return (r && r.data && r.data.session) ? r.data.session : null;
+      }
+      if(typeof client.auth.session === 'function'){
+        return client.auth.session() || null;
+      }
+      return null;
+    }catch(e){
+      return null;
+    }
+  };
+})();
+</script>
+<script id="crmo-admin-boot-v1653">
+/* RESCUE MODE 1652 ACTIVE */
+(function(){
+  
 
   // Rescue Mode - run immediately (no Supabase / no DOM wait)
-  var OWNER_EMAIL = "boochin@gmail.com";
+  var OWNER_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
+  var OWNER_EMAIL_PRIMARY = "boochin@gmail.com";
+  var OWNER_EMAIL = OWNER_EMAIL_PRIMARY;
   var localEmail = "";
   try{ localEmail = (localStorage.getItem('crmo:admin:email') || "").trim().toLowerCase(); }catch(e){}
-  var isRescue = (localEmail && localEmail === OWNER_EMAIL.toLowerCase());
+  var isRescue = (localEmail && OWNER_EMAILS.includes(localEmail).toLowerCase());
 
   if (isRescue) {
     try{ window.__CRMO_RESCUE_OWNER__ = true; }catch(e){}
@@ -39,11 +55,11 @@
       + "}";
 
     try {
-      document.write('<style id="crmo-rescue-css-v1651">' + css + '</style>');
+      document.write('<style id="crmo-rescue-css-v1653">' + css + '</style>');
     } catch(e) {
       try {
         var st = document.createElement('style');
-        st.id = 'crmo-rescue-css-v1651';
+        st.id = 'crmo-rescue-css-v1653';
         st.textContent = css;
         (document.head || document.documentElement).appendChild(st);
       } catch(e2) {}
@@ -51,10 +67,32 @@
   }
 })();
 </script>
+
+<script id="crmo-safe-session-v1653">
+(function(){
+  window.CRMO_safeGetSession = async function(client){
+    try{
+      if(!client || !client.auth) return null;
+      if(typeof client.auth.getSession === 'function'){
+        const r = await client.auth.getSession();
+        return (r && r.data && r.data.session) ? r.data.session : null;
+      }
+      if(typeof client.auth.session === 'function'){
+        return client.auth.session() || null;
+      }
+      return null;
+    }catch(e){
+      return null;
+    }
+  };
+})();
+</script>
 <script id="crmo-early-owner-peek-v1642">
   (function(){
     try{
-      const OWNER_EMAIL = "boochin@gmail.com";
+      const OWNER_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
+  const OWNER_EMAIL_PRIMARY = "boochin@gmail.com";
+  var OWNER_EMAIL = OWNER_EMAIL_PRIMARY;
       const getSessStr = () => (localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || "");
       const getEmail = () => {
         const lsEmail = (localStorage.getItem('crmo:admin:email') || "").trim().toLowerCase();
@@ -68,8 +106,8 @@
       };
 
       const email = getEmail();
-      if(email && email === OWNER_EMAIL){
-        try{ localStorage.setItem('crmo:admin:email', OWNER_EMAIL); }catch(_){}
+      if(email && OWNER_EMAILS.includes(email)){
+        try{ localStorage.setItem('crmo:admin:email', email); }catch(_){}
         try{ document.documentElement.classList.add('crmo-owner'); }catch(_){}
         try{ document.body.classList.add('role-admin','role-master'); }catch(_){}
 
@@ -118,9 +156,9 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1651";
-window.CRMO_VERSION = 'CRMO_v1651';
-window.CRMO_VERSION_NUMBER = 1651;
+window.CRMO_BUILD_VERSION = "1653";
+window.CRMO_VERSION = 'CRMO_v1653';
+window.CRMO_VERSION_NUMBER = 1653;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1416,7 +1454,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO v1651 | ADMIN</title>
+<title>CRMO v1653 | ADMIN</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8686,7 +8724,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   setTimeout(unlockIfStuck, 1200);
 })();
 </script>
-<script id="crmo-auth-ui-state-v1651">
+<script id="crmo-auth-ui-state-v1653">
 (function(){
   function readSessionStr(){
     return localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || '';
@@ -33319,7 +33357,9 @@ function CRMO_clearLocalDataAndReload(){
 
 <script id="crmo_auth_ui_bridge_v1642">
 (function(){
-  const OWNER_EMAIL = 'boochin@gmail.com';
+  const OWNER_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
+  const OWNER_EMAIL_PRIMARY = "boochin@gmail.com";
+  var OWNER_EMAIL = OWNER_EMAIL_PRIMARY;
 
   function _getSessionStr(){
     try{ return localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || ''; }catch(e){ return ''; }
@@ -33384,7 +33424,7 @@ function CRMO_clearLocalDataAndReload(){
   }
 
   function _hideAllAdminUI(){
-    /* RESCUE MODE 1651 ACTIVE */
+    /* RESCUE MODE 1652 ACTIVE */
     try{ if(window.__CRMO_RESCUE_OWNER__) return; }catch(e){}
 
     try{ document.documentElement.classList.remove('crmo-owner'); }catch(e){}
@@ -33410,7 +33450,9 @@ _forceHide(_qs('crmo-role-toggle'));
   }
 
   window.CRMO_refreshRoleAndAdminUI = async function(){
-  var OWNER_EMAIL = "boochin@gmail.com".toLowerCase();
+  var OWNER_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
+  var OWNER_EMAIL_PRIMARY = "boochin@gmail.com";
+  var OWNER_EMAIL = OWNER_EMAIL_PRIMARY;
 
   // Read local email immediately (for Rescue)
   var localEmail = "";
@@ -33426,7 +33468,7 @@ _forceHide(_qs('crmo-role-toggle'));
   var hasStoredSession = !!sessStr;
 
   // RESCUE MODE: allow UI to stay visible even without session (no redirects, no hide)
-  var isRescueOwner = (!hasStoredSession && localEmail && localEmail === OWNER_EMAIL);
+  var isRescueOwner = (!hasStoredSession && localEmail && OWNER_EMAILS.includes(localEmail));
   if(isRescueOwner){
     try{ window.__CRMO_RESCUE_OWNER__ = true; }catch(e){}
     try{ document.documentElement.classList.add('crmo-owner','crmo-pending-login'); }catch(e){}
@@ -33468,16 +33510,32 @@ _forceHide(_qs('crmo-role-toggle'));
   }
 
   var isLoggedIn = !!hasStoredSession && !!email;
-  var isOwner = (email === OWNER_EMAIL);
+  var isOwner = (OWNER_EMAILS.includes(email));
 
-  if(isLoggedIn && isOwner){
-    _showOwnerUI(email);
-    return { owner:true, email: email, uid: (sbSession && sbSession.user ? sbSession.user.id : null) || null, via: (sbSession ? 'supabase-session' : 'stored-session') };
+  if(isLoggedIn){
+    // Any signed-in user should see the UI stack while developing (no redirects)
+    try{ document.documentElement.classList.add('crmo-signed-in'); }catch(e){}
+    try{ document.documentElement.classList.remove('crmo-pending-login'); }catch(e){}
+    try{ document.body.classList.remove('role-guest'); document.body.classList.add('role-user'); }catch(e){}
+
+    _forceDisplay(_qs('crmo-role-toggle'), 'flex');
+    _forceDisplay(_qs('crmo-admin-bar'), 'block');
+    _forceDisplay(_qs('crmo-admin-subbar'), 'block');
+
+    if(isOwner){
+      _showOwnerUI(email);
+    }else{
+      try{ document.documentElement.classList.remove('crmo-owner'); }catch(e){}
+      try{ document.body.classList.remove('role-admin','role-master'); }catch(e){}
+      _setHeaderLock();
+    }
+
+    return { loggedIn:true, owner:isOwner, email: email, uid: (sbSession && sbSession.user ? sbSession.user.id : null) || null, via: (sbSession ? 'supabase-session' : 'stored-session') };
   }
 
-  // Public / non-owner
+  // No session and not in rescue
   _hideAllAdminUI();
-  return { owner:false, email: email||null, uid: (sbSession && sbSession.user ? sbSession.user.id : null) || null, via: isLoggedIn ? 'not-owner' : 'no-session' };
+  return { loggedIn:false, owner:false, email: email||null, uid: (sbSession && sbSession.user ? sbSession.user.id : null) || null, via: 'no-session' };
 };
 
 
