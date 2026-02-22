@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1648 -->
+<!-- CRMO_v1649 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -71,10 +71,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 </script>
 <script id="crmo_build_info">
 window.CRMO_BUILD_VERSION = "1648";
-window.CRMO_VERSION = 'CRMO_v1648';
+window.CRMO_VERSION = 'CRMO_v1649';
 window.CRMO_VERSION_NUMBER = 1648;
 window.CRMO_OWNER_EMAIL = "boochin@gmail.com";
-// Supabase auth.getSession() compatibility (v1/v2) - v1648
+// Supabase auth.getSession() compatibility (v1/v2) - v1649
 window.CRMO_authGetSession = async function(client){
   try{
     if(client && client.auth){
@@ -1383,7 +1383,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1648</title>
+<title>CRMO_v1649</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8611,7 +8611,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 #crmo-auth-modal-client .crmo-auth-panel.crmo-client-login{ margin:0 auto !important; }
 </style>
 
-<script id="crmo-ios-scroll-failsafe-v1648">
+<script id="crmo-ios-scroll-failsafe-v1649">
 (function(){
   function anyVisible(sel){
     try{
@@ -8653,7 +8653,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   setTimeout(unlockIfStuck, 1200);
 })();
 </script>
-<script id="crmo-auth-ui-state-v1648">
+<script id="crmo-auth-ui-state-v1649">
 (function(){
   function readSessionStr(){
     return localStorage.getItem('CRMO_SB_SESSION') || sessionStorage.getItem('CRMO_SB_SESSION') || '';
@@ -8746,7 +8746,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 </head>
 <body class="gallery-hover-ready role-guest">
 
-<script id="crmo-rolebar-fallback-v1648">
+<script id="crmo-rolebar-fallback-v1649">
 (function(){
   function ensureRoleBar(){
     try{
@@ -17874,7 +17874,7 @@ document.addEventListener('DOMContentLoaded', function () {
     content = {};
   }
   window.CREAMO_CONTENT = content;
-  // --- CRMO_v1648: lightbox thumbs filtering + contain fit ---
+  // --- CRMO_v1649: lightbox thumbs filtering + contain fit ---
   (function(){
     try{
       window.CRMO_getTileUploadFolder = function(){
@@ -21356,7 +21356,7 @@ window.CRMO_MasterGalleries = {
 })();
 </script>
 
-<!-- CRMO_v1648: inline multi-gallery tiles manager -->
+<!-- CRMO_v1649: inline multi-gallery tiles manager -->
 <style id="CRMO_tiles_manager_css">
   .tiles-manager-bar{
     margin: 10px 0 8px;
@@ -32849,7 +32849,7 @@ function CRMO_clearLocalDataAndReload(){
 
 
 <script id="crmo_auth_global_fallback_v1584">
-/* CRMO_v1648: global auth modal fallback
+/* CRMO_v1649: global auth modal fallback
    Ensures login/register modals can open even if earlier setup didn't run. */
 (function(){
   function show(el){ if(!el) return false; el.hidden = false; el.style.display = 'block'; el.setAttribute('aria-hidden','false'); return true; }
