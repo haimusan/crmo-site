@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- CRMO_v1664 single -->
+<!-- CRMO_v1667 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1664">
+  <script id="crmo-storage-sanitize-v1667">
 (function(){
   try{
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
@@ -18,7 +18,7 @@
 </script>
   
   
-<script id="crmo-safe-session-v1664">
+<script id="crmo-safe-session-v1667">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -68,8 +68,8 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 <script id="crmo_build_info">
 window.CRMO_BUILD_VERSION = "1664";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1664';
-window.CRMO_VERSION_NUMBER = 1664;
+window.CRMO_VERSION = 'CRMO_v1667';
+window.CRMO_VERSION_NUMBER = 1667;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1359,7 +1359,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO v1664 | SINGLE</title>
+<title>CRMO v1667 | SINGLE</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8629,7 +8629,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   setTimeout(unlockIfStuck, 1200);
 })();
 </script>
-<script id="crmo-auth-ui-state-v1664">
+<script id="crmo-auth-ui-state-v1667">
 (function(){
   const OWNER_EMAILS = ["boochin@walla.co.il","boochin@gmail.com"];
 
@@ -8648,7 +8648,17 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     try{
       document.documentElement.classList.toggle("crmo-owner", owner);
       document.documentElement.classList.toggle("crmo-signed-in", owner);
+    
+    try{
+      if(owner){
+        localStorage.setItem("CRMO_SB_SESSION","1");
+      }else{
+        localStorage.removeItem("CRMO_SB_SESSION");
+        sessionStorage.removeItem("CRMO_SB_SESSION");
+      }
     }catch(e){}
+
+  }catch(e){}
     try{
       document.body.classList.toggle("role-guest", !owner);
       document.body.classList.toggle("role-admin", owner);
@@ -8803,79 +8813,102 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 </script>
 
 
-<style id="CRMO_v1664_fixed_stack">
+<style <style id="CRMO_v1667_fixed_stack">
 :root{
   --crmo-rolebar-h: 0px;
   --crmo-adminbar-h: 0px;
   --crmo-subbar-h: 0px;
   --crmo-header-h: 72px;
+  --crmo-fixed-top: 0px;
 }
+
+/* Fixed stack in admin mode: role bar -> admin bar -> subbar (tabs) -> header */
 body.role-admin #crmo-role-toggle{
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
-  z-index: 100000 !important;
+  z-index: 120000 !important;
 }
 body.role-admin #crmo-admin-bar{
   position: fixed !important;
   top: var(--crmo-rolebar-h) !important;
   left: 0 !important;
   right: 0 !important;
-  z-index: 99999 !important;
+  z-index: 119000 !important;
 }
 body.role-admin #crmo-admin-subbar{
   position: fixed !important;
   top: calc(var(--crmo-rolebar-h) + var(--crmo-adminbar-h)) !important;
   left: 0 !important;
   right: 0 !important;
-  z-index: 99998 !important;
+  z-index: 118000 !important;
 }
-body.role-admin header{
+
+/* Header is always fixed. In admin mode it starts after the bars/tabs. */
+header{
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
-  z-index: 99997 !important;
-  top: calc(var(--crmo-rolebar-h) + var(--crmo-adminbar-h) + var(--crmo-subbar-h)) !important;
+  top: var(--crmo-fixed-top) !important;
+  z-index: 117000 !important;
 }
-body.role-admin main{
-  padding-top: calc(var(--crmo-rolebar-h) + var(--crmo-adminbar-h) + var(--crmo-subbar-h) + var(--crmo-header-h)) !important;
+
+/* Content always starts after the fixed header (and bars when present). */
+main{
+  padding-top: calc(var(--crmo-fixed-top) + var(--crmo-header-h)) !important;
 }
-.crmo-header-version{font-size:12px;border:1px solid #ddd;border-radius:999px;padding:4px 10px;line-height:1;white-space:nowrap;color:#666;background:#fff;}
 </style>
-<script id="CRMO_v1664_sticky_measure">
+<script id="CRMO_v1667_sticky_measure">
 (function(){
   function px(n){ return (Math.max(0, Math.round(n||0))) + "px"; }
+
+  function isVisible(el){
+    if(!el) return false;
+    if(el.offsetParent !== null) return true;
+    var cs = window.getComputedStyle(el);
+    return cs && cs.display !== "none" && cs.visibility !== "hidden" && cs.opacity !== "0";
+  }
+
   function measure(){
     try{
-      const roleBar = document.getElementById("crmo-role-toggle");
-      const adminBar = document.getElementById("crmo-admin-bar");
-      const subbar = document.getElementById("crmo-admin-subbar");
-      const header = document.querySelector("header");
+      var roleBar = document.getElementById("crmo-role-toggle");
+      var adminBar = document.getElementById("crmo-admin-bar");
+      var subbar  = document.getElementById("crmo-admin-subbar");
+      var header  = document.querySelector("header");
 
-      const isAdmin = document.body && document.body.classList.contains("role-admin");
-      const rh = (isAdmin && roleBar && roleBar.offsetParent !== null) ? roleBar.getBoundingClientRect().height : 0;
-      const ah = (isAdmin && adminBar && adminBar.offsetParent !== null) ? adminBar.getBoundingClientRect().height : 0;
-      const sh = (isAdmin && subbar && subbar.offsetParent !== null) ? subbar.getBoundingClientRect().height : 0;
-      const hh = (header && header.offsetParent !== null) ? header.getBoundingClientRect().height : 72;
+      var isAdmin = document.body && document.body.classList.contains("role-admin");
+
+      var rh = (isAdmin && isVisible(roleBar)) ? roleBar.getBoundingClientRect().height : 0;
+      var ah = (isAdmin && isVisible(adminBar)) ? adminBar.getBoundingClientRect().height : 0;
+      var sh = (isAdmin && isVisible(subbar))  ? subbar.getBoundingClientRect().height  : 0;
+
+      var fixedTop = isAdmin ? (rh + ah + sh) : 0;
+
+      var hh = (header && isVisible(header)) ? header.getBoundingClientRect().height : 72;
 
       document.documentElement.style.setProperty("--crmo-rolebar-h", px(rh));
       document.documentElement.style.setProperty("--crmo-adminbar-h", px(ah));
       document.documentElement.style.setProperty("--crmo-subbar-h", px(sh));
+      document.documentElement.style.setProperty("--crmo-fixed-top", px(fixedTop));
       document.documentElement.style.setProperty("--crmo-header-h", px(hh));
     }catch(e){}
   }
 
-  measure();
-  window.addEventListener("resize", function(){ try{ measure(); }catch(e){} });
-  window.addEventListener("scroll", function(){ try{ measure(); }catch(e){} }, {passive:true});
-  document.addEventListener("DOMContentLoaded", function(){ try{ measure(); }catch(e){} });
-  window.addEventListener("pageshow", function(){ try{ measure(); }catch(e){} });
-  window.addEventListener("focus", function(){ try{ measure(); }catch(e){} });
+  function schedule(){
+    try{ requestAnimationFrame(measure); }catch(e){ try{ measure(); }catch(_){} }
+  }
 
-  // measure after auth UI toggles
-  window.addEventListener("storage", function(){ try{ measure(); }catch(e){} });
-  setInterval(function(){ try{ measure(); }catch(e){} }, 1500);
+  schedule();
+  window.addEventListener("resize", schedule);
+  window.addEventListener("orientationchange", schedule);
+  window.addEventListener("pageshow", schedule);
+  window.addEventListener("focus", schedule);
+  document.addEventListener("DOMContentLoaded", schedule);
+
+  // Re-measure on auth/UI changes without reload
+  window.addEventListener("storage", function(){ schedule(); });
+  setInterval(schedule, 900);
 })();
 </script>
 
@@ -33406,7 +33439,7 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_auth_ui_bridge_v1664">
+<script id="crmo_auth_ui_bridge_v1667">
 (function(){
   window.CRMO_refreshRoleAndAdminUI = function(){
     try{ if(window.CRMO_applyAuthUIState) window.CRMO_applyAuthUIState(); }catch(e){}
