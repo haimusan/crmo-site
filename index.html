@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- CRMO_v1667 single -->
+<!-- CRMO_v1668 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1667">
+  <script id="crmo-storage-sanitize-v1668">
 (function(){
   try{
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
@@ -18,7 +18,7 @@
 </script>
   
   
-<script id="crmo-safe-session-v1667">
+<script id="crmo-safe-session-v1668">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -66,10 +66,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1664";
+window.CRMO_BUILD_VERSION = "1668";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1667';
-window.CRMO_VERSION_NUMBER = 1667;
+window.CRMO_VERSION = 'CRMO_v1668';
+window.CRMO_VERSION_NUMBER = 1668;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -233,7 +233,7 @@ window.CRMO_STUDIO_TITLE = "CRMO";
 
       var top = document.getElementById("crmo-top-version");
       var hv = document.getElementById("crmo-header-version");
-      if(hv) hv.textContent = label;
+      if(hv) hv.textContent = "";
       if (top){
         top.textContent = label;
         if(tag) top.setAttribute('title', tag);
@@ -1359,7 +1359,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO v1667 | SINGLE</title>
+<title>CRMO v1668 | SINGLE</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8912,6 +8912,10 @@ main{
 })();
 </script>
 
+
+<style id="crmo_hide_header_version_v1668">
+  #crmo-header-version, .crmo-header-version{ display:none !important; }
+</style>
 </head>
 <body class="gallery-hover-ready role-guest">
 
