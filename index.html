@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- CRMO_v1672 single -->
+<!-- CRMO_v1673 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1672">
+  <script id="crmo-storage-sanitize-v1673">
 (function(){
   try{
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
@@ -18,7 +18,7 @@
 </script>
   
   
-<script id="crmo-safe-session-v1672">
+<script id="crmo-safe-session-v1673">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -68,7 +68,7 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 <script id="crmo_build_info">
 window.CRMO_BUILD_VERSION = "1671";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1672';
+window.CRMO_VERSION = 'CRMO_v1673';
 window.CRMO_VERSION_NUMBER = 1671;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
@@ -1364,7 +1364,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1672</title>
+<title>CRMO_v1673</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8922,7 +8922,7 @@ main{
 </script>
 
 
-<style id="crmo_hide_header_version_v1672">
+<style id="crmo_hide_header_version_v1673">
   #crmo-header-version, .crmo-header-version{ display:none !important; }
 </style>
 </head>
@@ -8985,9 +8985,9 @@ main{
           vEl.id = 'crmo-version-badge';
           vEl.className = 'crmo-role-tab crmo-version-badge';
           vEl.setAttribute('data-static','1');
-          vEl.textContent = 'v1672';
+          vEl.textContent = 'v1673';
         } else {
-          vEl.textContent = 'v1672';
+          vEl.textContent = 'v1673';
         }
 
         var whoEl = bar.querySelector('#crmo-who-badge');
@@ -9162,7 +9162,7 @@ main{
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1672</span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1673</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
@@ -26583,7 +26583,7 @@ if (document.readyState === 'loading'){
     var isProd = (host === "www.crmo.co.il" || host === "crmo.co.il" || host.endsWith(".crmo.co.il"));
     if(isProd){
       
-      // v1672: do not override title or remove role bar; admin UI handles visibility.
+      // v1673: do not override title or remove role bar; admin UI handles visibility.
 }
   }catch(e){}
 })();
@@ -32214,33 +32214,135 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_v1534_banner">
+<script id="crmo_v1673_record_badge">
 (function(){
-  function addBanner(){
+  function isOwnerNow(){
+    try{
+      if(window.CRMO_AUTH && window.CRMO_AUTH.isOwner) return true;
+    }catch(e){}
+    try{
+      if(document.documentElement.classList && document.documentElement.classList.contains('crmo-owner')) return true;
+    }catch(e){}
+    try{
+      if(document.body && document.body.classList && document.body.classList.contains('role-admin')) return true;
+    }catch(e){}
+    return false;
+  }
+
+  function getEmailNow(){
+    try{
+      if(window.CRMO_AUTH && window.CRMO_AUTH.email) return String(window.CRMO_AUTH.email||'');
+    }catch(e){}
+    return '';
+  }
+
+  function getProviderFromEmail(email){
+    email = String(email||'').toLowerCase();
+    if(email.includes('@walla.')) return 'walla';
+    if(email.endsWith('@gmail.com')) return 'google';
+    return '';
+  }
+
+  function setPill(pill, txt, disabled){
+    pill.textContent = txt;
+    pill.disabled = !!disabled;
+    pill.style.opacity = disabled ? '0.55' : '0.9';
+    pill.style.cursor = disabled ? 'default' : 'pointer';
+  }
+
+  function mount(){
     try{
       var bar = document.getElementById('crmo-admin-bar');
       if(!bar) return;
-      var tag = document.createElement('div');
-      tag.id = 'crmo-mode-tag';
-      tag.style.marginInlineStart = '8px';
-      tag.style.padding = '4px 8px';
-      tag.style.borderRadius = '999px';
-      tag.style.fontSize = '12px';
-      tag.style.border = '1px solid rgba(0,0,0,.15)';
-      tag.style.opacity = '0.85';
-      tag.style.userSelect = 'none';
-      var sp = new URLSearchParams(location.search||'');
-      var cleared = (sp.get('cleared') === '1');
-      if(window.CRMO_ALLOW_CLOUD){
-        tag.textContent = cleared ? 'CLOUD (cleared=1) – blocked' : 'CLOUD';
-      } else {
-        tag.textContent = cleared ? 'OFFLINE (cleared=1)' : 'OFFLINE';
+
+      // Clean leftover marker in URL to avoid confusing "blocked" text
+      try{
+        var url = new URL(location.href);
+        if(url.searchParams.get('cleared') === '1'){
+          url.searchParams.delete('cleared');
+          history.replaceState(null,'',url.toString());
+        }
+      }catch(e){}
+
+      if(document.getElementById('crmo-record-pill')) return;
+
+      var pill = document.createElement('button');
+      pill.type = 'button';
+      pill.id = 'crmo-record-pill';
+      pill.style.marginInlineStart = '8px';
+      pill.style.padding = '4px 10px';
+      pill.style.borderRadius = '999px';
+      pill.style.fontSize = '12px';
+      pill.style.border = '1px solid rgba(0,0,0,.15)';
+      pill.style.background = '#fff';
+      pill.style.userSelect = 'none';
+      pill.style.lineHeight = '1.2';
+
+      var row = bar.querySelector('.crmo-admin-bar-row.crmo-admin-tabs') || bar;
+      row.appendChild(pill);
+
+      async function refresh(){
+        var owner = isOwnerNow();
+        var email = getEmailNow();
+        var provider = getProviderFromEmail(email);
+        var cloud = !!window.CRMO_ALLOW_CLOUD;
+
+        if(!cloud){
+          setPill(pill, 'OFFLINE', true);
+          return;
+        }
+
+        if(owner){
+          // Show as "Record" button (reverse of hard clear)
+          var suffix = provider ? (' | ' + provider) : '';
+          setPill(pill, 'RECORD' + suffix, false);
+          pill.title = email ? ('Save snapshot to Supabase as: ' + email) : 'Save snapshot to Supabase';
+        }else{
+          setPill(pill, 'RECORD – locked', true);
+          pill.title = 'Only owners can record snapshots';
+        }
       }
-      bar.querySelector('.crmo-admin-bar-row.crmo-admin-tabs')?.appendChild(tag);
+
+      pill.addEventListener('click', async function(){
+        try{
+          if(pill.disabled) return;
+          setPill(pill, 'RECORDING…', true);
+          var email = getEmailNow();
+          var provider = getProviderFromEmail(email);
+          // Prefer the site's existing cloud save function (full-state snapshot)
+          if(typeof window.CRMO_saveServerConfig === 'function'){
+            await window.CRMO_saveServerConfig();
+            setPill(pill, 'RECORDED ✓' + (provider ? (' | ' + provider) : ''), true);
+            setTimeout(function(){ refresh(); }, 1200);
+          }else{
+            setPill(pill, 'NO CLOUD API', true);
+          }
+        }catch(err){
+          try{ console.error(err); }catch(e){}
+          setPill(pill, 'RECORD FAILED', true);
+          setTimeout(function(){ refresh(); }, 1500);
+        }
+      });
+
+      // Refresh now and on auth changes
+      refresh();
+      try{
+        document.addEventListener('crmo-auth-changed', function(){ setTimeout(refresh, 50); });
+      }catch(e){}
+      try{
+        if(window.CRMO_getSbClient){
+          window.CRMO_getSbClient().then(function(sb){
+            try{
+              sb.auth.onAuthStateChange(function(){ setTimeout(refresh, 50); });
+            }catch(e){}
+          });
+        }
+      }catch(e){}
     }catch(e){}
   }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', addBanner);
-  else addBanner();
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', mount);
+  else mount();
 })();
 </script>
 
