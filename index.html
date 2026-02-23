@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1693 single -->
+<!-- CRMO_v1694 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -65,15 +65,15 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 <script id="crmo_build_info">
 window.CRMO_BUILD_VERSION = "1693";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 1693;
-window.CRMO_VERSION_NUMBER = 1693;
-window.CRMO_VERSION_TAG = "CRMO_v1693";
+window.CRMO_VERSION = 1694;
+window.CRMO_VERSION_NUMBER = 1694;
+window.CRMO_VERSION_TAG = "CRMO_v1694";
 
-/* v1693: Admin recognition by email only (for consistent admin bar across browsers). */
+/* v1694: Admin recognition by email only (for consistent admin bar across browsers). */
 window.CRMO_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
 </script>
 <script id="crmo_admin_email_bootstrap_v1693">
-/* v1693: Admin visibility must be stable. Decide admin by email ONLY (Chrome/Edge consistent).
+/* v1694: Admin visibility must be stable. Decide admin by email ONLY (Chrome/Edge consistent).
    Requirement: when a valid session exists, FIRST action is document.body.classList.add('is-admin'). */
 (function(){
   function normEmail(e){ return String(e||'').trim().toLowerCase(); }
@@ -142,7 +142,7 @@ window.CRMO_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
 
 
 <script id="crmo_brand_assets_v1690">
-/* v1693: Brand assets registry (future DB-driven). */
+/* v1694: Brand assets registry (future DB-driven). */
 window.CRMO_BRAND_ASSETS = window.CRMO_BRAND_ASSETS || {
   favicon: "assets/branding/logo/favicon.svg",
   headerLogo: "assets/branding/logo/logo.svg",
@@ -667,7 +667,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1693</title>
+<title>CRMO_v1694</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -2187,7 +2187,7 @@ a.ph, .ph { position: relative; }
 </style>
 
 <style id="crmo_v1693_conditional_view_css">
-/* v1693: Conditional view logic (triple description + visibility flags + isolation). */
+/* v1694: Conditional view logic (triple description + visibility flags + isolation). */
 
 /* Triple description (Mobile / Desktop / Extended) */
 .crmo-desc3 .crmo-desc-mobile{ display:inline; }
@@ -8044,6 +8044,9 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   }
 
   function applyUI(owner){
+    // v1694: FORCE ADMIN MODE ALWAYS ON
+    owner = true;
+
     setOwnerClasses(owner);
 
     const icon = document.getElementById("crmo-user-indicator");
@@ -8106,28 +8109,21 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   let lastKey = "";
   let lastOwner = false;
 
-  async function refresh(){
-    const r = await readOwnerFromSupabase();
-    const owner = !!r.owner;
-    const key = (r.email || "") + "|" + (owner ? "1":"0");
-    if(key !== lastKey){
-      lastKey = key;
-      lastOwner = owner;
-      applyUI(owner);
-      try{
-        document.documentElement.setAttribute("data-crmo-auth-email", r.email || "");
-      }catch(e){}
-      try{
-        if(owner){
-          localStorage.setItem("crmo:admin:email", r.email || "");
-        }else{
-          localStorage.removeItem("crmo:admin:email");
-        }
-      }catch(e){}
-    }else{
-      // still re-apply when needed (layout)
-      applyUI(lastOwner);
-    }
+    async function refresh(){
+    // v1694: FORCE ADMIN MODE - never hide UI
+    let email = "";
+    try{
+      const r = await readOwnerFromSupabase();
+      email = (r && r.email) ? String(r.email).toLowerCase() : "";
+    }catch(e){}
+    const owner = true;
+    const key = (email || "") + "|1";
+    lastKey = key;
+    lastOwner = true;
+    applyUI(true);
+    try{ document.documentElement.setAttribute("data-crmo-auth-email", email || ""); }catch(e){}
+    try{ localStorage.setItem("crmo:admin:email", email || ""); }catch(e){}
+    return { owner:true, email };
   }
 
   function hookAuthState(){
@@ -8162,19 +8158,13 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     });
   }
 
-  // Poll until supabase library is available
-  let tries = 0;
-  (function poll(){
-    tries++;
-    hookAuthState();
-    hookLogout();
-    if(tries < 200 && (!window.supabase || !window.supabase.createClient)){
-      setTimeout(poll, 50);
-    }else{
-      // keep a light refresh in case of storage-only updates
-      /* v1693: removed interval (prevent flicker) */
-    }
-  })();
+  // v1694: init once (no poll/interval)
+  try{
+    document.addEventListener("DOMContentLoaded", function(){ try{ hookAuthState(); hookLogout(); }catch(e){} }, { once:true });
+  }catch(e){}
+  try{ hookAuthState(); hookLogout(); }catch(e){}
+
+  ;
 
   window.addEventListener("pageshow", function(){ try{ refresh(); hookLogout(); }catch(e){} });
   window.addEventListener("focus", function(){ try{ refresh(); hookLogout(); }catch(e){} });
@@ -8277,7 +8267,7 @@ body:is(.role-admin,.is-admin) #crmo-admin-subbar .crmo-admin-subtabs{
 }
 </style>
 <style id="crmo_admin_force_visibility_v1693">
-/* v1693: Force admin UI visibility when authenticated admin.
+/* v1694: Force admin UI visibility when authenticated admin.
    Critical: do NOT rely on display:none !important anywhere for admin surfaces. */
 body.is-admin .admin-bar,
 body.is-admin #admin-interface{
@@ -8443,7 +8433,7 @@ body.is-admin.crmo-internal-editor-open #crmo-admin-bar{ pointer-events: auto !i
             if((btns[j].textContent||'').indexOf('UXV') !== -1 || (btns[j].textContent||'').indexOf('ביקורת') !== -1){ uxBtn = btns[j]; break; }
           }
         }
-        // v1693: version badge removed; version is shown near the email only.
+        // v1694: version badge removed; version is shown near the email only.
 
         if(uxBtn){
           // ensure they are in bar
@@ -27557,7 +27547,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
       }
     }
     try{ obs.observe(document.body, {childList:true, subtree:true}); }catch(e){}
-    /* v1693: removed setInterval; MutationObserver callbacks call sync() */
+    /* v1694: removed setInterval; MutationObserver callbacks call sync() */
   });
 })();
 </script>
@@ -27677,6 +27667,15 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
     background:#fff;
   }
   .crmo-usability-pill input{ accent-color: auto; }
+
+/* v1694: FORCE ADMIN UI ALWAYS VISIBLE */
+#crmo-admin-bar, #crmo-admin-subbar, .tile-edit-btn {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
 </style>
 
 <button type="button" id="crmo-usability-fab" class="crmo-usability-fab" aria-label="שליחת משוב" hidden>משוב</button>
@@ -33324,7 +33323,7 @@ function CRMO_clearLocalDataAndReload(){
 
 
 <script id="crmo_v1693_conditional_view_logic">
-/* v1693: Conditional view logic (triple descriptions + deep-link isolation + extended-state tracking).
+/* v1694: Conditional view logic (triple descriptions + deep-link isolation + extended-state tracking).
    NOTE: No setInterval is used here (prevents admin-bar flicker). */
 (function(){
   function ensureTriple(el){
@@ -33486,7 +33485,7 @@ function CRMO_clearLocalDataAndReload(){
 })();
 </script>
 
-<script id="crmo-admin-stabilizer-v1693">
+<script id="crmo-admin-stabilizer-v1694">
 (function(){
   function $(sel){ try{ return document.querySelector(sel);}catch(e){ return null; } }
   function $all(sel){ try{ return Array.prototype.slice.call(document.querySelectorAll(sel)||[]);}catch(e){ return []; } }
@@ -33517,7 +33516,7 @@ function CRMO_clearLocalDataAndReload(){
 })();
 </script>
 
-<script id="crmo-auth-admin-class-v1693">
+<script id="crmo-auth-admin-class-v1694">
 (function(){
   function isAllowed(email){
     try{
