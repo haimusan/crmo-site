@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1683 single -->
+<!-- CRMO_v1684 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -79,10 +79,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1683";
+window.CRMO_BUILD_VERSION = "1684";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1683';
-window.CRMO_VERSION_NUMBER = 1683;
+window.CRMO_VERSION = 'CRMO_v1684';
+window.CRMO_VERSION_NUMBER = 1684;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1394,7 +1394,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1683</title>
+<title>CRMO_v1684</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -5126,6 +5126,26 @@ mpAdd.addEventListener('click', function(){
       if(!wrapper) return;
       var anchor = wrapper.querySelector('a.ph');
       if(!anchor) return;
+      // v1684: open Tile Editor modal on pencil click (and stop tile click navigation)
+      try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
+      try{
+        if(window.CRMO_openTileEditor){
+          var grid = wrapper.closest('.gallery-grid, .grid, #stands, #exhibitions, #brands, #stores, #retail-interiors') || wrapper.parentElement;
+          var wrappers = [];
+          try{ wrappers = Array.prototype.slice.call((grid && grid.querySelectorAll) ? grid.querySelectorAll('.tile-edit-wrapper') : []); }catch(e){}
+          var idx = wrappers.length ? wrappers.indexOf(wrapper) : -1;
+          if(idx < 0){
+            try{
+              var kids = grid && grid.children ? Array.prototype.slice.call(grid.children) : [];
+              idx = kids.indexOf(wrapper);
+            }catch(e){}
+          }
+          if(idx >= 0){
+            window.CRMO_openTileEditor(window.currentGalleryKey || window.__CRMO_currentGalleryKey || (window.location.hash||'/'), idx);
+            return;
+          }
+        }
+      }catch(e){}
       currentWrapper = wrapper;
       currentAnchor  = anchor;
       if (mpRows){
@@ -9056,6 +9076,14 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
 html.crmo-owner #crmo-role-toggle{ display:flex !important; }
 html.crmo-owner #crmo-admin-bar{ display:block !important; }
 html.crmo-owner #crmo-admin-subbar{ display:block !important; }
+</style>
+
+
+<style id="crmo-owner-tile-edit-visible-v1684">
+/* v1684: ensure tile edit UI is visible for owner (some legacy rules hide it with !important) */
+html.crmo-owner .tile-edit-btn,
+html.crmo-owner .tile-admin-icons{ display:flex !important; }
+html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
 </style>
 
 </head>
@@ -22565,6 +22593,7 @@ var CRMO_GALLERY_STATE_KEY = 'crmo_gallery_state_v1';
   try{ window.CRMO__galleryMetaState = galleryMetaState; }catch(e){}
   try{ window.CRMO__galleryState = galleryState; }catch(e){}
   var currentGalleryKey = null;
+  try{ window.currentGalleryKey = currentGalleryKey; window.__CRMO_currentGalleryKey = currentGalleryKey; }catch(e){}
   var dragSrcIndex = null;
   var dragSrcGallery = null;
   function reorderGalleryTiles(key, fromIdx, toIdx){
@@ -22648,6 +22677,7 @@ if (key === currentGalleryKey){
       tileEditorModal.setAttribute("aria-hidden", "false");
     }
   }
+  window.CRMO_openTileEditor = openTileEditor;
   function closeTileEditor(){
     currentEditGalleryKey = null;
     currentEditIndex = null;
@@ -22679,7 +22709,13 @@ if (key === currentGalleryKey){
     }
     closeTileEditor();
     try{ persistGalleryState(currentEditGalleryKey); }catch(e){}
-    if (window.CRMO_sbPushNow){ window.CRMO_sbPushNow().catch(()=>{}); }
+    // v1684: push to DB (Supabase) immediately
+    if (window.CRMO_saveMainNow){
+      window.CRMO_saveMainNow().then(function(r){
+        try{ if(window.CRMO_showSaveNotice) window.CRMO_showSaveNotice(r && r.ok ? ('נשמר לשרת ✓ (' + (r.result && r.result.data && r.result.data.updated_at ? r.result.data.updated_at : 'ok') + ')') : 'שמירה לשרת נכשלה'); }catch(e){}
+        try{ if(r && r.error && window.CRMO_showUploadHint) window.CRMO_showUploadHint(r.raw || r.error); }catch(e){}
+      }).catch(function(e){ try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_e){} });
+    }
   }
   function handleTileEditorImageChange(ev){
     if (currentEditGalleryKey === null || currentEditIndex === null) return;
@@ -33822,6 +33858,61 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
   }
 
   setTimeout(run, 800);
+})();
+</script>
+
+
+<script id="crmo-save-notice-v1684">
+(function(){
+  if(window.CRMO_showSaveNotice) return;
+  function ensure(){
+    var id='crmo-save-notice-box';
+    var el=document.getElementById(id);
+    if(el) return el;
+    el=document.createElement('div');
+    el.id=id;
+    el.style.position='fixed';
+    el.style.right='12px';
+    el.style.bottom='12px';
+    el.style.zIndex='999999';
+    el.style.maxWidth='520px';
+    el.style.background='#111';
+    el.style.color='#fff';
+    el.style.padding='10px 12px';
+    el.style.borderRadius='10px';
+    el.style.boxShadow='0 8px 24px rgba(0,0,0,.25)';
+    el.style.fontSize='14px';
+    el.style.lineHeight='1.35';
+    el.style.whiteSpace='pre-line';
+    el.style.display='none';
+    document.body.appendChild(el);
+    return el;
+  }
+  window.CRMO_showSaveNotice = function(msg){
+    try{
+      var el=ensure();
+      if(!el) return;
+      el.textContent=String(msg||'');
+      el.style.display='block';
+      clearTimeout(el.__t);
+      el.__t=setTimeout(function(){ try{ el.style.display='none'; }catch(e){} }, 2400);
+    }catch(e){}
+  };
+})();
+</script>
+
+
+<script id="crmo-gallerykey-sync-v1684">
+(function(){
+  try{
+    setInterval(function(){
+      try{
+        if(typeof window.currentGalleryKey === 'undefined') return;
+        // keep shadow copy
+        window.__CRMO_currentGalleryKey = window.currentGalleryKey;
+      }catch(e){}
+    }, 800);
+  }catch(e){}
 })();
 </script>
 
