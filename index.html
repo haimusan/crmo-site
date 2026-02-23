@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1692 single -->
+<!-- CRMO_v1693 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -63,17 +63,17 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1692";
+window.CRMO_BUILD_VERSION = "1693";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 1692;
-window.CRMO_VERSION_NUMBER = 1692;
-window.CRMO_VERSION_TAG = "CRMO_v1692";
+window.CRMO_VERSION = 1693;
+window.CRMO_VERSION_NUMBER = 1693;
+window.CRMO_VERSION_TAG = "CRMO_v1693";
 
-/* v1692: Admin recognition by email only (for consistent admin bar across browsers). */
+/* v1693: Admin recognition by email only (for consistent admin bar across browsers). */
 window.CRMO_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
 </script>
-<script id="crmo_admin_email_bootstrap_v1692">
-/* v1692: Admin visibility must be stable. Decide admin by email ONLY (Chrome/Edge consistent).
+<script id="crmo_admin_email_bootstrap_v1693">
+/* v1693: Admin visibility must be stable. Decide admin by email ONLY (Chrome/Edge consistent).
    Requirement: when a valid session exists, FIRST action is document.body.classList.add('is-admin'). */
 (function(){
   function normEmail(e){ return String(e||'').trim().toLowerCase(); }
@@ -142,7 +142,7 @@ window.CRMO_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
 
 
 <script id="crmo_brand_assets_v1690">
-/* v1692: Brand assets registry (future DB-driven). */
+/* v1693: Brand assets registry (future DB-driven). */
 window.CRMO_BRAND_ASSETS = window.CRMO_BRAND_ASSETS || {
   favicon: "assets/branding/logo/favicon.svg",
   headerLogo: "assets/branding/logo/logo.svg",
@@ -667,7 +667,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1692</title>
+<title>CRMO_v1693</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -2186,8 +2186,8 @@ a.ph, .ph { position: relative; }
 }
 </style>
 
-<style id="crmo_v1692_conditional_view_css">
-/* v1692: Conditional view logic (triple description + visibility flags + isolation). */
+<style id="crmo_v1693_conditional_view_css">
+/* v1693: Conditional view logic (triple description + visibility flags + isolation). */
 
 /* Triple description (Mobile / Desktop / Extended) */
 .crmo-desc3 .crmo-desc-mobile{ display:inline; }
@@ -8172,7 +8172,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
       setTimeout(poll, 50);
     }else{
       // keep a light refresh in case of storage-only updates
-      /* v1692: removed interval (prevent flicker) */
+      /* v1693: removed interval (prevent flicker) */
     }
   })();
 
@@ -8276,8 +8276,8 @@ body:is(.role-admin,.is-admin) #crmo-admin-subbar .crmo-admin-subtabs{
   flex-direction: row-reverse !important; /* start from the right edge */
 }
 </style>
-<style id="crmo_admin_force_visibility_v1692">
-/* v1692: Force admin UI visibility when authenticated admin.
+<style id="crmo_admin_force_visibility_v1693">
+/* v1693: Force admin UI visibility when authenticated admin.
    Critical: do NOT rely on display:none !important anywhere for admin surfaces. */
 body.is-admin .admin-bar,
 body.is-admin #admin-interface{
@@ -8382,6 +8382,14 @@ body.is-admin .tiles-manager-bar{
 #crmo-admin-bar .crmo-admin-record-btn{ order: 9999 !important; }
 </style>
 
+
+<style id="crmo_admin_force_css_v1693">
+body.is-admin .admin-bar, body.is-admin #admin-interface { display: flex !important; visibility: visible !important; opacity: 1 !important; }
+body.is-admin #crmo-admin-bar, body.is-admin #crmo-header-admin, body.is-admin #crmo-galleries-admin { display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
+body.is-admin .tiles-manager-bar { display: flex !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
+body.is-admin #crmo-admin-bar * , body.is-admin .tiles-manager-bar * { pointer-events: auto !important; }
+body.is-admin.crmo-internal-editor-open #crmo-admin-bar{ pointer-events: auto !important; }
+</style>
 </head>
 <body class="gallery-hover-ready role-guest">
 
@@ -8435,7 +8443,7 @@ body.is-admin .tiles-manager-bar{
             if((btns[j].textContent||'').indexOf('UXV') !== -1 || (btns[j].textContent||'').indexOf('ביקורת') !== -1){ uxBtn = btns[j]; break; }
           }
         }
-        // v1692: version badge removed; version is shown near the email only.
+        // v1693: version badge removed; version is shown near the email only.
 
         if(uxBtn){
           // ensure they are in bar
@@ -8502,14 +8510,27 @@ body.is-admin .tiles-manager-bar{
         }catch(e){}
         if(roleBar) roleBar.style.display = (isOwner || adminLike) ? 'flex' : 'none';
 
-        // show/hide admin UI strictly by owner status
-        if(adminBar) adminBar.style.display = isOwner ? '' : 'none';
-        if(subbar) subbar.style.display = isOwner ? '' : 'none';
-
-        // If not owner, hard reset roles
+        // show/hide admin UI by admin email OR owner (not owner-only)
+        var adminEmail = false;
         try{
-          if(!isOwner){
-            document.body.classList.remove('role-admin','role-master','role-ux','role-user');
+          var list = (window.CRMO_ADMIN_EMAILS && Array.isArray(window.CRMO_ADMIN_EMAILS)) ? window.CRMO_ADMIN_EMAILS : ['boochin@gmail.com','boochin@walla.co.il'];
+          var em = (email||'').toLowerCase().trim();
+          adminEmail = !!em && list.map(function(x){ return String(x||'').toLowerCase().trim(); }).indexOf(em) !== -1;
+        }catch(e){}
+        // adminLike can be from classes, email allowlist, or forced is-admin
+        try{
+          adminLike = adminLike || adminEmail || document.body.classList.contains('is-admin');
+        }catch(e){}
+        if(adminBar) adminBar.style.display = (signedIn && (isOwner || adminLike)) ? '' : 'none';
+        if(subbar) subbar.style.display = (signedIn && (isOwner || adminLike)) ? '' : 'none';
+
+        // Keep role classes for allowed admins; reset only for public
+        try{
+          if(signedIn && (isOwner || adminLike)){
+            document.body.classList.add('role-admin');
+            document.body.classList.add('is-admin');
+          }else if(!isOwner){
+            document.body.classList.remove('role-admin','role-master','role-ux','role-user','is-admin');
           }
         }catch(e){}
       }
@@ -27536,7 +27557,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
       }
     }
     try{ obs.observe(document.body, {childList:true, subtree:true}); }catch(e){}
-    /* v1692: removed setInterval; MutationObserver callbacks call sync() */
+    /* v1693: removed setInterval; MutationObserver callbacks call sync() */
   });
 })();
 </script>
@@ -33302,8 +33323,8 @@ function CRMO_clearLocalDataAndReload(){
 
 
 
-<script id="crmo_v1692_conditional_view_logic">
-/* v1692: Conditional view logic (triple descriptions + deep-link isolation + extended-state tracking).
+<script id="crmo_v1693_conditional_view_logic">
+/* v1693: Conditional view logic (triple descriptions + deep-link isolation + extended-state tracking).
    NOTE: No setInterval is used here (prevents admin-bar flicker). */
 (function(){
   function ensureTriple(el){
@@ -33462,6 +33483,83 @@ function CRMO_clearLocalDataAndReload(){
   } else {
     init();
   }
+})();
+</script>
+
+<script id="crmo-admin-stabilizer-v1693">
+(function(){
+  function $(sel){ try{ return document.querySelector(sel);}catch(e){ return null; } }
+  function $all(sel){ try{ return Array.prototype.slice.call(document.querySelectorAll(sel)||[]);}catch(e){ return []; } }
+  function force(){
+    try{
+      if(!document.body || !document.body.classList.contains('is-admin')) return;
+      // Keep admin UI visible + clickable
+      var el;
+      el = document.getElementById('crmo-admin-bar'); if(el){ el.style.display='block'; el.style.visibility='visible'; el.style.opacity='1'; el.style.pointerEvents='auto'; }
+      el = document.getElementById('crmo-header-admin'); if(el){ el.style.display='block'; el.style.visibility='visible'; el.style.opacity='1'; el.style.pointerEvents='auto'; }
+      el = document.getElementById('crmo-galleries-admin'); if(el){ el.style.display='block'; el.style.visibility='visible'; el.style.opacity='1'; el.style.pointerEvents='auto'; }
+      $all('.tiles-manager-bar').forEach(function(b){ b.style.display='flex'; b.style.visibility='visible'; b.style.opacity='1'; b.style.pointerEvents='auto'; });
+    }catch(e){}
+  }
+  function init(){
+    try{
+      // Force once after load and after first paint
+      force();
+      requestAnimationFrame(force);
+      // Observe changes that might hide admin UI a few seconds later
+      var obs = new MutationObserver(function(){ force(); });
+      obs.observe(document.documentElement, {attributes:true, attributeFilter:['class','style'], subtree:true});
+      obs.observe(document.body, {attributes:true, attributeFilter:['class','style'], subtree:true});
+    }catch(e){}
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+<script id="crmo-auth-admin-class-v1693">
+(function(){
+  function isAllowed(email){
+    try{
+      var list = (window.CRMO_ADMIN_EMAILS && Array.isArray(window.CRMO_ADMIN_EMAILS)) ? window.CRMO_ADMIN_EMAILS : ['boochin@gmail.com','boochin@walla.co.il'];
+      var em = String(email||'').toLowerCase().trim();
+      return !!em && list.map(function(x){return String(x||'').toLowerCase().trim();}).indexOf(em)!==-1;
+    }catch(e){ return false; }
+  }
+  async function attach(){
+    try{
+      if(!window.CRMO_getSbClient) return;
+      var sb = await window.CRMO_getSbClient();
+      if(!sb || !sb.auth) return;
+
+      var apply = function(email){
+        if(isAllowed(email)){
+          document.body.classList.add('is-admin','role-admin');
+        }
+      };
+
+      // Try current session
+      try{
+        var sess = (window.CRMO_safeGetSession) ? await window.CRMO_safeGetSession(sb) : null;
+        var em = sess && sess.user && sess.user.email;
+        apply(em);
+      }catch(e){}
+
+      // Listen to auth changes
+      try{
+        if(typeof sb.auth.onAuthStateChange === 'function'){
+          sb.auth.onAuthStateChange(function(evt, session){
+            try{
+              var email = session && session.user && session.user.email;
+              apply(email);
+            }catch(e){}
+          });
+        }
+      }catch(e){}
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', attach);
+  else attach();
 })();
 </script>
 </body>
