@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1681 single -->
+<!-- CRMO_v1682 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -79,10 +79,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1681";
+window.CRMO_BUILD_VERSION = "1682";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1681';
-window.CRMO_VERSION_NUMBER = 1681;
+window.CRMO_VERSION = 'CRMO_v1682';
+window.CRMO_VERSION_NUMBER = 1682;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -246,9 +246,7 @@ window.CRMO_STUDIO_TITLE = "CRMO";
       var vOnly = ('v' + n);
 
       var top = document.getElementById("crmo-version-badge");
-      var hv = document.getElementById("crmo-header-version");
-       if(hv) hv.textContent = vOnly;
-      if (top){
+if (top){
         top.textContent = vOnly;
         if(tag) top.setAttribute('title', tag);
       }
@@ -1396,7 +1394,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1681</title>
+<title>CRMO_v1682</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8551,9 +8549,6 @@ body.role-admin header{
   flex-direction: row-reverse !important; /* first tab sits on the right edge */
   justify-content: flex-start !important; /* pack to the (reversed) start */
 }
-#crmo-adminbar-hardreset{
-  order: 999 !important; /* keep RECORD button on the left edge */
-}
 </style>
 
 
@@ -8958,15 +8953,13 @@ body.role-admin #crmo-admin-bar > .wrap{
   box-sizing: border-box !important;
 }
 
-/* Align tabs to the container right edge (RTL) while keeping RECORD on the left */
+/* Align tabs to the container right edge (RTL) */
 body.role-admin #crmo-admin-bar .crmo-admin-tabs{
   padding-right: var(--crmo-adminbars-pr) !important;
   padding-left: var(--crmo-adminbars-pl) !important;
   box-sizing: border-box !important;
 }
-body.role-admin #crmo-adminbar-hardreset{
-  margin-right: auto !important; /* pushes the tabs group to the right */
-}
+
 body.role-admin #crmo-admin-bar .crmo-admin-tabs-group{
   display: flex !important;
   flex-direction: row-reverse !important; /* start from the right edge */
@@ -9040,12 +9033,6 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
   setInterval(schedule, 900);
 })();
 </script>
-
-
-<style id="crmo_show_header_version_v1681">
-  #crmo-header-version, .crmo-header-version{ display:inline-flex !important; align-items:center; }
-</style>
-
 <style>
 
 /* v1681: RTL alignment for admin tabs + sub-tabs within the same wrap width */
@@ -9061,7 +9048,6 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
   width: 100% !important;
   box-sizing: border-box !important;
 }
-#crmo-admin-bar .crmo-admin-record-btn{ order: 9999 !important; }
 </style>
 
 
@@ -9300,13 +9286,11 @@ html.crmo-owner #crmo-admin-subbar{ display:block !important; }
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1681</span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1682</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
         <div class="crmo-admin-bar-row crmo-admin-tabs" dir="rtl">
-      
-      <button type="button" class="crmo-admin-bar-btn crmo-hard-reset-btn" id="crmo-adminbar-hardreset" title="ניקוי קשיח (בדיקות שמישות)" onclick="CRMO_clearLocalDataAndReload()">ניקוי קשיח</button>
 <div class="crmo-admin-tabs-group" dir="rtl">
 <button type="button" class="crmo-admin-bar-btn" id="crmo-adminbar-content" aria-controls="crmo-content-selector" aria-expanded="false">
         <span class="crmo-admin-bar-icon" aria-hidden="true">+</span>
@@ -9753,7 +9737,6 @@ var bar = document.getElementById('crmo-admin-bar');
 <div class="wrap">
 <nav aria-label="ראשי" class="nav">
 <a class="logo" href="#top" title="בית"><img alt="CREAMO logo" decoding="async" loading="lazy" src="assets/branding/logo/logo.svg" style="height:40px"/></a>
-<span id="crmo-header-version" class="crmo-header-version"></span>
 <a href="#" id="crmo-user-indicator" class="crmo-user-indicator" aria-label="התחבר / הירשם" title="התחבר / הירשם">
   <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 12a4.2 4.2 0 1 0-4.2-4.2A4.2 4.2 0 0 0 12 12Zm0 2.2c-4.4 0-8 2.2-8 4.9V21h16v-1.9c0-2.7-3.6-4.9-8-4.9Z"/></svg>
 </a>
@@ -32286,248 +32269,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 })();
 </script>
 
-<script>
-/* CRMO v1547: Hard reset (Local only) */
-function CRMO_clearLocalDataAndReload(){
-  try{
-    // Clear LocalStorage keys that may affect CRMO (including legacy preview keys)
-    var keys = Object.keys(localStorage);
-    for(var i=0;i<keys.length;i++){
-      var k = keys[i];
-      if(/^crmo/i.test(k) || /^CRMO/i.test(k) || /^USABILITY_PREVIEW/i.test(k)){
-        try{ localStorage.removeItem(k); }catch(e){}
-      }
-    }
-  }catch(e){}
-  try{
-    // Clear session flags too
-    for (var j=0;j<Object.keys(sessionStorage).length;j++){
-      var sk = Object.keys(sessionStorage)[j];
-      if(/^crmo/i.test(sk) || /^CRMO/i.test(sk) || /^USABILITY_PREVIEW/i.test(sk)){
-        try{ sessionStorage.removeItem(sk); }catch(e){}
-      }
-    }
-    // Note: do not force OFFLINE after hard reset; preserve cloud mode if enabled.
-  }catch(e){}
-  (async function(){
-    try{
-      if(window.caches && caches.keys){
-        var ckeys = await caches.keys();
-        await Promise.all(ckeys.map(function(x){ return caches.delete(x); }));
-      }
-    }catch(e){}
-    try{
-      if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){
-        var regs = await navigator.serviceWorker.getRegistrations();
-        await Promise.all(regs.map(function(r){ return r.unregister(); }));
-      }
-    }catch(e){}
-    // Reload with a cache-busting query so browsers don't reuse a cached HTML
-    try{
-      var u = new URL(location.href);
-      u.searchParams.set('cleared','1');
-      u.searchParams.set('r', Date.now().toString());
-      location.replace(u.toString());
-    }catch(e){
-      location.reload();
-    }
-  })();
-}
-</script>
 
-
-<script id="crmo_clear_wrapper_v1533">
-(function(){
-  if (typeof window.CRMO_clearLocalDataAndReload !== 'function') return;
-  var _orig = window.CRMO_clearLocalDataAndReload;
-  window.CRMO_clearLocalDataAndReload = function(){
-    try{ sessionStorage.setItem('CRMO_SKIP_CLOUD_RESTORE','1'); }catch(e){}
-    try{
-      var url = new URL(location.href);
-      // keep cloud param (do not force offline)
-      url.searchParams.delete('redirect');
-      url.searchParams.delete('p');
-      // Mark cleared to avoid accidental restore loops
-      url.searchParams.set('cleared','1');
-      history.replaceState(null,'',url.toString());
-    }catch(e){}
-    return _orig.apply(this, arguments);
-  };
-})();
-</script>
-
-
-<script id="crmo_v1681_record_badge">
-(function(){
-  function isOwnerNow(){
-    try{
-      if(window.CRMO_AUTH && window.CRMO_AUTH.isOwner) return true;
-    }catch(e){}
-    try{
-      if(document.documentElement.classList && document.documentElement.classList.contains('crmo-owner')) return true;
-    }catch(e){}
-    try{
-      if(document.body && document.body.classList && document.body.classList.contains('role-admin')) return true;
-    }catch(e){}
-    return false;
-  }
-
-  function getEmailNow(){
-    try{
-      if(window.CRMO_AUTH && window.CRMO_AUTH.email) return String(window.CRMO_AUTH.email||'');
-    }catch(e){}
-    return '';
-  }
-
-  function getProviderFromEmail(email){
-    email = String(email||'').toLowerCase();
-    if(email.includes('@walla.')) return 'walla';
-    if(email.endsWith('@gmail.com')) return 'google';
-    return '';
-  }
-
-  function setPill(pill, txt, disabled){
-    pill.textContent = txt;
-    pill.disabled = !!disabled;
-    pill.style.opacity = disabled ? '0.55' : '0.9';
-    pill.style.cursor = disabled ? 'default' : 'pointer';
-  }
-
-  function mount(){
-    try{
-      var bar = document.getElementById('crmo-admin-bar');
-      if(!bar) return;
-
-      // Clean leftover marker in URL to avoid confusing "blocked" text
-      try{
-        var url = new URL(location.href);
-        if(url.searchParams.get('cleared') === '1'){
-          url.searchParams.delete('cleared');
-          history.replaceState(null,'',url.toString());
-        }
-      }catch(e){}
-
-      if(document.getElementById('crmo-record-pill')) return;
-
-      var pill = document.createElement('button');
-      pill.type = 'button';
-      pill.id = 'crmo-record-pill';
-      pill.style.marginInlineStart = '8px';
-      pill.style.padding = '4px 10px';
-      pill.style.borderRadius = '999px';
-      pill.style.fontSize = '12px';
-      pill.style.border = '1px solid rgba(0,0,0,.15)';
-      pill.style.background = '#fff';
-      pill.style.userSelect = 'none';
-      pill.style.lineHeight = '1.2';
-
-      var row = bar.querySelector('.crmo-admin-bar-row.crmo-admin-tabs') || bar;
-      row.appendChild(pill);
-
-      async function refresh(){
-        var owner = isOwnerNow();
-        var email = getEmailNow();
-        var provider = getProviderFromEmail(email);
-        var cloud = !!window.CRMO_ALLOW_CLOUD;
-
-        if(!cloud){
-          setPill(pill, 'OFFLINE', true);
-          return;
-        }
-
-        if(owner){
-          // Show as "Record" button (reverse of hard clear)
-          var suffix = provider ? (' | ' + provider) : '';
-          setPill(pill, 'RECORD' + suffix, false);
-          pill.title = email ? ('Save snapshot to Supabase as: ' + email) : 'Save snapshot to Supabase';
-        }else{
-          setPill(pill, 'RECORD – locked', true);
-          pill.title = 'Only owners can record snapshots';
-        }
-      }
-
-      pill.addEventListener('click', async function(){
-        try{
-          if(pill.disabled) return;
-          setPill(pill, 'RECORDING…', true);
-          var email = getEmailNow();
-          var provider = getProviderFromEmail(email);
-          // Prefer the site's existing cloud save function (full-state snapshot)
-          if(typeof window.CRMO_saveServerConfig === 'function'){
-            await window.CRMO_saveServerConfig();
-            setPill(pill, 'RECORDED ✓' + (provider ? (' | ' + provider) : ''), true);
-            setTimeout(function(){ refresh(); }, 1200);
-          }else{
-            setPill(pill, 'NO CLOUD API', true);
-          }
-        }catch(err){
-          try{ console.error(err); }catch(e){}
-          setPill(pill, 'RECORD FAILED', true);
-          setTimeout(function(){ refresh(); }, 1500);
-        }
-      });
-
-      // Refresh now and on auth changes
-      refresh();
-      try{
-        document.addEventListener('crmo-auth-changed', function(){ setTimeout(refresh, 50); });
-      }catch(e){}
-      try{
-        if(window.CRMO_getSbClient){
-          window.CRMO_getSbClient().then(function(sb){
-            try{
-              sb.auth.onAuthStateChange(function(){ setTimeout(refresh, 50); });
-            }catch(e){}
-          });
-        }
-      }catch(e){}
-    }catch(e){}
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', mount);
-  else mount();
-})();
-</script>
-
-
-<script id="crmo_clear_wrapper_v1534">
-(function(){
-  function hardWipe(){
-    try{
-      sessionStorage.clear();
-      sessionStorage.setItem('CRMO_SKIP_CLOUD_RESTORE','1');
-    }catch(e){}
-    try{
-      localStorage.setItem('CRMO_CLEARED_V1','1');
-    }catch(e){}
-  }
-  if (typeof window.CRMO_clearLocalDataAndReload === 'function') {
-    var _orig = window.CRMO_clearLocalDataAndReload;
-    window.CRMO_clearLocalDataAndReload = function(){
-      hardWipe();
-      try{
-        var url = new URL(location.href);
-        // keep cloud param (do not force offline)
-        url.searchParams.set('cleared','1');
-        history.replaceState(null,'',url.toString());
-      }catch(e){}
-      return _orig.apply(this, arguments);
-    };
-  } else {
-    window.CRMO_clearLocalDataAndReload = function(){
-      hardWipe();
-      try{
-        for(const k of Object.keys(localStorage)){
-          if(/^crmo/i.test(k) || /^CRMO/i.test(k)){
-            try{ localStorage.removeItem(k); }catch(e){}
-          }
-        }
-      }catch(e){}
-      location.reload();
-    };
-  }
-})();
-</script>
 
 
 <script id="crmo_v1534_no_seed_after_clear">
