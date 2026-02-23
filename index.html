@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1679 single -->
+<!-- CRMO_v1684 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -79,10 +79,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1671";
+window.CRMO_BUILD_VERSION = "1684";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1679';
-window.CRMO_VERSION_NUMBER = 1671;
+window.CRMO_VERSION = 'CRMO_v1684';
+window.CRMO_VERSION_NUMBER = 1684;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -430,27 +430,85 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
     return window.CRMO_IS_OWNER === true;
   }
 
-  /* ===== CRMO RBAC (v1611) ===== */
+  /* ===== CRMO RBAC (v1684) ===== */
   (function(){
-    // Hide admin DOM immediately; we will only enable it for owners after role check.
+    // Hide admin UI by default; we only show it for owners after a role check.
+    // IMPORTANT: We never remove/recreate admin DOM to avoid flicker.
     try{
       if(!document.getElementById('crmo-admin-stealth-css')){
         var st = document.createElement('style');
         st.id = 'crmo-admin-stealth-css';
         st.textContent = `
-          #crmo-admin-bar, #crmo-admin-editor, #crmo-admin-subbar,
-          #CRMO_v1646_brands_admin_panel,
-          #crmo-header-admin, #crmo-mode-admin,
-          #crmo-settings-admin, #crmo-media-admin, #crmo-galleries-admin,
-          #crmo-tracking-admin, #crmo-permissions-admin, #crmo-audience-admin,
-          #crmo-campaign-admin, #crmo-dev-admin, #crmo-restore-admin,
-          #crmo-admin-add-btn, #crmo-admins-list
+          body:not(.is-admin) #crmo-admin-bar,
+          body:not(.is-admin) #crmo-admin-editor,
+          body:not(.is-admin) #crmo-admin-subbar,
+          body:not(.is-admin) #CRMO_v1646_brands_admin_panel,
+          body:not(.is-admin) #crmo-header-admin,
+          body:not(.is-admin) #crmo-mode-admin,
+          body:not(.is-admin) #crmo-settings-admin,
+          body:not(.is-admin) #crmo-media-admin,
+          body:not(.is-admin) #crmo-galleries-admin,
+          body:not(.is-admin) #crmo-tracking-admin,
+          body:not(.is-admin) #crmo-permissions-admin,
+          body:not(.is-admin) #crmo-audience-admin,
+          body:not(.is-admin) #crmo-campaign-admin,
+          body:not(.is-admin) #crmo-dev-admin,
+          body:not(.is-admin) #crmo-restore-admin,
+          body:not(.is-admin) #crmo-admin-add-btn,
+          body:not(.is-admin) #crmo-admins-list,
+          body:not(.is-admin) #crmo-profile-edit
           { display:none !important; visibility:hidden !important; }
         `;
         document.head.appendChild(st);
       }
     }catch(e){}
   })();
+
+  function CRMO_adminNodes(){
+    // Known admin roots / panels
+    return Array.from(document.querySelectorAll([
+      '#crmo-admin-bar',
+      '#crmo-admin-editor',
+      '#crmo-admin-subbar',
+      '#CRMO_v1646_brands_admin_panel',
+      '#crmo-header-admin',
+      '#crmo-mode-admin',
+      '#crmo-settings-admin',
+      '#crmo-media-admin',
+      '#crmo-galleries-admin',
+      '#crmo-tracking-admin',
+      '#crmo-permissions-admin',
+      '#crmo-audience-admin',
+      '#crmo-campaign-admin',
+      '#crmo-dev-admin',
+      '#crmo-restore-admin',
+      '#crmo-admin-add-btn',
+      '#crmo-admins-list',
+      '#crmo-profile-edit'
+    ].join(',')));
+  }
+
+  function CRMO_setAdminUI(on){
+    var isOn = !!on;
+    try{ if(document.body) document.body.classList.toggle('is-admin', isOn); }catch(e){}
+    // Keep a legacy marker for any existing CSS/JS that expects it.
+    try{ document.documentElement.classList.toggle('crmo-owner', isOn); }catch(e){}
+
+    if(isOn){
+      // Clear any inline/hidden flags left from older builds (without recreating nodes)
+      try{
+        CRMO_adminNodes().forEach(function(n){
+          if(!n) return;
+          try{ n.hidden = false; }catch(e){}
+          try{ if(n.style){ n.style.display = ''; n.style.visibility = ''; } }catch(e){}
+          try{ n.removeAttribute && n.removeAttribute('aria-hidden'); }catch(e){}
+        });
+      }catch(e){}
+    }
+  }
+
+  function CRMO_enableAdminDom(){ CRMO_setAdminUI(true); }
+  function CRMO_disableAdminDom(){ CRMO_setAdminUI(false); }
 
   async function CRMO_refreshRoleAndAdminUI(){
     try{
@@ -517,7 +575,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
         CRMO_enableAdminDom();
       }else{
         try{ localStorage.removeItem('crmo:admin:email'); }catch(e){}
-        CRMO_disableAdminDom(true); // remove from DOM for stealth
+        CRMO_disableAdminDom();
       }
       return { role: role, owner: isOwner };
     }catch(e){
@@ -526,68 +584,6 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
       CRMO_disableAdminDom();
       return { role: null, owner: false, reason: 'error', error: (e && e.message) ? e.message : String(e||'') };
     }
-  }
-
-  function CRMO_adminNodes(){
-    // Known admin roots / panels
-    return Array.from(document.querySelectorAll([
-      '#crmo-admin-bar',
-      '#crmo-admin-editor',
-      '#crmo-admin-subbar',
-      '#CRMO_v1646_brands_admin_panel',
-      '#crmo-header-admin',
-      '#crmo-mode-admin',
-      '#crmo-settings-admin',
-      '#crmo-media-admin',
-      '#crmo-galleries-admin',
-      '#crmo-tracking-admin',
-      '#crmo-permissions-admin',
-      '#crmo-audience-admin',
-      '#crmo-campaign-admin',
-      '#crmo-dev-admin',
-      '#crmo-restore-admin',
-      '#crmo-admin-add-btn',
-      '#crmo-admins-list',
-      '#crmo-profile-edit'
-    ].join(',')));
-  }
-
-  function CRMO_enableAdminDom(){
-    try{
-      var st = document.getElementById('crmo-admin-stealth-css');
-      if(st) st.remove();
-    }catch(e){}
-    try{
-      CRMO_adminNodes().forEach(function(n){
-        if(n){ n.style.display=''; n.style.visibility=''; n.hidden=false; }
-      });
-    }catch(e){}
-    try{ document.documentElement.classList.add('crmo-owner'); }catch(e){}
-  }
-
-  function CRMO_disableAdminDom(remove){
-    try{ document.documentElement.classList.remove('crmo-owner'); }catch(e){}
-    try{
-      CRMO_adminNodes().forEach(function(n){
-        if(!n) return;
-        if(remove){
-          n.remove();
-        }else{
-          n.style.display='none';
-          n.style.visibility='hidden';
-          n.hidden=true;
-        }
-      });
-    }catch(e){}
-    // ensure stealth css stays
-    try{
-      if(!document.getElementById('crmo-admin-stealth-css')){
-        var st = document.createElement('style');
-        st.id='crmo-admin-stealth-css';
-        st.textContent='#crmo-admin-bar,#crmo-admin-editor,#crmo-admin-subbar{display:none!important}';
-        document.head.appendChild(st);
-      }
-    }catch(e){}
   }
 
   // Quiet background role check at startup (no UI messages)
@@ -1491,13 +1487,13 @@ body{margin:0;background:#fff;color:#111;
 img{display:block;max-width:100%;height:auto}
 a{color:inherit;text-decoration:none}
 header{position:sticky;top:var(--crmo-sticky-top, 0px);z-index:9999;background:#fff;border-bottom:1px solid var(--line)}
-body.role-admin header{top: calc(var(--crmo-sticky-top, 0px) + var(--crmo-admin-tabs-h, 44px) + var(--crmo-admin-panels-h, 0px));}
-body.role-admin main,
+body:is(.role-admin,.is-admin) header{top: calc(var(--crmo-sticky-top, 0px) + var(--crmo-admin-tabs-h, 44px) + var(--crmo-admin-panels-h, 0px));}
+body:is(.role-admin,.is-admin) main,
 body.role-master main{padding-top: calc(var(--crmo-admin-tabs-h, 44px) + var(--crmo-admin-panels-h, 0px));}
-body.role-admin section,
+body:is(.role-admin,.is-admin) section,
 body.role-master section{scroll-margin-top: calc(88px + var(--crmo-admin-tabs-h, 44px) + var(--crmo-admin-panels-h, 0px));}
-body.role-admin #crmo-header-admin,
-body.role-admin #crmo-galleries-admin{
+body:is(.role-admin,.is-admin) #crmo-header-admin,
+body:is(.role-admin,.is-admin) #crmo-galleries-admin{
   position: fixed;
   left: 0;
   right: 0;
@@ -1508,8 +1504,8 @@ body.role-admin #crmo-galleries-admin{
   max-height: calc(100vh - (var(--crmo-sticky-top, 0px) + var(--crmo-admin-tabs-h, 44px)));
   overflow:auto;
 }
-body.role-admin #crmo-header-admin .wrap,
-body.role-admin #crmo-galleries-admin .wrap{
+body:is(.role-admin,.is-admin) #crmo-header-admin .wrap,
+body:is(.role-admin,.is-admin) #crmo-galleries-admin .wrap{
   padding-top:10px;
   padding-bottom:10px;
 }
@@ -5694,7 +5690,7 @@ editor.addEventListener('click', function(ev){
 .tile-edit-wrapper > a.ph{
   display:block;
 }
-body.role-admin .tile-admin-icons{
+body:is(.role-admin,.is-admin) .tile-admin-icons{
   display:flex;
 }
 body.role-user .tile-admin-icons{
@@ -5804,7 +5800,7 @@ body.role-guest .tile-like-btn{
 .crmo-auth-provider{pointer-events:none;min-width:58px;text-align:center;}
 </style>
 <style id="crmo_admin_icons_fix">
-body.role-admin .tile-edit-btn{
+body:is(.role-admin,.is-admin) .tile-edit-btn{
   position:static;
   top:auto;
   left:auto;
@@ -5827,7 +5823,7 @@ body.role-admin .tile-edit-btn{
 .tile-admin-right::before{
   content:'';
 }
-body.role-admin .tile-edit-wrapper.tile-multi-on .tile-admin-right::before{
+body:is(.role-admin,.is-admin) .tile-edit-wrapper.tile-multi-on .tile-admin-right::before{
   content:'⧉';
   display:inline-flex;
   align-items:center;
@@ -5842,7 +5838,7 @@ body.role-admin .tile-edit-wrapper.tile-multi-on .tile-admin-right::before{
   border-radius:4px;
   pointer-events:none;
 }
-body.role-admin .tile-edit-wrapper.tile-multi-off .tile-admin-right::before{
+body:is(.role-admin,.is-admin) .tile-edit-wrapper.tile-multi-off .tile-admin-right::before{
   content:'⧉';
   display:inline-flex;
   align-items:center;
@@ -5858,25 +5854,25 @@ body.role-admin .tile-edit-wrapper.tile-multi-off .tile-admin-right::before{
   opacity:0.6;
   pointer-events:none;
 }
-body.role-admin .tile-edit-wrapper.tile-single .tile-admin-right::before{
+body:is(.role-admin,.is-admin) .tile-edit-wrapper.tile-single .tile-admin-right::before{
   content:'';
 }
 </style>
 <style id="CRMO_v1646_layer_icon_fix">
-body.role-admin .tile-edit-wrapper .tile-layer-btn{
+body:is(.role-admin,.is-admin) .tile-edit-wrapper .tile-layer-btn{
   display:inline-flex !important;
 }
-body.role-admin .tile-layer-btn{
+body:is(.role-admin,.is-admin) .tile-layer-btn{
   position:relative;
   overflow:hidden;
   justify-content:center;
   align-items:center;
 }
-body.role-admin .tile-layer-btn svg{
+body:is(.role-admin,.is-admin) .tile-layer-btn svg{
   display:none !important;
 }
-body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn::before,
-body.role-admin .tile-edit-wrapper.tile-multi-off .tile-layer-btn::before{
+body:is(.role-admin,.is-admin) .tile-edit-wrapper.tile-multi-on .tile-layer-btn::before,
+body:is(.role-admin,.is-admin) .tile-edit-wrapper.tile-multi-off .tile-layer-btn::before{
   content:'';
   display:block;
   width:70%;
@@ -5886,13 +5882,13 @@ body.role-admin .tile-edit-wrapper.tile-multi-off .tile-layer-btn::before{
   background-size:contain;
   background-image:url('assets/branding/icons/ui/ux_ui_icons_layers-off.svg');
 }
-body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn::before{
+body:is(.role-admin,.is-admin) .tile-edit-wrapper.tile-multi-on .tile-layer-btn::before{
   background-image:url('assets/branding/icons/ui/ux_ui_icons_layers-on.svg');
 }
-body.role-admin .tile-edit-wrapper.tile-multi-off .tile-layer-btn{
+body:is(.role-admin,.is-admin) .tile-edit-wrapper.tile-multi-off .tile-layer-btn{
   opacity:0.4;
 }
-body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
+body:is(.role-admin,.is-admin) .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
   opacity:1;
 }
 </style>
@@ -6122,7 +6118,7 @@ body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
 
 <style id="crmo-galleries-admin-style">
   #crmo-galleries-admin{ display:none; }
-  body.role-admin #crmo-galleries-admin{ display:block; }
+  body:is(.role-admin,.is-admin) #crmo-galleries-admin{ display:block; }
   #crmo-galleries-admin{
     padding: 10px 0 12px;
     border-bottom: 1px solid rgba(0,0,0,0.18);
@@ -6621,17 +6617,17 @@ body:not(.role-admin) #crmo-admin-bar{ display:none !important; }
     cursor: grab;
   }
 }
-body.role-admin #crmo-admin-bar{
+body:is(.role-admin,.is-admin) #crmo-admin-bar{
   position: sticky;
   top: var(--crmo-sticky-top, 0px);
   z-index: 99998;
   border-bottom: none;
 }
-body.role-admin #crmo-admin-bar .crmo-admin-tabs{
+body:is(.role-admin,.is-admin) #crmo-admin-bar .crmo-admin-tabs{
   border-bottom: 1px solid var(--line, rgba(0,0,0,.08));
 }
-body.role-admin #crmo-header-admin,
-body.role-admin #crmo-galleries-admin{
+body:is(.role-admin,.is-admin) #crmo-header-admin,
+body:is(.role-admin,.is-admin) #crmo-galleries-admin{
   position: fixed;
   inset-inline: 0;
   top: calc(var(--crmo-sticky-top, 0px) + var(--crmo-admin-tabs-h, 44px));
@@ -6669,7 +6665,7 @@ body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
 
 <style id="CRMO_v1646_future_admin_tabs_css">
 body:not(.role-admin) .crmo-future-panel{ display:none !important; }
-body.role-admin .crmo-future-panel{
+body:is(.role-admin,.is-admin) .crmo-future-panel{
   position: fixed;
   inset-inline: 0;
   top: calc(var(--crmo-sticky-top, 0px) + var(--crmo-admin-tabs-h, 44px));
@@ -7169,7 +7165,7 @@ body.role-ux #crmo-settings-admin{
 }
 #crmo-profile-modal form.contact input,
 #crmo-profile-modal form.contact textarea{ font-size:13px; }
-body.role-admin #crmo-profile-edit,
+body:is(.role-admin,.is-admin) #crmo-profile-edit,
 body.role-master #crmo-profile-edit,
 body.role-ux #crmo-profile-edit{ display:block; }
 #crmo-profile-modal form.contact input{ text-overflow: ellipsis; }
@@ -7390,7 +7386,7 @@ body.role-ux #crmo-profile-edit{ display:block; }
   display:none;
   z-index:5;
 }
-body.role-admin #crmo-client-auth-edit,
+body:is(.role-admin,.is-admin) #crmo-client-auth-edit,
 body.role-master #crmo-client-auth-edit,
 body.role-ux #crmo-client-auth-edit{ display:block; }
 #crmo-auth-modal-client .crmo-client-modebtn.active{
@@ -7549,11 +7545,11 @@ html.crmo-usability-public #crmo-role-toggle{
 
 
 <style id="CRMO_v1646_galleries_admin_gap_fix_css">
-body.role-admin #crmo-galleries-admin{
+body:is(.role-admin,.is-admin) #crmo-galleries-admin{
   padding-top: 0 !important;
   background: #f7f7f7 !important;
 }
-body.role-admin #crmo-galleries-admin .wrap{
+body:is(.role-admin,.is-admin) #crmo-galleries-admin .wrap{
   background: transparent !important;
   border-radius: 0 !important;
   padding-top: 0 !important;
@@ -8454,7 +8450,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
 
 <style id="CRMO_v1646_admin_fixed_stack">
 #crmo-role-toggle{ padding-bottom: 10px !important; }
-body.role-admin #crmo-admin-bar{
+body:is(.role-admin,.is-admin) #crmo-admin-bar{
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
@@ -8462,18 +8458,18 @@ body.role-admin #crmo-admin-bar{
   z-index: 99998 !important;
   margin: 0 !important;
 }
-body.role-admin #crmo-header-admin,
-body.role-admin #crmo-galleries-admin,
-body.role-admin #crmo-settings-admin,
-body.role-admin #crmo-permissions-admin,
-body.role-admin #crmo-dev-admin,
-body.role-admin #crmo-mode-admin,
-body.role-admin #crmo-audience-admin,
-body.role-admin #crmo-campaign-admin,
-body.role-admin #crmo-media-admin,
-body.role-admin #crmo-restore-admin,
-body.role-admin #crmo-tracking-admin,
-body.role-admin .crmo-future-panel{
+body:is(.role-admin,.is-admin) #crmo-header-admin,
+body:is(.role-admin,.is-admin) #crmo-galleries-admin,
+body:is(.role-admin,.is-admin) #crmo-settings-admin,
+body:is(.role-admin,.is-admin) #crmo-permissions-admin,
+body:is(.role-admin,.is-admin) #crmo-dev-admin,
+body:is(.role-admin,.is-admin) #crmo-mode-admin,
+body:is(.role-admin,.is-admin) #crmo-audience-admin,
+body:is(.role-admin,.is-admin) #crmo-campaign-admin,
+body:is(.role-admin,.is-admin) #crmo-media-admin,
+body:is(.role-admin,.is-admin) #crmo-restore-admin,
+body:is(.role-admin,.is-admin) #crmo-tracking-admin,
+body:is(.role-admin,.is-admin) .crmo-future-panel{
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
@@ -8484,7 +8480,7 @@ body.role-admin .crmo-future-panel{
   overflow: auto !important;
   box-shadow: 0 12px 28px rgba(0,0,0,.08) !important;
 }
-body.role-admin header{
+body:is(.role-admin,.is-admin) header{
   top: calc(var(--crmo-sticky-top, 0px) + var(--crmo-admin-tabs-h, 44px) + var(--crmo-admin-panels-h, 0px)) !important;
 }
 </style>
@@ -8573,9 +8569,9 @@ html[dir="rtl"] .crmo-mobile-panel{right:0; left:auto;}
 
 <style id="CRMO_v1646_admin_visibility_fix">
 /* v1451: show admin UI only when authenticated role is owner/admin/etc */
-body.role-admin #crmo-admin-bar{ display:block !important; }
-body.role-admin #crmo-header-admin .crmo-header-admin-toggle,
-body.role-admin #crmo-galleries-admin .crmo-galleries-admin-toggle{ display:flex !important; }
+body:is(.role-admin,.is-admin) #crmo-admin-bar{ display:block !important; }
+body:is(.role-admin,.is-admin) #crmo-header-admin .crmo-header-admin-toggle,
+body:is(.role-admin,.is-admin) #crmo-galleries-admin .crmo-galleries-admin-toggle{ display:flex !important; }
 body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role switch bar is dev/admin only */
 </style>
 
@@ -8860,21 +8856,21 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 }
 
 /* Fixed stack in admin mode: role bar -> admin bar -> subbar (tabs) -> header */
-body.role-admin #crmo-role-toggle{
+body:is(.role-admin,.is-admin) #crmo-role-toggle{
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   right: 0 !important;
   z-index: 120000 !important;
 }
-body.role-admin #crmo-admin-bar{
+body:is(.role-admin,.is-admin) #crmo-admin-bar{
   position: fixed !important;
   top: var(--crmo-rolebar-h) !important;
   left: 0 !important;
   right: 0 !important;
   z-index: 119000 !important;
 }
-body.role-admin #crmo-admin-subbar{
+body:is(.role-admin,.is-admin) #crmo-admin-subbar{
   position: static !important; /* stay inside the fixed admin bar wrap */
   left: auto !important;
   right: auto !important;
@@ -8907,7 +8903,7 @@ main{
 }
 
 /* Constrain admin bars to the same container width as the site content */
-body.role-admin #crmo-admin-bar > .wrap{
+body:is(.role-admin,.is-admin) #crmo-admin-bar > .wrap{
   max-width: var(--crmo-adminbars-maxw) !important;
   width: min(100%, var(--crmo-adminbars-maxw)) !important;
   margin: 0 auto !important;
@@ -8915,15 +8911,15 @@ body.role-admin #crmo-admin-bar > .wrap{
 }
 
 /* Align tabs to the container right edge (RTL) while keeping RECORD on the left */
-body.role-admin #crmo-admin-bar .crmo-admin-tabs{
+body:is(.role-admin,.is-admin) #crmo-admin-bar .crmo-admin-tabs{
   padding-right: var(--crmo-adminbars-pr) !important;
   padding-left: var(--crmo-adminbars-pl) !important;
   box-sizing: border-box !important;
 }
-body.role-admin #crmo-adminbar-hardreset{
+body:is(.role-admin,.is-admin) #crmo-adminbar-hardreset{
   margin-right: auto !important; /* pushes the tabs group to the right */
 }
-body.role-admin #crmo-admin-bar .crmo-admin-tabs-group{
+body:is(.role-admin,.is-admin) #crmo-admin-bar .crmo-admin-tabs-group{
   display: flex !important;
   flex-direction: row-reverse !important; /* start from the right edge */
   align-items: flex-end !important;
@@ -8933,12 +8929,12 @@ body.role-admin #crmo-admin-bar .crmo-admin-tabs-group{
 }
 
 /* Subbar: same container padding and right-start alignment */
-body.role-admin #crmo-admin-subbar{
+body:is(.role-admin,.is-admin) #crmo-admin-subbar{
   padding-right: var(--crmo-adminbars-pr) !important;
   padding-left: var(--crmo-adminbars-pl) !important;
   box-sizing: border-box !important;
 }
-body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
+body:is(.role-admin,.is-admin) #crmo-admin-subbar .crmo-admin-subtabs{
   justify-content: flex-start !important;
   flex-direction: row-reverse !important; /* start from the right edge */
 }
@@ -22209,9 +22205,9 @@ window.CRMO_MasterGalleries = {
   font-size:12px;
   opacity:.75;
 }
-  body.role-admin .gallery-grid{ position: relative; }
-  body.role-admin .gallery-grid .tiles-manager-bar,
-  body.role-admin .gallery-grid .crmo-top-actions{
+  body:is(.role-admin,.is-admin) .gallery-grid{ position: relative; }
+  body:is(.role-admin,.is-admin) .gallery-grid .tiles-manager-bar,
+  body:is(.role-admin,.is-admin) .gallery-grid .crmo-top-actions{
     position: absolute !important;
     top: 0 !important;
     right: 0 !important;
@@ -22226,12 +22222,12 @@ window.CRMO_MasterGalleries = {
     transform: translateY(-100%);
     pointer-events: none;
   }
-  body.role-admin .gallery-grid .tiles-manager-bar .tiles-manager-open,
-  body.role-admin .gallery-grid .crmo-top-actions .tiles-manager-open{
+  body:is(.role-admin,.is-admin) .gallery-grid .tiles-manager-bar .tiles-manager-open,
+  body:is(.role-admin,.is-admin) .gallery-grid .crmo-top-actions .tiles-manager-open{
     pointer-events: auto;
   }
-  body.role-admin .tiles-manager-bar button.tiles-manager-open,
-  body.role-admin .crmo-top-actions button.tiles-manager-open{
+  body:is(.role-admin,.is-admin) .tiles-manager-bar button.tiles-manager-open,
+  body:is(.role-admin,.is-admin) .crmo-top-actions button.tiles-manager-open{
     border: 1px solid rgba(0,0,0,.18) !important;
     border-bottom: none !important;
     background: #f7f7f7 !important;
@@ -22246,14 +22242,14 @@ window.CRMO_MasterGalleries = {
     cursor: pointer !important;
     box-shadow: none !important;
   }
-  body.role-admin .tiles-manager-bar button.tiles-manager-open:hover,
-  body.role-admin .crmo-top-actions button.tiles-manager-open:hover{
+  body:is(.role-admin,.is-admin) .tiles-manager-bar button.tiles-manager-open:hover,
+  body:is(.role-admin,.is-admin) .crmo-top-actions button.tiles-manager-open:hover{
     background: #fff !important;
   }
-  body.role-admin .tiles-manager-open[data-tm-open="1"]{
+  body:is(.role-admin,.is-admin) .tiles-manager-open[data-tm-open="1"]{
     background: #fff !important;
   }
-  body.role-admin .tiles-manager-open .tm-tab-icon{
+  body:is(.role-admin,.is-admin) .tiles-manager-open .tm-tab-icon{
     width: 20px;
     height: 20px;
     display: inline-flex;
@@ -22264,14 +22260,14 @@ window.CRMO_MasterGalleries = {
     line-height: 1;
     flex: 0 0 auto;
   }
-  body.role-admin .tiles-manager-open .tm-tab-icon::before{
+  body:is(.role-admin,.is-admin) .tiles-manager-open .tm-tab-icon::before{
     content: '+';
   }
-  body.role-admin .tiles-manager-open[data-tm-open="1"] .tm-tab-icon::before{
+  body:is(.role-admin,.is-admin) .tiles-manager-open[data-tm-open="1"] .tm-tab-icon::before{
     content: '−';
   }
-  body.role-admin .tiles-manager-bar button.tiles-manager-open,
-  body.role-admin .crmo-top-actions button.tiles-manager-open{
+  body:is(.role-admin,.is-admin) .tiles-manager-bar button.tiles-manager-open,
+  body:is(.role-admin,.is-admin) .crmo-top-actions button.tiles-manager-open{
     color: #111 !important;
   }
   .tm-dropzone{
