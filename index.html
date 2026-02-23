@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- CRMO_v1678 single -->
+<!-- CRMO_v1679 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1678">
+  <script id="crmo-storage-sanitize-v1679">
 (function(){
   try{
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
@@ -18,7 +18,7 @@
 </script>
   
   
-<script id="crmo-safe-session-v1678">
+<script id="crmo-safe-session-v1679">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -47,6 +47,19 @@ window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
 window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
 </script>
 
+<script>
+(function(){
+  try{
+    var href = String(location.href||'');
+    var h = String(location.hash||'');
+    var q = String(location.search||'');
+    // Detect Supabase password recovery / magic link flows
+    window.__CRMO_RECOVERY_FLOW = /(^|[?#&])type=recovery/i.test(href) || /(^|[?#&])type=recovery/i.test(h) || /(^|[?#&])type=recovery/i.test(q) || /(^|[?#&])recovery/i.test(href);
+  }catch(e){ window.__CRMO_RECOVERY_FLOW = false; }
+})();
+</script>
+
+
 
 
 <script id="crmo_cloud_defaults">window.CRMO_ALLOW_CLOUD = true; window.CRMO_OFFLINE_MODE = false;</script>
@@ -68,7 +81,7 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 <script id="crmo_build_info">
 window.CRMO_BUILD_VERSION = "1671";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1678';
+window.CRMO_VERSION = 'CRMO_v1679';
 window.CRMO_VERSION_NUMBER = 1671;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
@@ -1364,7 +1377,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1678</title>
+<title>CRMO_v1679</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8510,8 +8523,8 @@ body.role-admin header{
 #crmo-admin-bar .crmo-admin-subtab-btn:focus{ outline: 2px solid rgba(0,0,0,.18); outline-offset: 2px; }
 </style>
 
-<style id="CRMO_v1678_admin_tabs_ralign_css">
-/* v1678: align admin tabs + sub-tabs to start at the right edge of the content (RTL) */
+<style id="CRMO_v1679_admin_tabs_ralign_css">
+/* v1679: align admin tabs + sub-tabs to start at the right edge of the content (RTL) */
 #crmo-admin-bar .crmo-admin-tabs,
 #crmo-admin-bar .crmo-admin-subbar{
   width: 100% !important;
@@ -8886,7 +8899,7 @@ main{
 }
 </style>
 
-<style id="CRMO_v1678_admin_container_align">
+<style id="CRMO_v1679_admin_container_align">
 :root{
   --crmo-adminbars-maxw: 1200px;
   --crmo-adminbars-pr: 18px;
@@ -8985,13 +8998,13 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
 </script>
 
 
-<style id="crmo_hide_header_version_v1678">
+<style id="crmo_hide_header_version_v1679">
   #crmo-header-version, .crmo-header-version{ display:none !important; }
 </style>
 
 <style>
 
-/* v1678: RTL alignment for admin tabs + sub-tabs within the same wrap width */
+/* v1679: RTL alignment for admin tabs + sub-tabs within the same wrap width */
 #crmo-admin-bar .crmo-admin-tabs,
 #crmo-admin-bar .crmo-admin-subbar{
   direction: rtl !important;
@@ -9067,9 +9080,9 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
           vEl.id = 'crmo-version-badge';
           vEl.className = 'crmo-role-tab crmo-version-badge';
           vEl.setAttribute('data-static','1');
-          vEl.textContent = 'v1678';
+          vEl.textContent = 'v1679';
         } else {
-          vEl.textContent = 'v1678';
+          vEl.textContent = 'v1679';
         }
 
         var whoEl = bar.querySelector('#crmo-who-badge');
@@ -9244,7 +9257,7 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1678</span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1679</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
@@ -26668,7 +26681,7 @@ if (document.readyState === 'loading'){
     var isProd = (host === "www.crmo.co.il" || host === "crmo.co.il" || host.endsWith(".crmo.co.il"));
     if(isProd){
       
-      // v1678: do not override title or remove role bar; admin UI handles visibility.
+      // v1679: do not override title or remove role bar; admin UI handles visibility.
 }
   }catch(e){}
 })();
@@ -29819,6 +29832,8 @@ try{
 
           const u = new URL(location.href);
           // keep URL clean; cloud is enabled automatically on hosted domains
+          // Skip URL token cleaning during recovery flow so we can complete password set
+          if (window.__CRMO_RECOVERY_FLOW) return;
 
           const rawHash = String(location.hash||'');
           if(/access_token=|refresh_token=|type=magiclink|token_type=|expires_in=|expires_at=|(^|[&#?])code=/i.test(rawHash)){
@@ -32299,7 +32314,7 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_v1678_record_badge">
+<script id="crmo_v1679_record_badge">
 (function(){
   function isOwnerNow(){
     try{
@@ -33787,6 +33802,153 @@ function CRMO_clearLocalDataAndReload(){
 })();
 </script>
 
+<script>
+(function(){
+  const CLIENT_MODAL_ID = "crmo-auth-modal-client";
+  const $id = (id) => document.getElementById(id);
+  const qs = (sel, root=document) => root.querySelector(sel);
+
+  function isRecoveryUrl(){
+    try{
+      const href = String(location.href||'');
+      const h = String(location.hash||'');
+      const q = String(location.search||'');
+      return /(^|[?#&])type=recovery\b/i.test(href) || /(^|[?#&])type=recovery\b/i.test(h) || /(^|[?#&])type=recovery\b/i.test(q) || /(^|[?#&])recovery\b/i.test(href);
+    }catch(e){ return false; }
+  }
+
+  function openClientModal(){
+    try{
+      if (typeof window.CRMO_openCustomerAuthAuto === "function") { window.CRMO_openCustomerAuthAuto("login"); }
+    }catch(e){}
+    const modal = $id(CLIENT_MODAL_ID);
+    if (!modal) return null;
+    modal.hidden = false;
+    modal.style.display = "";
+    modal.setAttribute("aria-hidden","false");
+    return modal;
+  }
+
+  function ensureRecoveryPanel(modal){
+    const panel = qs(".crmo-auth-panel", modal) || modal;
+    let rec = $id("crmo-recovery-panel-client");
+    if (rec) return rec;
+
+    rec = document.createElement("div");
+    rec.id = "crmo-recovery-panel-client";
+    rec.style.cssText = "margin-top:12px;padding:12px;border:1px solid rgba(0,0,0,.12);border-radius:14px;background:#fff;";
+    rec.innerHTML = `
+      <div style="font-weight:700;margin-bottom:8px;">קביעת סיסמה חדשה</div>
+      <div style="font-size:13px;opacity:.8;margin-bottom:10px;">כדי שתוכל להיכנס עם המודאל (אימייל + סיסמה), קבע עכשיו סיסמה חדשה לחשבון.</div>
+      <label class="crmo-auth-field" style="margin-top:8px;">
+        <div class="crmo-auth-label">סיסמה חדשה</div>
+        <div class="crmo-pass-wrap">
+          <input type="password" class="crmo-auth-input" id="crmo-recovery-pass1" autocomplete="new-password" placeholder="לפחות 8 תווים" />
+        </div>
+      </label>
+      <label class="crmo-auth-field" style="margin-top:8px;">
+        <div class="crmo-auth-label">אישור סיסמה</div>
+        <div class="crmo-pass-wrap">
+          <input type="password" class="crmo-auth-input" id="crmo-recovery-pass2" autocomplete="new-password" placeholder="חזור על הסיסמה" />
+        </div>
+      </label>
+      <div id="crmo-recovery-msg" style="margin-top:10px;font-size:13px;"></div>
+      <div style="margin-top:12px;display:flex;gap:10px;justify-content:flex-start;">
+        <button type="button" class="crmo-auth-submit" id="crmo-recovery-submit" style="padding:10px 14px;border-radius:12px;border:0;cursor:pointer;">שמור סיסמה</button>
+        <button type="button" class="crmo-auth-submit" id="crmo-recovery-cancel" style="padding:10px 14px;border-radius:12px;border:1px solid rgba(0,0,0,.2);background:#fff;cursor:pointer;">ביטול</button>
+      </div>
+    `;
+    panel.appendChild(rec);
+    return rec;
+  }
+
+  function showRecoveryMode(){
+    const modal = openClientModal();
+    if (!modal) return;
+    const body = qs(".crmo-client-body", modal);
+    const rec = ensureRecoveryPanel(modal);
+    if (body) body.style.display = "none";
+    rec.style.display = "";
+
+    const msg = $id("crmo-recovery-msg");
+    const bSubmit = $id("crmo-recovery-submit");
+    const bCancel = $id("crmo-recovery-cancel");
+    const p1 = $id("crmo-recovery-pass1");
+    const p2 = $id("crmo-recovery-pass2");
+
+    function setMsg(text, ok){
+      if (!msg) return;
+      msg.textContent = text || "";
+      msg.style.color = ok ? "#0a7" : "#b00";
+    }
+
+    function close(){
+      try{ rec.style.display = "none"; }catch(e){}
+      try{ if (body) body.style.display = ""; }catch(e){}
+      try{ modal.hidden = true; modal.setAttribute("aria-hidden","true"); }catch(e){}
+    }
+
+    if (bCancel) bCancel.onclick = close;
+
+    if (bSubmit) bSubmit.onclick = async function(){
+      try{
+        const a = String((p1 && p1.value) || "").trim();
+        const b = String((p2 && p2.value) || "").trim();
+        if (!a || a.length < 8) { setMsg("סיסמה חייבת להיות לפחות 8 תווים.", false); return; }
+        if (a !== b) { setMsg("אישור הסיסמה לא תואם.", false); return; }
+
+        setMsg("שומר סיסמה...", true);
+
+        const sb = (typeof window.CRMO_getSbClient === "function") ? await window.CRMO_getSbClient() : null;
+        if (!sb || !sb.auth) { setMsg("שגיאה: Supabase client לא זמין.", false); return; }
+
+        const res = await sb.auth.updateUser({ password: a });
+        if (res && res.error) { setMsg("שגיאה: " + (res.error.message || res.error.toString()), false); return; }
+
+        setMsg("נשמר! עכשיו אפשר להיכנס עם אימייל + סיסמה.", true);
+
+        // Clean URL of sensitive recovery params
+        try{
+          const u = new URL(location.href);
+          u.searchParams.delete("type");
+          u.searchParams.delete("code");
+          u.searchParams.delete("token");
+          u.searchParams.delete("access_token");
+          u.searchParams.delete("refresh_token");
+          history.replaceState(null, "", u.pathname + (u.searchParams.toString()?("?"+u.searchParams.toString()):""));
+        }catch(e){}
+
+        // allow cleanup to run later
+        window.__CRMO_RECOVERY_FLOW = false;
+
+        setTimeout(close, 650);
+      }catch(e){
+        setMsg("שגיאה: " + (e && e.message ? e.message : String(e)), false);
+      }
+    };
+
+    // focus
+    try{ if (p1) p1.focus(); }catch(e){}
+  }
+
+  // Trigger recovery mode soon after load if URL indicates recovery
+  function boot(){
+    try{
+      if (!isRecoveryUrl()) return;
+      window.__CRMO_RECOVERY_FLOW = true;
+      showRecoveryMode();
+    }catch(e){}
+  }
+
+  if (document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+
+
 
 <script id="crmo_auth_ui_bridge_v1667">
 (function(){
@@ -33798,7 +33960,7 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo-recovery-password-v1678">
+<script id="crmo-recovery-password-v1679">
 (function(){
   function _params(){
     const p = new URLSearchParams(window.location.search || "");
