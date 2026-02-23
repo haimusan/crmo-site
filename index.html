@@ -1,24 +1,9 @@
 <!DOCTYPE html>
-<!-- CRMO_v1684 single -->
+<!-- CRMO_v1685 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1681">
-(function(){
-  try{
-    var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
-    kill.forEach(function(k){
-      try{
-        var v = localStorage.getItem(k);
-        if(v && String(v).toLowerCase().includes('boochin@gmail.com')) localStorage.removeItem(k);
-      }catch(e){}
-    });
-  }catch(e){}
-})();
-</script>
-  
-  
-<script id="crmo-safe-session-v1681">
+  <script id="crmo-safe-session-v1681">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -79,10 +64,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1684";
+window.CRMO_BUILD_VERSION = "1685";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1684';
-window.CRMO_VERSION_NUMBER = 1684;
+window.CRMO_VERSION = 'CRMO_v1685';
+window.CRMO_VERSION_NUMBER = 1685;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1394,7 +1379,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1684</title>
+<title>CRMO_v1685</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -5126,7 +5111,7 @@ mpAdd.addEventListener('click', function(){
       if(!wrapper) return;
       var anchor = wrapper.querySelector('a.ph');
       if(!anchor) return;
-      // v1684: open Tile Editor modal on pencil click (and stop tile click navigation)
+      // v1685: open Tile Editor modal on pencil click (and stop tile click navigation)
       try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
       try{
         if(window.CRMO_openTileEditor){
@@ -8769,26 +8754,6 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     setDisplay(adminBar, owner);
     setDisplay(subbar, owner);
 
-    // Force OWNER visual mode + editing tools when signed in as owner
-    if(owner){
-      try{ localStorage.setItem('crmo-role','master'); }catch(e){}
-      try{ document.body.classList.add('role-admin','role-master'); document.body.classList.remove('role-guest'); }catch(e){}
-      try{
-        var rb = document.getElementById('crmo-role-toggle');
-        if(rb){
-          var btns = rb.querySelectorAll('button.crmo-role-tab');
-          for(var i=0;i<btns.length;i++){
-            var r = btns[i].getAttribute('data-role');
-            var isMaster = (r === 'master');
-            btns[i].classList.toggle('is-active', isMaster);
-            btns[i].setAttribute('aria-pressed', isMaster ? 'true' : 'false');
-            if(!isMaster){ btns[i].disabled = true; btns[i].style.pointerEvents='none'; btns[i].style.opacity='0.45'; }
-            else{ btns[i].disabled = false; btns[i].style.pointerEvents='auto'; btns[i].style.opacity='1'; }
-          }
-        }
-      }catch(e){}
-    }
-
     try{
       window.dispatchEvent(new Event("resize"));
       window.dispatchEvent(new Event("scroll"));
@@ -8826,11 +8791,6 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   let inited = false;
   let lastKey = "";
   let lastOwner = false;
-  let lastGoodEmail = "";
-  let lastGoodAt = 0;
-  let pendingOffAt = 0;
-  const STICKY_MS = 8000; // keep owner UI stable through transient null sessions
-  const OFF_GRACE_MS = 5000; // require sustained non-owner before switching off
 
   async function refresh(){
     const r = await readOwnerFromSupabase();
@@ -8898,7 +8858,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
       setTimeout(poll, 50);
     }else{
       // keep a light refresh in case of storage-only updates
-      setInterval(function(){ try{ refresh(); hookLogout(); }catch(e){} }, 6000);
+      setInterval(function(){ try{ refresh(); hookLogout(); }catch(e){} }, 1200);
     }
   })();
 
@@ -9079,8 +9039,8 @@ html.crmo-owner #crmo-admin-subbar{ display:block !important; }
 </style>
 
 
-<style id="crmo-owner-tile-edit-visible-v1684">
-/* v1684: ensure tile edit UI is visible for owner (some legacy rules hide it with !important) */
+<style id="crmo-owner-tile-edit-visible-v1685">
+/* v1685: ensure tile edit UI is visible for owner (some legacy rules hide it with !important) */
 html.crmo-owner .tile-edit-btn,
 html.crmo-owner .tile-admin-icons{ display:flex !important; }
 html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
@@ -22709,7 +22669,7 @@ if (key === currentGalleryKey){
     }
     closeTileEditor();
     try{ persistGalleryState(currentEditGalleryKey); }catch(e){}
-    // v1684: push to DB (Supabase) immediately
+    // v1685: push to DB (Supabase) immediately
     if (window.CRMO_saveMainNow){
       window.CRMO_saveMainNow().then(function(r){
         try{ if(window.CRMO_showSaveNotice) window.CRMO_showSaveNotice(r && r.ok ? ('נשמר לשרת ✓ (' + (r.result && r.result.data && r.result.data.updated_at ? r.result.data.updated_at : 'ok') + ')') : 'שמירה לשרת נכשלה'); }catch(e){}
@@ -33862,7 +33822,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 </script>
 
 
-<script id="crmo-save-notice-v1684">
+<script id="crmo-save-notice-v1685">
 (function(){
   if(window.CRMO_showSaveNotice) return;
   function ensure(){
@@ -33902,7 +33862,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 </script>
 
 
-<script id="crmo-gallerykey-sync-v1684">
+<script id="crmo-gallerykey-sync-v1685">
 (function(){
   try{
     setInterval(function(){
