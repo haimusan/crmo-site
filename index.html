@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- CRMO_v1677 single -->
+<!-- CRMO_v1678 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-storage-sanitize-v1677">
+  <script id="crmo-storage-sanitize-v1678">
 (function(){
   try{
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
@@ -18,7 +18,7 @@
 </script>
   
   
-<script id="crmo-safe-session-v1677">
+<script id="crmo-safe-session-v1678">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -68,7 +68,7 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 <script id="crmo_build_info">
 window.CRMO_BUILD_VERSION = "1671";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1677';
+window.CRMO_VERSION = 'CRMO_v1678';
 window.CRMO_VERSION_NUMBER = 1671;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
@@ -1364,7 +1364,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1677</title>
+<title>CRMO_v1678</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8510,8 +8510,8 @@ body.role-admin header{
 #crmo-admin-bar .crmo-admin-subtab-btn:focus{ outline: 2px solid rgba(0,0,0,.18); outline-offset: 2px; }
 </style>
 
-<style id="CRMO_v1677_admin_tabs_ralign_css">
-/* v1677: align admin tabs + sub-tabs to start at the right edge of the content (RTL) */
+<style id="CRMO_v1678_admin_tabs_ralign_css">
+/* v1678: align admin tabs + sub-tabs to start at the right edge of the content (RTL) */
 #crmo-admin-bar .crmo-admin-tabs,
 #crmo-admin-bar .crmo-admin-subbar{
   width: 100% !important;
@@ -8886,7 +8886,7 @@ main{
 }
 </style>
 
-<style id="CRMO_v1677_admin_container_align">
+<style id="CRMO_v1678_admin_container_align">
 :root{
   --crmo-adminbars-maxw: 1200px;
   --crmo-adminbars-pr: 18px;
@@ -8985,13 +8985,13 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
 </script>
 
 
-<style id="crmo_hide_header_version_v1677">
+<style id="crmo_hide_header_version_v1678">
   #crmo-header-version, .crmo-header-version{ display:none !important; }
 </style>
 
 <style>
 
-/* v1677: RTL alignment for admin tabs + sub-tabs within the same wrap width */
+/* v1678: RTL alignment for admin tabs + sub-tabs within the same wrap width */
 #crmo-admin-bar .crmo-admin-tabs,
 #crmo-admin-bar .crmo-admin-subbar{
   direction: rtl !important;
@@ -9067,9 +9067,9 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
           vEl.id = 'crmo-version-badge';
           vEl.className = 'crmo-role-tab crmo-version-badge';
           vEl.setAttribute('data-static','1');
-          vEl.textContent = 'v1677';
+          vEl.textContent = 'v1678';
         } else {
-          vEl.textContent = 'v1677';
+          vEl.textContent = 'v1678';
         }
 
         var whoEl = bar.querySelector('#crmo-who-badge');
@@ -9244,7 +9244,7 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1677</span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1678</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
@@ -26668,7 +26668,7 @@ if (document.readyState === 'loading'){
     var isProd = (host === "www.crmo.co.il" || host === "crmo.co.il" || host.endsWith(".crmo.co.il"));
     if(isProd){
       
-      // v1677: do not override title or remove role bar; admin UI handles visibility.
+      // v1678: do not override title or remove role bar; admin UI handles visibility.
 }
   }catch(e){}
 })();
@@ -32299,7 +32299,7 @@ function CRMO_clearLocalDataAndReload(){
 </script>
 
 
-<script id="crmo_v1677_record_badge">
+<script id="crmo_v1678_record_badge">
 (function(){
   function isOwnerNow(){
     try{
@@ -33794,6 +33794,83 @@ function CRMO_clearLocalDataAndReload(){
     try{ if(window.CRMO_applyAuthUIState) window.CRMO_applyAuthUIState(); }catch(e){}
     return true;
   };
+})();
+</script>
+
+
+<script id="crmo-recovery-password-v1678">
+(function(){
+  function _params(){
+    const p = new URLSearchParams(window.location.search || "");
+    if (window.location.hash && window.location.hash.length > 1) {
+      const hp = new URLSearchParams(window.location.hash.substring(1));
+      for (const [k,v] of hp.entries()) if (!p.has(k)) p.set(k,v);
+    }
+    return p;
+  }
+  const p = _params();
+  const type = (p.get('type') || '').toLowerCase();
+  const hasCode = !!p.get('code');
+  const isRecovery = (type === 'recovery' || type === 'reset_password' || p.get('recovery') === '1');
+  if (!isRecovery && !hasCode) return;
+
+  function getClient(){
+    try{
+      if (typeof window.CRMO_getSbClient === 'function') return window.CRMO_getSbClient();
+      if (typeof window.getSupabaseClient === 'function') return window.getSupabaseClient();
+      if (window.supabaseClient && window.supabaseClient.auth) return window.supabaseClient;
+      if (window.supabase && window.supabase.auth) return window.supabase;
+    }catch(e){}
+    return null;
+  }
+
+  async function ensureSession(sb){
+    try{
+      if (hasCode && sb?.auth?.exchangeCodeForSession) {
+        try { await sb.auth.exchangeCodeForSession(p.get('code')); } catch(e) {}
+      }
+      const res = await sb.auth.getSession();
+      return res?.data?.session || null;
+    }catch(e){ return null; }
+  }
+
+  async function run(){
+    const sb = getClient();
+    if (!sb || !sb.auth) return;
+
+    const session = await ensureSession(sb);
+    if (!session) return;
+
+    const email = session?.user?.email || '';
+    const pass1 = window.prompt('איפוס סיסמה: הקלד סיסמה חדשה עבור ' + (email || 'המשתמש'));
+    if (!pass1) return;
+
+    if (pass1.length < 8) {
+      window.alert('הסיסמה קצרה מדי (מינימום 8 תווים).');
+      return;
+    }
+
+    const pass2 = window.prompt('אשר סיסמה חדשה (הקלד שוב)');
+    if (pass1 !== pass2) {
+      window.alert('הסיסמאות לא תואמות.');
+      return;
+    }
+
+    try{
+      const upd = await sb.auth.updateUser({ password: pass1 });
+      if (upd?.error) {
+        window.alert('שגיאה בקביעת סיסמה: ' + upd.error.message);
+        return;
+      }
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      window.alert('הסיסמה עודכנה בהצלחה. עכשיו אפשר להתחבר עם אימייל+סיסמה.');
+    }catch(e){
+      window.alert('שגיאה בקביעת סיסמה.');
+    }
+  }
+
+  setTimeout(run, 800);
 })();
 </script>
 
