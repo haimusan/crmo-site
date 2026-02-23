@@ -18328,20 +18328,82 @@ document.addEventListener('DOMContentLoaded', function () {
   })();
   function CRMO_getTileUploadFolder(){ try{ return (window.CRMO_getTileUploadFolder || window.CRMO_getTileUploadFolderCompat)(); }catch(e){ return 'galleries/uploads'; } }
 
-  if (content.projects) {
-    content.projects.forEach(function (p) {
-      if (!p.galleries || !p.galleries.length) return;
-      var g = p.galleries[0];
-      if (!g.galleryId || !g.position) return;
-      var sec = document.getElementById(g.galleryId);
-      if (!sec) return;
-      var grid = sec.querySelector('.gallery-grid');
-      if (!grid) return;
-      var anchors = grid.querySelectorAll('a.ph');
-      var anchor = anchors[g.position - 1];
-      if (!anchor) return;
-      var wrapper = anchor.closest('.tile-edit-wrapper') || anchor;
-      wrapper.setAttribute('data-project-id', p.id);
+  function resolveProjectImageSrc(project, galleryId){
+    try{
+      var a0 = (project && Array.isArray(project.assets) && project.assets[0]) ? project.assets[0] : null;
+      if(!a0) return '';
+      var direct = [a0.src, a0.url, a0.path, a0.filePath, a0.image, a0.imageSrc].find(function(v){ return !!(v && String(v).trim()); });
+      if(direct) return String(direct).trim();
+      var fileBase = a0.file ? String(a0.file).trim() : '';
+      if(!fileBase) return '';
+      var folder = String(galleryId || 'gallery').trim();
+      var candidates = [
+        'assets/galleries/' + folder + '/' + fileBase + '.jpg',
+        'assets/gallery/' + folder + '/' + fileBase + '.jpg',
+        'assets/uploads/' + folder + '/' + fileBase + '.jpg'
+      ];
+      return candidates[0];
+    }catch(e){ return ''; }
+  }
+
+  function applyProjectToTile(project, galleryRef){
+    if(!project || !galleryRef || !galleryRef.galleryId || !galleryRef.position) return;
+    var sec = document.getElementById(galleryRef.galleryId);
+    if (!sec) return;
+    var grid = sec.querySelector('.gallery-grid');
+    if (!grid) return;
+    var anchors = grid.querySelectorAll('a.ph');
+    var anchor = anchors[galleryRef.position - 1];
+    if (!anchor) return;
+
+    var wrapper = anchor.closest('.tile-edit-wrapper') || anchor;
+    wrapper.setAttribute('data-project-id', project.id || '');
+
+    var title = (project.title || 'שם הפרויקט').trim();
+    var desc = (project.shortDescription || 'תיאור קצר על הפרויקט').trim();
+
+    var hoverStrong = anchor.querySelector('.hover-desc strong');
+    var hoverDesc = anchor.querySelector('.hover-desc div');
+    var ovTitle = anchor.querySelector('.crmo-ov h4');
+    var ovDesc = anchor.querySelector('.crmo-ov .desc');
+
+    if (hoverStrong) hoverStrong.textContent = title;
+    if (hoverDesc) hoverDesc.textContent = desc;
+    if (ovTitle) ovTitle.textContent = title;
+    if (ovDesc) ovDesc.textContent = desc;
+
+    var imageSrc = resolveProjectImageSrc(project, galleryRef.galleryId);
+    if(imageSrc){
+      var img = anchor.querySelector('img');
+      if(!img){
+        img = document.createElement('img');
+        img.loading = 'lazy';
+        anchor.insertBefore(img, anchor.firstChild);
+      }
+      img.src = imageSrc;
+      img.alt = title;
+      anchor.style.backgroundImage = 'url("' + String(imageSrc).replace(/"/g, '%22') + '")';
+      anchor.style.backgroundSize = 'cover';
+      anchor.style.backgroundPosition = 'center';
+      wrapper.classList.remove('placeholder');
+    }
+
+    try{
+      var fileBase = project && project.assets && project.assets[0] && project.assets[0].file ? String(project.assets[0].file) : '';
+      if(fileBase){
+        anchor.setAttribute('data-files', fileBase);
+        anchor.setAttribute('data-filename', fileBase);
+        wrapper.setAttribute('data-files', fileBase);
+      }
+    }catch(e){}
+  }
+
+  if (Array.isArray(content.projects)) {
+    content.projects.forEach(function (project) {
+      if (!Array.isArray(project.galleries) || !project.galleries.length) return;
+      project.galleries.forEach(function(galleryRef){
+        applyProjectToTile(project, galleryRef);
+      });
     });
   }
   var panel = document.createElement('aside');
