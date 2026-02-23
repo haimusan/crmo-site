@@ -1,9 +1,24 @@
 <!DOCTYPE html>
-<!-- CRMO_v1695 single -->
+<!-- CRMO_v1685 single -->
 
 <html dir="rtl" lang="he">
 <head>
-  <script id="crmo-safe-session-v1679">
+  <script id="crmo-storage-sanitize-v1679">
+(function(){
+  try{
+    var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
+    kill.forEach(function(k){
+      try{
+        var v = localStorage.getItem(k);
+        if(v && String(v).toLowerCase().includes('boochin@gmail.com')) localStorage.removeItem(k);
+      }catch(e){}
+    });
+  }catch(e){}
+})();
+</script>
+  
+  
+<script id="crmo-safe-session-v1679">
 (function(){
   window.CRMO_safeGetSession = async function(client){
     try{
@@ -47,6 +62,7 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 
 
 
+<script id="crmo_cloud_defaults">window.CRMO_ALLOW_CLOUD = true; window.CRMO_OFFLINE_MODE = false;</script>
 <script id="crmo_ghpages_redirect_fix">
 (function(){
   try{
@@ -63,96 +79,16 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1695";
+window.CRMO_BUILD_VERSION = "1685";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 1695;
-window.CRMO_VERSION_NUMBER = 1695;
-window.CRMO_VERSION_TAG = "CRMO_v1695";
+window.CRMO_VERSION = 1685;
+window.CRMO_VERSION_NUMBER = 1685;
+window.CRMO_VERSION_TAG = "CRMO_v1685";
+window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION_TAG || window.CRMO_VERSION_NUMBER || window.CRMO_VERSION || ""); };
+window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
-/* v1694: Admin recognition by email only (for consistent admin bar across browsers). */
-window.CRMO_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
+window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
-<script id="crmo_admin_email_bootstrap_v1693">
-/* v1694: Admin visibility must be stable. Decide admin by email ONLY (Chrome/Edge consistent).
-   Requirement: when a valid session exists, FIRST action is document.body.classList.add('is-admin'). */
-(function(){
-  function normEmail(e){ return String(e||'').trim().toLowerCase(); }
-  function listEmails(){
-    var a = window.CRMO_ADMIN_EMAILS || window.CRMO_SUPABASE_ADMIN_EMAILS || [];
-    if(!Array.isArray(a)) a = [];
-    return a.map(normEmail).filter(Boolean);
-  }
-  function isAdminEmail(email){
-    var e = normEmail(email);
-    if(!e) return false;
-    var list = listEmails();
-    return list.indexOf(e) !== -1;
-  }
-  function applyAdminFromSession(session){
-    try{
-      if(!session || !session.user) return;
-      var email = session.user.email || '';
-      if(!isAdminEmail(email)) return;
-
-      // FIRST command on valid admin session:
-      document.body.classList.add('is-admin');
-
-      // Keep legacy role class for CSS that expects it (doesn't touch tabs CSS).
-      document.body.classList.add('role-admin');
-    }catch(e){}
-  }
-
-  async function tryBoot(){
-    try{
-      if(!window.CRMO_getSbClient || !window.CRMO_safeGetSession) return false;
-      var sb = await window.CRMO_getSbClient();
-      if(!sb || !sb.auth) return false;
-
-      var session = await window.CRMO_safeGetSession(sb);
-      if(session) applyAdminFromSession(session);
-
-      // Keep it stable on auth changes
-      try{
-        if(typeof sb.auth.onAuthStateChange === 'function'){
-          sb.auth.onAuthStateChange(function(evt, sess){
-            if(sess) applyAdminFromSession(sess);
-          });
-        }
-      }catch(e){}
-      return true;
-    }catch(e){
-      return false;
-    }
-  }
-
-  // No setInterval: use rAF to wait for Supabase client to exist.
-  function loop(){
-    tryBoot().then(function(ok){
-      if(!ok) requestAnimationFrame(loop);
-    }).catch(function(){ requestAnimationFrame(loop); });
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', loop);
-  }else{
-    loop();
-  }
-})();
-</script>
-
-
-<script id="crmo_brand_assets_v1690">
-/* v1694: Brand assets registry (future DB-driven). */
-window.CRMO_BRAND_ASSETS = window.CRMO_BRAND_ASSETS || {
-  favicon: "assets/branding/logo/favicon.svg",
-  headerLogo: "assets/branding/logo/logo.svg",
-  social: {
-    ogImage: "assets/branding/logo/logo.svg",
-    twitterImage: "assets/branding/logo/logo.svg"
-  }
-};
-</script>
-
 
 <script id="crmo_asset_paths_v1557">
 /* v1556: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
@@ -274,6 +210,32 @@ window.CRMO_BRAND_ASSETS = window.CRMO_BRAND_ASSETS || {
 
 <script>window.CRMO_STUDIO_TITLE = "CRMO";</script>
 
+<script id="crmo_offline_default">
+(function(){
+  try{
+    // IMPORTANT: do not override CRMO_ALLOW_CLOUD decision on hosted domains.
+    if (typeof window.CRMO_ALLOW_CLOUD === 'boolean'){
+      window.CRMO_OFFLINE_MODE = !window.CRMO_ALLOW_CLOUD;
+      window.CRMO_USABILITY_MODE = true;
+      return;
+    }
+    var sp = new URLSearchParams(location.search||'');
+    // Fallback: OFFLINE unless explicitly requested with ?cloud=1
+    var cloud = sp.get('cloud');
+    window.CRMO_OFFLINE_MODE = !(cloud === '1' || cloud === 'true');
+    window.CRMO_USABILITY_MODE = true;
+    try{
+      if (sessionStorage.getItem('CRMO_SKIP_CLOUD_RESTORE') === '1') {
+        window.CRMO_OFFLINE_MODE = true;
+      }
+    }catch(e){}
+  }catch(e){
+    window.CRMO_OFFLINE_MODE = true;
+    window.CRMO_USABILITY_MODE = true;
+  }
+})();
+</script>
+
 <script id="crmo_title_and_footer_version">
 (function(){
   function apply(){
@@ -284,11 +246,22 @@ window.CRMO_BRAND_ASSETS = window.CRMO_BRAND_ASSETS || {
       var label = ('v' + n + (type ? (' ' + type) : ''));
       var vOnly = ('v' + n);
 
+      var top = document.getElementById("crmo-version-badge");
+      var hv = document.getElementById("crmo-header-version");
+      if(hv) hv.textContent = "";
+      if (top){
+        top.textContent = vOnly;
+        var ab = document.getElementById('crmo-admin-version-badge');
+        if(ab){ ab.textContent = vOnly; if(tag) ab.setAttribute('title', tag); }
+        if(tag) top.setAttribute('title', tag);
+      }
       var foot = document.getElementById("crmo-footer-version");
       if (foot){
         foot.textContent = ('CRMO System Version ' + n + (type ? (' | ' + type) : ''));
         if(tag) foot.setAttribute('title', tag);
       }
+      var internal = document.getElementById("crmo-internal-version");
+      if(internal) internal.textContent = label;
 
       if (n) document.documentElement.setAttribute("data-crmo-build", n);
       if (tag) document.documentElement.setAttribute("data-crmo-version", tag);
@@ -318,6 +291,731 @@ window.CRMO_SUPABASE_CONFIG_ID = "main";
 window.CRMO_SUPABASE_REQUIRE_LOGIN = true;
 window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 </script>
+
+<script id="crmo_cloud_config_v1553">
+/*
+  CRMO Cloud Config (v1553)
+  Minimal server load/save for crmo_site_config.
+  - Cloud ops only when ?cloud=1 (or cloud=true). We also accept params inside hash (/#?cloud=1) for convenience.
+  - env=staging routes to config id "main_staging", otherwise "main".
+  - UI: small panel for admins only (by email list) to Load / Save.
+*/
+(function(){
+  function getParams(){
+    var out = new URLSearchParams(location.search || '');
+    try{
+      var h = location.hash || '';
+      var qi = h.indexOf('?');
+      if(qi >= 0){
+        var q = h.slice(qi+1);
+        var hp = new URLSearchParams(q);
+        hp.forEach(function(v,k){ if(!out.has(k)) out.set(k,v); });
+      }
+    }catch(e){}
+    return out;
+  }
+  function truthy(v){
+    v = String(v||'').toLowerCase();
+    return (v === '1' || v === 'true' || v === 'yes' || v === 'on');
+  }
+  function cloudEnabled(){
+    try{
+      var sp = getParams();
+      var allow = truthy(sp.get('cloud'));
+      if(typeof window.CRMO_ALLOW_CLOUD === 'boolean') return window.CRMO_ALLOW_CLOUD || allow;
+      return allow;
+    }catch(e){}
+    return false;
+  }
+  function getEnv(){
+    try{
+      var sp = getParams();
+      return (sp.get('env') || sp.get('ENV') || '').toLowerCase() || 'prod';
+    }catch(e){}
+    return 'prod';
+  }
+  function getConfigId(){
+    var env = getEnv();
+    if(env === 'staging' || env === 'stage' || env === 'stg') return 'main_staging';
+    return (window.CRMO_SUPABASE_CONFIG_ID || 'main');
+  }
+
+  // Default admin list (safe, not a secret). You can still override via the settings UI later.
+  try{
+    if(!Array.isArray(window.CRMO_SUPABASE_ADMIN_EMAILS) || window.CRMO_SUPABASE_ADMIN_EMAILS.length === 0){
+      window.CRMO_SUPABASE_ADMIN_EMAILS = ['boochin@gmail.com','boochin@walla.co.il'];
+    }
+  }catch(e){}
+
+  function pickLocalState(){
+    var bag = {};
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        if(k.indexOf('crmo:') === 0 || k.indexOf('crmo_') === 0 || k.indexOf('CRMO_') === 0){
+          bag[k] = localStorage.getItem(k);
+        }
+      }
+    }catch(e){}
+    // Minimal metadata
+    bag['crmo:meta:build'] = String(window.CRMO_BUILD_VERSION || '');
+    bag['crmo:meta:savedAt'] = String(Date.now());
+    return bag;
+  }
+
+  function clearLocalCrmoKeys(){
+    try{
+      var kill = [];
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        if(k.indexOf('crmo:') === 0 || k.indexOf('crmo_') === 0 || k.indexOf('CRMO_') === 0){
+          kill.push(k);
+        }
+      }
+      kill.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+    }catch(e){}
+  }
+  // Debug / recovery: force logout and clear local auth crumbs (v1612)
+  window.CRMO_forceLogout = async function(){
+    try{
+      var sb = null;
+      try{
+        if (window.CRMO_getSbClient) sb = await window.CRMO_getSbClient();
+      }catch(e){}
+      if(!sb){
+        try{
+          if (window.supabase && window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY){
+            sb = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
+          }
+        }catch(e){}
+      }
+      if(sb){
+        try{ await sb.auth.signOut(); }catch(e){}
+      }
+    }catch(e){}
+    try{
+      // remove supabase auth tokens + crmo local flags
+      var kill=[];
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        if(k.indexOf('sb-')===0 && k.indexOf('-auth-token')>0) kill.push(k);
+        if(k.indexOf('crmo:')===0 || k.indexOf('crmo_')===0 || k.indexOf('CRMO_')===0) kill.push(k);
+      }
+      kill.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+    }catch(e){}
+    try{ sessionStorage.clear(); }catch(e){}
+    try{ location.reload(); }catch(e){}
+  };
+
+
+  async function getSbOrThrow(){
+    if(!window.CRMO_getSB) throw new Error('CRMO_getSB missing');
+    return await window.CRMO_getSB();
+  }
+
+  async function getUserEmail(){
+    try{
+      var sb = await getSbOrThrow();
+      var gu = await sb.auth.getUser();
+      var user = gu && gu.data && gu.data.user;
+      var email = user && user.email ? String(user.email).toLowerCase() : '';
+      return email;
+    }catch(e){
+      return '';
+    }
+  }
+
+  function isAdminEmail(email){
+    // Role-based access control: ONLY owners see admin tools.
+    return window.CRMO_IS_OWNER === true;
+  }
+
+  /* ===== CRMO RBAC (v1685) ===== */
+  (function(){
+    // Hide admin UI by default; we only show it for owners after a role check.
+    // IMPORTANT: We never remove/recreate admin DOM to avoid flicker.
+    try{
+      if(!document.getElementById('crmo-admin-stealth-css')){
+        var st = document.createElement('style');
+        st.id = 'crmo-admin-stealth-css';
+        st.textContent = `
+          body:not(.is-admin) #crmo-admin-bar,
+          body:not(.is-admin) #crmo-admin-editor,
+          body:not(.is-admin) #crmo-admin-subbar,
+          body:not(.is-admin) #CRMO_v1646_brands_admin_panel,
+          body:not(.is-admin) #crmo-header-admin,
+          body:not(.is-admin) #crmo-mode-admin,
+          body:not(.is-admin) #crmo-settings-admin,
+          body:not(.is-admin) #crmo-media-admin,
+          body:not(.is-admin) #crmo-galleries-admin,
+          body:not(.is-admin) #crmo-tracking-admin,
+          body:not(.is-admin) #crmo-permissions-admin,
+          body:not(.is-admin) #crmo-audience-admin,
+          body:not(.is-admin) #crmo-campaign-admin,
+          body:not(.is-admin) #crmo-dev-admin,
+          body:not(.is-admin) #crmo-restore-admin,
+          body:not(.is-admin) #crmo-admin-add-btn,
+          body:not(.is-admin) #crmo-admins-list,
+          body:not(.is-admin) #crmo-profile-edit
+          { display:none !important; visibility:hidden !important; }
+        `;
+        document.head.appendChild(st);
+      }
+    }catch(e){}
+  })();
+
+  function CRMO_adminNodes(){
+    // Known admin roots / panels
+    return Array.from(document.querySelectorAll([
+      '#crmo-admin-bar',
+      '#crmo-admin-editor',
+      '#crmo-admin-subbar',
+      '#CRMO_v1646_brands_admin_panel',
+      '#crmo-header-admin',
+      '#crmo-mode-admin',
+      '#crmo-settings-admin',
+      '#crmo-media-admin',
+      '#crmo-galleries-admin',
+      '#crmo-tracking-admin',
+      '#crmo-permissions-admin',
+      '#crmo-audience-admin',
+      '#crmo-campaign-admin',
+      '#crmo-dev-admin',
+      '#crmo-restore-admin',
+      '#crmo-admin-add-btn',
+      '#crmo-admins-list',
+      '#crmo-profile-edit'
+    ].join(',')));
+  }
+
+  function CRMO_setAdminUI(on){
+    var isOn = !!on;
+    try{ if(document.body) document.body.classList.toggle('is-admin', isOn); }catch(e){}
+    // Keep a legacy marker for any existing CSS/JS that expects it.
+    try{ document.documentElement.classList.toggle('crmo-owner', isOn); }catch(e){}
+
+    if(isOn){
+      // Clear any inline/hidden flags left from older builds (without recreating nodes)
+      try{
+        CRMO_adminNodes().forEach(function(n){
+          if(!n) return;
+          try{ n.hidden = false; }catch(e){}
+          try{ if(n.style){ n.style.display = ''; n.style.visibility = ''; } }catch(e){}
+          try{ n.removeAttribute && n.removeAttribute('aria-hidden'); }catch(e){}
+        });
+      }catch(e){}
+    }
+  }
+
+  function CRMO_enableAdminDom(){ CRMO_setAdminUI(true); }
+  function CRMO_disableAdminDom(){ CRMO_setAdminUI(false); }
+
+  async function CRMO_refreshRoleAndAdminUI(){
+    try{
+      // If supabase client can't load, treat as viewer.
+      if(typeof window.supabase === 'undefined' && !window.CRMO_getSbClient){
+        window.CRMO_IS_OWNER = false;
+        try{ localStorage.removeItem('crmo:admin:email'); }catch(e){}
+        CRMO_disableAdminDom();
+        return { role: null, owner: false, reason: 'supabase_not_ready' };
+      }
+
+      var sb = null;
+      try{
+        sb = (window.CRMO_getSbClient) ? await window.CRMO_getSbClient() : null;
+      }catch(e){}
+      if(!sb && typeof window.supabase !== 'undefined'){
+        try{
+          sb = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
+        }catch(e){}
+      }
+      if(!sb){
+        window.CRMO_IS_OWNER = false;
+        try{ localStorage.removeItem('crmo:admin:email'); }catch(e){}
+        CRMO_disableAdminDom();
+        return { role: null, owner: false, reason: 'no_client' };
+      }
+
+      var ses = await sb.auth.getSession();
+      var session = ses && ses.data ? ses.data.session : null;
+      if(!session || !session.user){
+        window.CRMO_IS_OWNER = false;
+        try{ localStorage.removeItem('crmo:admin:email'); }catch(e){}
+        CRMO_disableAdminDom();
+        return { role: null, owner: false, reason: 'no_session' };
+      }
+
+      var uid = session.user.id;
+      var email = session.user.email || '';
+
+      // Query role table: public.crmo_user_roles
+      var role = null;
+      try{
+        var q = sb.from('crmo_user_roles').select('role').eq('user_id', uid);
+        // maybeSingle if available
+        if(typeof q.maybeSingle === 'function'){
+          var out = await q.maybeSingle();
+          if(out && out.data && out.data.role) role = out.data.role;
+        }else{
+          var out2 = await q.limit(1);
+          if(out2 && out2.data && out2.data[0] && out2.data[0].role) role = out2.data[0].role;
+        }
+      }
+      catch(e){
+        try{ console.warn('[CRMO] role check failed; continuing as viewer', e); }catch(_e){}
+        role = null;
+      }
+
+      var isOwner = (role === 'owner');
+      window.CRMO_IS_OWNER = isOwner;
+
+      if(isOwner){
+        // Keep compatibility with legacy admin code without granting admin to everyone.
+        try{ localStorage.setItem('crmo:admin:email', String(email||'').toLowerCase()); }catch(e){}
+        CRMO_enableAdminDom();
+      }else{
+        try{ localStorage.removeItem('crmo:admin:email'); }catch(e){}
+        CRMO_disableAdminDom();
+      }
+      return { role: role, owner: isOwner };
+    }catch(e){
+      window.CRMO_IS_OWNER = false;
+      try{ localStorage.removeItem('crmo:admin:email'); }catch(_e){}
+      CRMO_disableAdminDom();
+      return { role: null, owner: false, reason: 'error', error: (e && e.message) ? e.message : String(e||'') };
+    }
+  }
+
+  // Quiet background role check at startup (no UI messages)
+  (function(){
+    function boot(){
+      CRMO_refreshRoleAndAdminUI();
+      // Retry once shortly after in case auth state becomes available after async SDK init
+      setTimeout(function(){ CRMO_refreshRoleAndAdminUI(); }, 800);
+    }
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+  /* ===== /CRMO RBAC ===== */
+
+      
+  /* v1685: legacy admin-email fallback removed (RBAC owners only). */
+
+  async function ensureAuthed(){
+    var sb = await getSbOrThrow();
+    var ses = await sb.auth.getSession();
+    if(ses && ses.data && ses.data.session) return true;
+    // Open auth UI if present
+    try{
+      if(window.CRMO_openAuth){ window.CRMO_openAuth('admin'); }
+      else if(window.CRMO_openAuthAuto){ window.CRMO_openAuthAuto(); }
+    }catch(e){}
+    return false;
+  }
+
+  async function saveToServer(){
+    if(!cloudEnabled()) throw new Error('Cloud disabled. Use ?cloud=1');
+    var ok = await ensureAuthed();
+    if(!ok) throw new Error('Not authenticated');
+    var email = await getUserEmail();
+    if(!isAdminEmail(email)) throw new Error('Not admin: ' + email);
+    var sb = await getSbOrThrow();
+    var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
+    var id = getConfigId();
+    var payload = { id: id, storage: pickLocalState() };
+    var r = await sb.from(table).upsert(payload).select('id, updated_at').single();
+    if(r && r.error) throw r.error;
+    return r;
+  }
+
+  async function loadFromServer(){
+    if(!cloudEnabled()) throw new Error('Cloud disabled. Use ?cloud=1');
+    var ok = await ensureAuthed();
+    if(!ok) throw new Error('Not authenticated');
+    var email = await getUserEmail();
+    if(!isAdminEmail(email)) throw new Error('Not admin: ' + email);
+    var sb = await getSbOrThrow();
+    var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
+    var id = getConfigId();
+    var r = await sb.from(table).select('id, storage, updated_at').eq('id', id).single();
+    if(r && r.error) throw r.error;
+    var st = r && r.data && r.data.storage ? r.data.storage : null;
+    if(!st || typeof st !== 'object') throw new Error('No storage in row: ' + id);
+    // Apply
+    clearLocalCrmoKeys();
+    Object.keys(st).forEach(function(k){
+      try{
+        if(k === 'crmo:meta:savedAt' || k === 'crmo:meta:build'){}
+        var v = st[k];
+        if(v === null || typeof v === 'undefined') return;
+        localStorage.setItem(k, String(v));
+      }catch(e){}
+    });
+    // Mark hydration source
+    try{
+      localStorage.setItem('crmo:meta:lastHydrateFrom', 'server:' + id);
+      localStorage.setItem('crmo:meta:lastHydrateAt', String(Date.now()));
+    }catch(e){}
+    // Reload to re-hydrate UI from localStorage
+    location.reload();
+    return r;
+  }
+
+  // Expose public API
+  window.CRMO_cloudEnabled = cloudEnabled;
+  window.CRMO_getEnv = getEnv;
+  window.CRMO_getConfigId = getConfigId;
+  window.CRMO_saveServerConfig = saveToServer;
+  window.CRMO_loadServerConfig = loadFromServer;
+
+  // Minimal admin panel
+  function mountPanel(){
+    if(!cloudEnabled()) return;
+    if(document.getElementById('crmo-cloud-panel')) return;
+    var box = document.createElement('div');
+    box.id = 'crmo-cloud-panel';
+    box.style.cssText = 'position:fixed;top:10px;left:10px;z-index:999999;background:#ffffff;border:1px solid #d0d0d0;border-radius:10px;padding:8px 10px;font-family:Arial, sans-serif;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.12);display:none;gap:6px;align-items:center;';
+    box.innerHTML = '' +
+      '<div style="display:flex;flex-direction:column;gap:6px;min-width:190px;">' +
+        '<div id="crmo-cloud-panel-title" style="font-weight:700;">Cloud</div>' +
+        '<div id="crmo-cloud-panel-sub" style="opacity:.75;">...</div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+          '<button id="crmo-cloud-load" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #bbb;background:#f6f6f6;">טען מהשרת</button>' +
+          '<button id="crmo-cloud-save" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #111;background:#111;color:#fff;">שמור לשרת</button>' +
+          '<button id="crmo-cloud-reset-media" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #b00020;background:#fff;color:#b00020;">איפוס מדיה</button>' +
+          '<button id="crmo-cloud-fix-stands-folders" style="cursor:pointer;padding:6px 10px;border-radius:8px;border:1px solid #1565c0;background:#fff;color:#1565c0;">סטנדים: סידור תיקיות</button>' +
+        '</div>' +
+        '<div id="crmo-cloud-panel-msg" style="min-height:16px;"></div>' +
+      '</div>';
+    document.body.appendChild(box);
+
+    // Bind the top admin bar "CLOUD" button to toggle this panel (so it's always discoverable).
+    (function bindCloudTopButton(){
+      function findTrigger(){
+        // Look for a clickable element whose visible text is exactly "CLOUD"
+        var els = Array.prototype.slice.call(document.querySelectorAll('button, a, div, span'));
+        for (var i=0;i<els.length;i++){
+          var el = els[i];
+          if(!el) continue;
+          var t = (el.textContent || '').trim();
+          if(t === 'CLOUD'){
+            // Avoid tiny template nodes
+            var r = el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+            if(r && r.width > 10 && r.height > 10) return el;
+          }
+        }
+        return null;
+      }
+
+      function positionPanel(trigger){
+        try{
+          var r = trigger.getBoundingClientRect();
+          // Prefer aligning to the left edge; clamp within viewport.
+          var left = Math.max(8, Math.min(r.left, (window.innerWidth - 220)));
+          box.style.top = (r.bottom + 8) + 'px';
+          box.style.left = left + 'px';
+        }catch(e){}
+      }
+
+      function toggle(trigger){
+        if(!trigger) return;
+        if(box.style.display === 'none' || box.style.display === ''){
+          positionPanel(trigger);
+          box.style.display = 'flex';
+        }else{
+          box.style.display = 'none';
+        }
+      }
+
+      function closeIfOutside(e){
+        try{
+          if(!box || box.style.display === 'none') return;
+          var trg = window.__CRMO_CLOUD_TRIGGER;
+          if(box.contains(e.target)) return;
+          if(trg && (trg === e.target || (trg.contains && trg.contains(e.target)))) return;
+          box.style.display = 'none';
+        }catch(err){}
+      }
+
+      function attach(){
+        if(!window.CRMO_ALLOW_CLOUD) return;
+        // Only show controls for admins (same rule as the panel itself uses later).
+        var trig = findTrigger();
+        if(!trig) return false;
+        window.__CRMO_CLOUD_TRIGGER = trig;
+        trig.style.cursor = 'pointer';
+        trig.addEventListener('click', function(ev){
+          ev.preventDefault();
+          ev.stopPropagation();
+          toggle(trig);
+        });
+        window.addEventListener('resize', function(){ if(box.style.display !== 'none') positionPanel(trig); });
+        document.addEventListener('click', closeIfOutside, true);
+        return true;
+      }
+
+      // Try a few times because the top bar may render after this script.
+      var tries = 0;
+      var timer = setInterval(function(){
+        tries++;
+        if(attach() || tries > 40){ clearInterval(timer); }
+      }, 250);
+    })();
+
+    function setMsg(t, isErr){
+      var el = document.getElementById('crmo-cloud-panel-msg');
+      if(!el) return;
+      el.textContent = t || '';
+      el.style.color = isErr ? '#b00020' : '#0b6b0b';
+    }
+
+    document.getElementById('crmo-cloud-load').onclick = async function(){
+      try{
+        setMsg('טוען...', false);
+        await loadFromServer();
+      }catch(e){
+        setMsg(String((e && e.message) ? e.message : e), true);
+      }
+    };
+    document.getElementById('crmo-cloud-save').onclick = async function(){
+      try{
+        setMsg('שומר...', false);
+        var r = await saveToServer();
+        setMsg('נשמר (' + (r && r.data ? r.data.id : getConfigId()) + ')', false);
+      }catch(e){
+        setMsg(String((e && e.message) ? e.message : e), true);
+      }
+    };
+
+    
+    // Media-only reset (projects/assets + brand media) for STAGING/Cloud
+    document.getElementById('crmo-cloud-reset-media').onclick = async function(){
+      try{
+        var sp = new URLSearchParams(location.search || '');
+        var env = (sp.get('env') || '').toLowerCase();
+        var isStaging = (env === 'staging');
+        var ok = window.confirm('איפוס מדיה בלבד' + (isStaging ? ' (STAGING)' : '') + '?\nזה ינקה תמונות/נכסים של עבודות ומותגים אך ישאיר מבנה, טקסטים ושיוכים.');
+        if(!ok) return;
+
+        // Get current content JSON from script (already hydrated from localStorage earlier)
+        var dataScript = document.getElementById('content-data');
+        var cur = {};
+        try{ cur = JSON.parse((dataScript && dataScript.textContent) ? dataScript.textContent : '{}'); }catch(e){ cur = {}; }
+
+        if(cur && Array.isArray(cur.projects)){
+          cur.projects = cur.projects.map(function(p){
+            if(p && typeof p === 'object'){
+              // Keep metadata, wipe media assets only
+              p.assets = [];
+            }
+            return p;
+          });
+        }
+        if(cur && Array.isArray(cur.brands)){
+          cur.brands = cur.brands.map(function(b){
+            if(b && typeof b === 'object'){
+              b.logo = null;
+              b.assets = [];
+              // keep linkedProjects as-is
+            }
+            return b;
+          });
+        }
+
+        try{
+          // Persist locally
+          localStorage.setItem('crmo_content_data', JSON.stringify(cur));
+          if(dataScript) dataScript.textContent = JSON.stringify(cur);
+          // Clear any derived gallery state/meta so UI rebuilds clean
+          try{ localStorage.removeItem('crmo_gallery_state_v1'); }catch(_e){}
+          try{ localStorage.removeItem('crmo_gallery_meta'); }catch(_e){}
+        }catch(e){}
+
+        // Save to server if cloud enabled
+        if(cloudEnabled()){
+          setMsg('שומר איפוס...', false);
+          await saveToServer();
+          setMsg('איפוס מדיה נשמר לשרת', false);
+        }else{
+          setMsg('איפוס מדיה נשמר מקומית (offline)', false);
+        }
+
+        // Reload to rehydrate UI
+        setTimeout(function(){ location.reload(); }, 150);
+      }catch(e){
+        setMsg(String((e && e.message) ? e.message : e), true);
+      }
+    };// Fix stands subfolders: create stands/<child>/ and optionally migrate legacy stands_all... folders
+document.getElementById('crmo-cloud-fix-stands-folders').onclick = async function(){
+  try{
+    var ok = window.confirm(
+      'סידור תיקיות STANDS (קבועות) + תיקון אם בטעות נוצרו בשורש.\n\n' +
+      'המבנה הרצוי הוא:\n' +
+      'assets/galleries/stands/{all,carts,counter,floor,pos,shelf,special,stage}\n\n' +
+      'אם קיימות תיקיות ישנות (stands_all וכו׳) או אם בטעות נוצר assets/stands/...\n' +
+      'הפעולה תנסה להעביר/לארגן בלי למחוק קבצים.'
+    );
+    if(!ok) return;
+
+    var sb = await getSb();
+    var bucket = getBucket();
+    var base = 'galleries';
+    var master = 'stands';
+
+    var desiredMasterPrefix = base + '/' + master;
+
+    async function listSafe(prefix){
+      try{
+        return await sb.storage.from(bucket).list(prefix, { limit: 1000 });
+      }catch(e){
+        return { error: e };
+      }
+    }
+
+    async function ensureKeepAt(prefix){
+      // creates prefix/.keep (idempotent)
+      var p = prefix.replace(/\/+$/,'') + '/.keep';
+      try{
+        var blob = new Blob(['keep'], { type: 'text/plain' });
+        var r = await sb.storage.from(bucket).upload(p, blob, { upsert: false, contentType:'text/plain', cacheControl:'3600' });
+        if(r && r.error){
+          var msg = String(r.error.message || r.error);
+          if(/exist|already|duplicate|409/i.test(msg)) return { ok:true, exists:true };
+          return { ok:false, error: msg };
+        }
+        return { ok:true };
+      }catch(e){
+        return { ok:false, error: e };
+      }
+    }
+
+    async function walkAndMove(fromPrefix, toPrefix, depth){
+      if(depth > 10) return;
+      var r = await listSafe(fromPrefix);
+      if(r && r.error){
+        console.warn('[CRMO] list error', fromPrefix, r.error);
+        return;
+      }
+      r = r || [];
+      for(var i=0;i<r.length;i++){
+        var it = r[i];
+        if(!it || !it.name) continue;
+        // Supabase returns "folders" as items without id/metadata
+        var isFolder = (!it.id && !it.metadata && !it.updated_at && !it.created_at);
+        if(isFolder){
+          await walkAndMove(fromPrefix + '/' + it.name, toPrefix + '/' + it.name, (depth||0)+1);
+          continue;
+        }
+        var fromPath = fromPrefix + '/' + it.name;
+        var toPath = toPrefix + '/' + it.name;
+        try{
+          var mv = await sb.storage.from(bucket).move(fromPath, toPath);
+          if(mv && mv.error){
+            var em = String(mv.error.message || mv.error);
+            // If target exists, do not delete source (safe behavior)
+            if(/exist|already|duplicate|409/i.test(em)) continue;
+            console.warn('[CRMO] move error', fromPath, '->', toPath, mv.error);
+          }
+        }catch(e){
+          console.warn('[CRMO] move exception', fromPath, '->', toPath, e);
+        }
+      }
+    }
+
+    // 1) Fix "stands" mistakenly created at bucket root (assets/stands/...)
+    var root = await listSafe('');
+    var rootNames = {};
+    (root||[]).forEach(function(x){ if(x && x.name) rootNames[x.name]=true; });
+
+    var wantedChildren = ['all','carts','counter','floor','pos','shelf','special','stage'];
+    var legacyMap = [
+      ['stands_all','all'],
+      ['stands_carts','carts'],
+      ['stands_counter','counter'],
+      ['stands_floor','floor'],
+      ['stands_pos','pos'],
+      ['stands_shelf','shelf'],
+      ['stands_special','special'],
+      ['stands_stage','stage']
+    ];
+
+    // If assets/stands exists, move its known children into galleries/stands
+    if(rootNames[master]){
+      var inside = await listSafe(master);
+      var insideNames = {};
+      (inside||[]).forEach(function(x){ if(x && x.name) insideNames[x.name]=true; });
+
+      // Move the 8 folders from assets/stands/<child> -> assets/galleries/stands/<child>
+      for(var c=0;c<wantedChildren.length;c++){
+        var child = wantedChildren[c];
+        if(insideNames[child]){
+          await walkAndMove(master + '/' + child, desiredMasterPrefix + '/' + child, 0);
+        }
+      }
+
+      // If accidentally moved other top-level folders into assets/stands, move them back
+      var misplaced = [
+        'branding','brands','debug','drop','galleries','gallery-extra','gallery-main','multi',
+        'custom-gallery-1','custom-gallery-2','exhibitions','identity','intro','packages','product',
+        'secondary-gallery','small','stores','uploads','stands'
+      ];
+      for(var m=0;m<misplaced.length;m++){
+        var name = misplaced[m];
+        if(!insideNames[name]) continue;
+        var dst = rootNames[name] ? ('_recovered/' + name) : name;
+        await walkAndMove(master + '/' + name, dst, 0);
+        rootNames[name] = true;
+      }
+    }
+
+    // 2) Move legacy folders stands_all וכו׳ -> galleries/stands/<child>
+    for(var j=0;j<legacyMap.length;j++){
+      var old = legacyMap[j][0], neu = legacyMap[j][1];
+      if(rootNames[old]){
+        await walkAndMove(old, desiredMasterPrefix + '/' + neu, 0);
+      }
+    }
+
+    // 3) Ensure all target folders exist (create .keep)
+    await ensureKeepAt(base + '/' + master);
+    for(var k=0;k<wantedChildren.length;k++){
+      await ensureKeepAt(desiredMasterPrefix + '/' + wantedChildren[k]);
+    }
+
+    cloudMsg('✅ תיקיות STANDS מסודרות. אם היו קבצים — הם הועברו למבנה החדש. מומלץ לרענן.', false);
+  }catch(e){
+    cloudMsg('❌ שגיאה: ' + (e && e.message ? e.message : e), true);
+  }
+};
+    // show panel only for admins
+    (async function refresh(){
+      try{
+        var email = await getUserEmail();
+        var admin = isAdminEmail(email);
+        var id = getConfigId();
+        var env = getEnv();
+        var sub = document.getElementById('crmo-cloud-panel-sub');
+        if(sub) sub.textContent = 'env=' + env + ' | id=' + id + (email ? (' | ' + email) : '');
+        box.style.display = admin ? 'flex' : 'none';
+        if(!admin && email){
+          // If logged in but not admin, keep hidden (no spam).
+        }
+      }catch(e){}
+      setTimeout(refresh, 4000);
+    })();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', mountPanel);
+  }else{
+    mountPanel();
+  }
+})();
+</script>
+
 
 <script id="crmo_upload_hint_v1472">
 (function(){
@@ -644,7 +1342,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
 
 
 body.crmo-route-gallery footer{ display:none !important; }
-body.crmo-route-gallery .tiles-manager-bar{ display:none; }
+body.crmo-route-gallery .tiles-manager-bar{ display:none !important; }
 body.crmo-route-gallery .tile-edit-btn,
 body.crmo-route-gallery .tile-admin-icons{ display:none !important; }
 body.crmo-route-gallery .gallery-grid.grid > .tile-edit-wrapper{ display:block !important; }
@@ -667,7 +1365,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1695</title>
+<title>CRMO_v1679</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -2185,46 +2883,6 @@ a.ph, .ph { position: relative; }
   display:none;
 }
 </style>
-
-<style id="crmo_v1693_conditional_view_css">
-/* v1694: Conditional view logic (triple description + visibility flags + isolation). */
-
-/* Triple description (Mobile / Desktop / Extended) */
-.crmo-desc3 .crmo-desc-mobile{ display:inline; }
-.crmo-desc3 .crmo-desc-desktop{ display:none; }
-.crmo-desc3 .crmo-desc-extended{ display:none; }
-
-@media (min-width: 901px){
-  .crmo-desc3 .crmo-desc-mobile{ display:none; }
-  .crmo-desc3 .crmo-desc-desktop{ display:inline; }
-}
-
-/* "Project extended" mode overrides: show Extended text only */
-.crmo-project-extended .crmo-desc3 .crmo-desc-mobile,
-.crmo-project-extended .crmo-desc3 .crmo-desc-desktop{ display:none; }
-.crmo-project-extended .crmo-desc3 .crmo-desc-extended{ display:inline; }
-
-/* Admin visibility toggles */
-.crmo-gallery-hidden{ display:none !important; }
-@media (max-width: 640px){
-  .crmo-hide-mobile{ display:none !important; }
-}
-
-/* Deep-link isolation */
-.crmo-isolated-hide{ display:none !important; }
-
-
-/* Extended mode should also reveal extra tiles (12+) */
-.crmo-project-extended .tile-hidden-extra{ display:block !important; }
-body.crmo-route-gallery .tile-hidden-extra{ display:block !important; }
-
-/* Route-gallery is also an "extended" context for text */
-body.crmo-route-gallery .crmo-desc3 .crmo-desc-mobile,
-body.crmo-route-gallery .crmo-desc3 .crmo-desc-desktop{ display:none !important; }
-body.crmo-route-gallery .crmo-desc3 .crmo-desc-extended{ display:inline !important; }
-
-</style>
-
 
 <style id="crmo_extended_gallery_css">
 #crmoExtendedGalleryOverlay .crmo-ext-frame{
@@ -5743,7 +6401,7 @@ section[id^="stands-"] nav.subcats{
 </style>
 
 <style id="CRMO_v1646_header_buttons_admin_css">
-body:not(.role-admin) #crmo-header-admin{ display:none; }
+body:not(.role-admin) #crmo-header-admin{ display:none !important; }
 #crmo-header-admin{
   border-top: 1px solid var(--line, rgba(0,0,0,.08));
   background: #f7f7f7;
@@ -5820,7 +6478,7 @@ body:not(.role-admin) #crmo-header-admin{ display:none; }
   border-radius:6px;
   line-height:1;
 }
-body:not(.role-admin) #crmo-admin-bar{ display:none; }
+body:not(.role-admin) #crmo-admin-bar{ display:none !important; }
 #crmo-header-admin .crmo-header-admin-toggle,
 #crmo-galleries-admin .crmo-galleries-admin-toggle{ display:none !important; }
 #crmo-header-admin .crmo-header-admin-list{ display:grid; gap:8px; }
@@ -5996,7 +6654,31 @@ body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
 .crmo-admin-subtab:hover{ background: rgba(255,255,255,.92); }
 
 
-
+/* v1685 adminbar alignment */
+body.is-admin #crmo-admin-bar .crmo-admin-tabs{
+  justify-content: flex-start !important; /* in RTL this is right aligned */
+  width: 100% !important;
+}
+body.is-admin #crmo-admin-bar .crmo-admin-tabs-group{
+  justify-content: flex-start !important; /* keep packed to the right in RTL */
+  flex-direction: row !important;
+  width: auto !important;
+  margin-right: 0 !important;
+}
+body.is-admin #crmo-admin-version-badge{
+  border:1px solid rgba(0,0,0,.18);
+  border-bottom:none;
+  background:transparent;
+  border-radius:14px 14px 0 0;
+  padding:10px 14px;
+  display:inline-flex;
+  align-items:center;
+  font-size:13px;
+  user-select:none;
+}
+/* Prevent layout jumps if legacy code toggles role-admin before is-admin */
+body.role-admin:not(.is-admin) header{ top: var(--crmo-sticky-top, 0px) !important; }
+body.role-admin:not(.is-admin) main{ padding-top: 0 !important; }
 </style>
 
 
@@ -8044,11 +8726,6 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   }
 
   function applyUI(owner){
-    // v1695: FORCE ADMIN MODE ALWAYS ON (never hide admin UI)
-    owner = true;
-    try{ document.body.classList.add("is-admin"); }catch(e){}
-    try{ document.body.classList.add("role-admin","role-master"); document.body.classList.remove("role-guest"); }catch(e){}
-
     setOwnerClasses(owner);
 
     const icon = document.getElementById("crmo-user-indicator");
@@ -8111,22 +8788,28 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   let lastKey = "";
   let lastOwner = false;
 
-    async function refresh(){
-    // v1695: FORCE ADMIN MODE - never hide UI
-    try{ document.body.classList.add("is-admin"); }catch(e){}
-    let email = "";
-    try{
-      const r = await readOwnerFromSupabase();
-      email = (r && r.email) ? String(r.email).toLowerCase() : "";
-    }catch(e){}
-    const owner = true;
-    const key = (email || "") + "|1";
-    lastKey = key;
-    lastOwner = true;
-    applyUI(true);
-    try{ document.documentElement.setAttribute("data-crmo-auth-email", email || ""); }catch(e){}
-    try{ localStorage.setItem("crmo:admin:email", email || ""); }catch(e){}
-    return { owner:true, email };
+  async function refresh(){
+    const r = await readOwnerFromSupabase();
+    const owner = !!r.owner;
+    const key = (r.email || "") + "|" + (owner ? "1":"0");
+    if(key !== lastKey){
+      lastKey = key;
+      lastOwner = owner;
+      applyUI(owner);
+      try{
+        document.documentElement.setAttribute("data-crmo-auth-email", r.email || "");
+      }catch(e){}
+      try{
+        if(owner){
+          localStorage.setItem("crmo:admin:email", r.email || "");
+        }else{
+          localStorage.removeItem("crmo:admin:email");
+        }
+      }catch(e){}
+    }else{
+      // still re-apply when needed (layout)
+      applyUI(lastOwner);
+    }
   }
 
   function hookAuthState(){
@@ -8161,13 +8844,19 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     });
   }
 
-  // v1694: init once (no poll/interval)
-  try{
-    document.addEventListener("DOMContentLoaded", function(){ try{ hookAuthState(); hookLogout(); }catch(e){} }, { once:true });
-  }catch(e){}
-  try{ hookAuthState(); hookLogout(); }catch(e){}
-
-  ;
+  // Poll until supabase library is available
+  let tries = 0;
+  (function poll(){
+    tries++;
+    hookAuthState();
+    hookLogout();
+    if(tries < 200 && (!window.supabase || !window.supabase.createClient)){
+      setTimeout(poll, 50);
+    }else{
+      // keep a light refresh in case of storage-only updates
+      setInterval(function(){ try{ refresh(); hookLogout(); }catch(e){} }, 1200);
+    }
+  })();
 
   window.addEventListener("pageshow", function(){ try{ refresh(); hookLogout(); }catch(e){} });
   window.addEventListener("focus", function(){ try{ refresh(); hookLogout(); }catch(e){} });
@@ -8269,35 +8958,6 @@ body:is(.role-admin,.is-admin) #crmo-admin-subbar .crmo-admin-subtabs{
   flex-direction: row-reverse !important; /* start from the right edge */
 }
 </style>
-<style id="crmo_admin_force_visibility_v1693">
-/* v1694: Force admin UI visibility when authenticated admin.
-   Critical: do NOT rely on display:none !important anywhere for admin surfaces. */
-body.is-admin .admin-bar,
-body.is-admin #admin-interface{
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* Map to actual CRMO admin surfaces (keep layout stable). */
-body.is-admin #crmo-admin-bar{
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-body.is-admin #crmo-header-admin,
-body.is-admin #crmo-galleries-admin{
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-body.is-admin .tiles-manager-bar{
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-</style>
-
 
 <script id="CRMO_v1667_sticky_measure">
 (function(){
@@ -8348,7 +9008,7 @@ body.is-admin .tiles-manager-bar{
 
   // Re-measure on auth/UI changes without reload
   window.addEventListener("storage", function(){ schedule(); });
-  (function loop(){ schedule(); setTimeout(loop, 900); })();
+  setInterval(schedule, 900);
 })();
 </script>
 
@@ -8373,31 +9033,6 @@ body.is-admin .tiles-manager-bar{
   box-sizing: border-box !important;
 }
 #crmo-admin-bar .crmo-admin-record-btn{ order: 9999 !important; }
-</style>
-
-
-<style id="crmo_admin_force_css_v1695">
-body.is-admin .admin-bar, body.is-admin #admin-interface { display: flex !important; visibility: visible !important; opacity: 1 !important; }
-body.is-admin #crmo-admin-bar, body.is-admin #crmo-header-admin, body.is-admin #crmo-galleries-admin { display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
-body.is-admin .tiles-manager-bar { display: flex !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
-body.is-admin #crmo-admin-bar * , body.is-admin .tiles-manager-bar * { pointer-events: auto !important; }
-body.is-admin.crmo-internal-editor-open #crmo-admin-bar{ pointer-events: auto !important; }
-</style>
-
-<style id="crmo_force_admin_visible_v1695">
-/* v1695: hard-force admin UI visibility (prevents post-refresh disabling) */
-#crmo-admin-bar, #crmo-admin-subbar, .tile-edit-btn {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-/* keep other admin surfaces interactive */
-#crmo-role-toggle, #admin-interface, #crmo-header-admin, #crmo-galleries-admin, .tiles-manager-bar {
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
 </style>
 
 </head>
@@ -8453,16 +9088,48 @@ body.is-admin.crmo-internal-editor-open #crmo-admin-bar{ pointer-events: auto !i
             if((btns[j].textContent||'').indexOf('UXV') !== -1 || (btns[j].textContent||'').indexOf('ביקורת') !== -1){ uxBtn = btns[j]; break; }
           }
         }
-        // v1694: version badge removed; version is shown near the email only.
 
+        var vEl = bar.querySelector('#crmo-version-badge');
+        if(!vEl){
+          vEl = document.createElement('span');
+          vEl.id = 'crmo-version-badge';
+          vEl.className = 'crmo-role-tab crmo-version-badge';
+          vEl.setAttribute('data-static','1');
+          vEl.textContent = 'v1679';
+        } else {
+          vEl.textContent = 'v1679';
+        }
+
+        var whoEl = bar.querySelector('#crmo-who-badge');
+        if(!whoEl){
+          whoEl = document.createElement('span');
+          whoEl.id = 'crmo-who-badge';
+          whoEl.className = 'crmo-role-tab crmo-who-badge crmo-who-unknown';
+          whoEl.setAttribute('data-static','1');
+          whoEl.textContent = 'מי מחובר: לא מזוהה';
+        } else {
+          if(!whoEl.classList.contains('crmo-who-badge')) whoEl.classList.add('crmo-who-badge');
+          if(!whoEl.classList.contains('crmo-who-unknown')) whoEl.classList.add('crmo-who-unknown');
+          if(!(whoEl.textContent||'').trim()) whoEl.textContent = 'מי מחובר: לא מזוהה';
+        }
+
+        // Position: ... [UXV] [vXXXX] [מי מחובר]
         if(uxBtn){
           // ensure they are in bar
-          if(whoEl.parentNode !== bar) bar.appendChild(whoEl);// insert who after version (so visually "left of version" in RTL)
+          if(vEl.parentNode !== bar) bar.appendChild(vEl);
+          if(whoEl.parentNode !== bar) bar.appendChild(whoEl);
+
+          // insert version after UXV
+          if(uxBtn.nextSibling !== vEl){
+            bar.insertBefore(vEl, uxBtn.nextSibling);
+          }
+          // insert who after version (so visually "left of version" in RTL)
           if(vEl.nextSibling !== whoEl){
             bar.insertBefore(whoEl, vEl.nextSibling);
           }
         } else {
           // fallback: append at end
+          if(vEl.parentNode !== bar) bar.appendChild(vEl);
           if(whoEl.parentNode !== bar) bar.appendChild(whoEl);
         }
       }
@@ -8480,8 +9147,7 @@ body.is-admin.crmo-internal-editor-open #crmo-admin-bar{ pointer-events: auto !i
       function setWho(email, isOwner){
         var whoEl = (roleBar && roleBar.querySelector) ? roleBar.querySelector('#crmo-who-badge') : document.getElementById('crmo-who-badge');
         if(!whoEl) return;
-        var v = String(window.CRMO_BUILD_VERSION||'');
-        var txt = 'מי מחובר: ' + (email ? email : 'לא מזוהה') + (email && v ? (' · v' + v) : '');
+        var txt = 'מי מחובר: ' + (email ? email : 'לא מזוהה');
         whoEl.textContent = txt;
         if(isOwner){
           whoEl.classList.remove('crmo-who-unknown');
@@ -8520,27 +9186,14 @@ body.is-admin.crmo-internal-editor-open #crmo-admin-bar{ pointer-events: auto !i
         }catch(e){}
         if(roleBar) roleBar.style.display = (isOwner || adminLike) ? 'flex' : 'none';
 
-        // show/hide admin UI by admin email OR owner (not owner-only)
-        var adminEmail = false;
-        try{
-          var list = (window.CRMO_ADMIN_EMAILS && Array.isArray(window.CRMO_ADMIN_EMAILS)) ? window.CRMO_ADMIN_EMAILS : ['boochin@gmail.com','boochin@walla.co.il'];
-          var em = (email||'').toLowerCase().trim();
-          adminEmail = !!em && list.map(function(x){ return String(x||'').toLowerCase().trim(); }).indexOf(em) !== -1;
-        }catch(e){}
-        // adminLike can be from classes, email allowlist, or forced is-admin
-        try{
-          adminLike = adminLike || adminEmail || document.body.classList.contains('is-admin');
-        }catch(e){}
-        if(adminBar) adminBar.style.display = (signedIn && (isOwner || adminLike)) ? '' : 'none';
-        if(subbar) subbar.style.display = (signedIn && (isOwner || adminLike)) ? '' : 'none';
+        // show/hide admin UI strictly by owner status
+        if(adminBar) adminBar.style.display = isOwner ? '' : 'none';
+        if(subbar) subbar.style.display = isOwner ? '' : 'none';
 
-        // Keep role classes for allowed admins; reset only for public
+        // If not owner, hard reset roles
         try{
-          if(signedIn && (isOwner || adminLike)){
-            document.body.classList.add('role-admin');
-            document.body.classList.add('is-admin');
-          }else if(!isOwner){
-            document.body.classList.remove('role-admin','role-master','role-ux','role-user','is-admin');
+          if(!isOwner){
+            document.body.classList.remove('role-admin','role-master','role-ux','role-user');
           }
         }catch(e){}
       }
@@ -8619,11 +9272,15 @@ body.is-admin.crmo-internal-editor-open #crmo-admin-bar{ pointer-events: auto !i
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1685</span>
 </div>
-<div id="crmo-admin-bar" class="admin-bar" aria-label="סרגל ניהול">
+<div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
         <div class="crmo-admin-bar-row crmo-admin-tabs" dir="rtl">
-<button type="button" class="crmo-admin-bar-btn crmo-hard-reset-btn" id="crmo-adminbar-hardreset" title="ניקוי קשיח (בדיקות שמישות)" onclick="CRMO_clearLocalDataAndReload()">ניקוי קשיח</button>
+      <span id="crmo-admin-version-badge" class="crmo-admin-bar-btn crmo-admin-version-badge" data-static="1" aria-label="גרסה">v1685</span>
+
+      
+      <button type="button" class="crmo-admin-bar-btn crmo-hard-reset-btn" id="crmo-adminbar-hardreset" title="ניקוי קשיח (בדיקות שמישות)" onclick="CRMO_clearLocalDataAndReload()">ניקוי קשיח</button>
 <div class="crmo-admin-tabs-group" dir="rtl">
 <button type="button" class="crmo-admin-bar-btn" id="crmo-adminbar-content" aria-controls="crmo-content-selector" aria-expanded="false">
         <span class="crmo-admin-bar-icon" aria-hidden="true">+</span>
@@ -9154,7 +9811,6 @@ var bar = document.getElementById('crmo-admin-bar');
   </div>
 </div>
 
-<div id="admin-interface">
 <div id="crmo-header-admin" class="is-collapsed" aria-label="ניהול כפתורי הדר">
   <div class="wrap">
     <div class="crmo-header-admin-actions">
@@ -9567,8 +10223,6 @@ function render(){
     <div id="crmo-galleries-admin-list" class="crmo-galleries-admin-list" role="list"></div>
   </div>
 </div>
-</div><!-- /#admin-interface -->
-
 
 
 <div id="crmo-mode-admin" class="crmo-future-panel is-collapsed" aria-label="מצב">
@@ -21714,16 +22368,6 @@ window.CRMO_MasterGalleries = {
         <span>להציג כפתור "לכל העבודות" בגלריה (לא מציף)</span>
       </label>
 
-      <label class="tm-meta-note" style="display:flex; gap:10px; align-items:center; margin-top:10px;">
-        <input type="checkbox" id="tm-meta-visible" style="width:auto; transform:scale(1.05);" />
-        <span>Show/Hide: להציג את הגלריה באתר</span>
-      </label>
-      <label class="tm-meta-note" style="display:flex; gap:10px; align-items:center; margin-top:6px;">
-        <input type="checkbox" id="tm-meta-hide-mobile" style="width:auto; transform:scale(1.05);" />
-        <span>Hide on Mobile: להסתיר את הגלריה במובייל</span>
-      </label>
-
-
     </div>
 
     <div class="tm-tiles-wrapper" id="tm-tiles"></div>
@@ -22999,8 +23643,6 @@ data.push({
       galleryMetaState[key] = { title:{}, subtitle:{}, expandPageEnabled:false };
     }
     if (typeof galleryMetaState[key].expandPageEnabled === 'undefined') galleryMetaState[key].expandPageEnabled = false;
-    if (typeof galleryMetaState[key].isVisible === 'undefined') galleryMetaState[key].isVisible = true;
-    if (typeof galleryMetaState[key].hideOnMobile === 'undefined') galleryMetaState[key].hideOnMobile = false;
     var t = galleryMetaState[key].title || (galleryMetaState[key].title = {});
     var s = galleryMetaState[key].subtitle || (galleryMetaState[key].subtitle = {});
     ['mobile','desktop','expanded','tablet'].forEach(function(k){
@@ -23155,12 +23797,9 @@ data.push({
       var pS = box.querySelector('.desc');
       if (hS && titleTxt) hS.textContent = titleTxt;
       if (pS){
-        if (!tmSetTripleDescText(pS, galleryMetaState[key].subtitle)){
-          if (subTxt){ pS.textContent = subTxt; pS.style.display = ''; }
-          else { /* אם אין טקסט – נשאיר כמו שהוא */ }
-        }
+        if (subTxt){ pS.textContent = subTxt; pS.style.display = ''; }
+        else { /* אם אין טקסט – נשאיר כמו שהוא */ }
       }
-      tmApplyVisibilityToSection(key);
       return;
     }
     if (!GALLERIES[key]) return;
@@ -23171,61 +23810,15 @@ data.push({
     var p = sec.querySelector('.narrow .desc') || sec.querySelector('.desc');
     if (h && titleTxt) h.textContent = titleTxt;
     if (p){
-      if (!tmSetTripleDescText(p, galleryMetaState[key].subtitle)){
-        if (subTxt){ p.textContent = subTxt; p.style.display = ''; }
-        else { /* אם אין טקסט – נשאיר כמו שהוא */ }
-      }
+      if (subTxt){ p.textContent = subTxt; p.style.display = ''; }
+      else { /* אם אין טקסט – נשאיר כמו שהוא */ }
     }
-    tmApplyVisibilityToSection(key);
   }
-  function tmApplyVisibilityToSection(key){
-    try{
-      if (!key) return;
-      tmEnsureMetaKey(key);
-
-      var cfg = (GALLERIES && GALLERIES[key]) ? GALLERIES[key] : null;
-      var sid = (cfg && cfg.sectionId) ? cfg.sectionId : key;
-      var section = document.getElementById(sid);
-      if (!section) return;
-
-      var isVisible = (galleryMetaState[key].isVisible !== false);
-      section.classList.toggle('crmo-gallery-hidden', !isVisible);
-      section.classList.toggle('crmo-hide-mobile', !!galleryMetaState[key].hideOnMobile);
-    }catch(e){}
-  }
-
-  function tmSetTripleDescText(pEl, subObj){
-    try{
-      if (!pEl) return false;
-      var mEl = pEl.querySelector('.crmo-desc-mobile');
-      var dEl = pEl.querySelector('.crmo-desc-desktop');
-      var eEl = pEl.querySelector('.crmo-desc-extended');
-      if (!mEl && !dEl && !eEl) return false;
-
-      var base = (pEl.getAttribute('data-crmo-default-desc') || '').trim();
-      if (!base){
-        base = (pEl.textContent || '').trim();
-        pEl.setAttribute('data-crmo-default-desc', base);
-      }
-
-      var mob = (subObj ? tmPickMetaText(subObj, 'mobile') : '') || base;
-      var desk = (subObj ? tmPickMetaText(subObj, 'desktop') : '') || base;
-      var exp = (subObj ? tmPickMetaText(subObj, 'expanded') : '') || base;
-
-      if (mEl) mEl.textContent = mob;
-      if (dEl) dEl.textContent = desk;
-      if (eEl) eEl.textContent = exp;
-      return true;
-    }catch(e){}
-    return false;
-  }
-
   function tmApplyMetaToAllSections(){
     try{
       Object.keys(GALLERIES).forEach(function(k){
         if (!GALLERIES[k]) return;
-        tmApplyVisibilityToSection(k);
-        if (galleryMetaState[k] && (tmPickMetaText(galleryMetaState[k].title,'desktop') || tmPickMetaText(galleryMetaState[k].subtitle,'desktop') || typeof galleryMetaState[k].isVisible !== 'undefined' || typeof galleryMetaState[k].hideOnMobile !== 'undefined')){
+        if (galleryMetaState[k] && (tmPickMetaText(galleryMetaState[k].title,'desktop') || tmPickMetaText(galleryMetaState[k].subtitle,'desktop'))){
           tmApplyMetaToSection(k);
         }
       });
@@ -23778,7 +24371,6 @@ var a = tiles[i].querySelector && tiles[i].querySelector('a.ph');
   var tmMetaTitleMobile, tmMetaTitleDesktop, tmMetaTitleExpanded;
   var tmMetaSubMobile, tmMetaSubDesktop, tmMetaSubExpanded;
   var tmMetaExpandEnabled;
-  var tmMetaVisible, tmMetaHideMobile;
   function tmReadMetaInputsToState(key){
     if (!key) return;
     tmEnsureMetaKey(key);
@@ -23789,8 +24381,6 @@ var a = tiles[i].querySelector && tiles[i].querySelector('a.ph');
     if (tmMetaSubDesktop)    galleryMetaState[key].subtitle.desktop  = (tmMetaSubDesktop.value||'');
     if (tmMetaSubExpanded)   galleryMetaState[key].subtitle.expanded = (tmMetaSubExpanded.value||'');
     if (tmMetaExpandEnabled) galleryMetaState[key].expandPageEnabled = !!tmMetaExpandEnabled.checked;
-    if (tmMetaVisible)    galleryMetaState[key].isVisible    = !!tmMetaVisible.checked;
-    if (tmMetaHideMobile) galleryMetaState[key].hideOnMobile = !!tmMetaHideMobile.checked;
     galleryMetaState[key].title.tablet = galleryMetaState[key].title.desktop;
     galleryMetaState[key].subtitle.tablet = galleryMetaState[key].subtitle.desktop;
   }
@@ -23804,8 +24394,6 @@ var a = tiles[i].querySelector && tiles[i].querySelector('a.ph');
     if (tmMetaSubDesktop)    tmMetaSubDesktop.value    = galleryMetaState[key].subtitle.desktop  || '';
     if (tmMetaSubExpanded)   tmMetaSubExpanded.value   = galleryMetaState[key].subtitle.expanded || '';
     if (tmMetaExpandEnabled) tmMetaExpandEnabled.checked = !!galleryMetaState[key].expandPageEnabled;
-    if (tmMetaVisible)    tmMetaVisible.checked    = (galleryMetaState[key].isVisible !== false);
-    if (tmMetaHideMobile) tmMetaHideMobile.checked = !!galleryMetaState[key].hideOnMobile;
   }
   function tmOnMetaInput(){
     try{
@@ -23854,9 +24442,7 @@ document.addEventListener("DOMContentLoaded", function(){
     tmMetaSubDesktop    = document.getElementById("tm-meta-sub-desktop");
     tmMetaSubExpanded   = document.getElementById("tm-meta-sub-expanded");
     tmMetaExpandEnabled = document.getElementById("tm-meta-expand-enabled");
-    tmMetaVisible      = document.getElementById("tm-meta-visible");
-    tmMetaHideMobile   = document.getElementById("tm-meta-hide-mobile");
-    [tmMetaTitleMobile, tmMetaTitleDesktop, tmMetaTitleExpanded, tmMetaSubMobile, tmMetaSubDesktop, tmMetaSubExpanded, tmMetaExpandEnabled, tmMetaVisible, tmMetaHideMobile].forEach(function(el){
+    [tmMetaTitleMobile, tmMetaTitleDesktop, tmMetaTitleExpanded, tmMetaSubMobile, tmMetaSubDesktop, tmMetaSubExpanded, tmMetaExpandEnabled].forEach(function(el){
       if(!el) return;
       el.addEventListener("input", tmOnMetaInput, {passive:true});
       el.addEventListener("change", tmOnMetaInput, {passive:true});
@@ -27567,7 +28153,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
       }
     }
     try{ obs.observe(document.body, {childList:true, subtree:true}); }catch(e){}
-    /* v1694: removed setInterval; MutationObserver callbacks call sync() */
+    setInterval(sync, 600);
   });
 })();
 </script>
@@ -27687,15 +28273,6 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
     background:#fff;
   }
   .crmo-usability-pill input{ accent-color: auto; }
-
-/* v1694: FORCE ADMIN UI ALWAYS VISIBLE */
-#crmo-admin-bar, #crmo-admin-subbar, .tile-edit-btn {
-  display: flex !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-
 </style>
 
 <button type="button" id="crmo-usability-fab" class="crmo-usability-fab" aria-label="שליחת משוב" hidden>משוב</button>
@@ -29509,7 +30086,7 @@ if (window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK){
     var gid = _crmoSanitizeId(raw);
     return 'galleries/' + gid;
   };
-  // ---- Server persistence (Supabase) -----------------------------------------
+  // ---- Cloud persistence (Supabase) -----------------------------------------
 // We store a snapshot of all CRMO localStorage keys in public.crmo_site_config(storage->ls)
 // so every HTML version can load the same data.
 const CRMO_CLOUD_LS_KEY_PREFIX = "crmo_";
@@ -29920,17 +30497,16 @@ var ok = await isAdminAllowed();
   }
   document.addEventListener('DOMContentLoaded', function(){
     var tries = 0;
-    (function attempt(){
+    var t = setInterval(function(){
       tries++;
       try{ installGalleryFolderHooks(); }catch(e){}
       if (tries > 60 || (window.CRMO_CustomGalleries && window.CRMO_CustomGalleries.__crmoFolderHooked)){
+        clearInterval(t);
         try{ window.CRMO_syncGalleryFolders().catch(function(){}); }catch(e){}
         try{ window.CRMO_syncSystemFolders().catch(function(){}); }catch(e){}
         try{ window.CRMO_syncMultiGalleryFolders().catch(function(){}); }catch(e){}
-        return;
       }
-      setTimeout(attempt, 250);
-    })();
+    }, 250);
   });
   window.CRMO_fileToSrcCached = function(file, folder){
     try{
@@ -31675,8 +32251,12 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
   else apply();
 
-  setTimeout(apply, 400);
-  setTimeout(apply, 1400);
+  var tries = 0;
+  var t = setInterval(function(){
+    apply();
+    tries++;
+    if(tries > 40) clearInterval(t);
+  }, 500);
 })();
 </script>
 
@@ -31747,6 +32327,139 @@ function CRMO_clearLocalDataAndReload(){
     }catch(e){}
     return _orig.apply(this, arguments);
   };
+})();
+</script>
+
+
+<script id="crmo_v1679_record_badge">
+(function(){
+  function isOwnerNow(){
+    try{
+      if(window.CRMO_AUTH && window.CRMO_AUTH.isOwner) return true;
+    }catch(e){}
+    try{
+      if(document.documentElement.classList && document.documentElement.classList.contains('crmo-owner')) return true;
+    }catch(e){}
+    try{
+      if(document.body && document.body.classList && document.body.classList.contains('role-admin')) return true;
+    }catch(e){}
+    return false;
+  }
+
+  function getEmailNow(){
+    try{
+      if(window.CRMO_AUTH && window.CRMO_AUTH.email) return String(window.CRMO_AUTH.email||'');
+    }catch(e){}
+    return '';
+  }
+
+  function getProviderFromEmail(email){
+    email = String(email||'').toLowerCase();
+    if(email.includes('@walla.')) return 'walla';
+    if(email.endsWith('@gmail.com')) return 'google';
+    return '';
+  }
+
+  function setPill(pill, txt, disabled){
+    pill.textContent = txt;
+    pill.disabled = !!disabled;
+    pill.style.opacity = disabled ? '0.55' : '0.9';
+    pill.style.cursor = disabled ? 'default' : 'pointer';
+  }
+
+  function mount(){
+    try{
+      var bar = document.getElementById('crmo-admin-bar');
+      if(!bar) return;
+
+      // Clean leftover marker in URL to avoid confusing "blocked" text
+      try{
+        var url = new URL(location.href);
+        if(url.searchParams.get('cleared') === '1'){
+          url.searchParams.delete('cleared');
+          history.replaceState(null,'',url.toString());
+        }
+      }catch(e){}
+
+      if(document.getElementById('crmo-record-pill')) return;
+
+      var pill = document.createElement('button');
+      pill.type = 'button';
+      pill.id = 'crmo-record-pill';
+      pill.style.marginInlineStart = '8px';
+      pill.style.padding = '4px 10px';
+      pill.style.borderRadius = '999px';
+      pill.style.fontSize = '12px';
+      pill.style.border = '1px solid rgba(0,0,0,.15)';
+      pill.style.background = '#fff';
+      pill.style.userSelect = 'none';
+      pill.style.lineHeight = '1.2';
+
+      var row = bar.querySelector('.crmo-admin-bar-row.crmo-admin-tabs') || bar;
+      row.appendChild(pill);
+
+      async function refresh(){
+        var owner = isOwnerNow();
+        var email = getEmailNow();
+        var provider = getProviderFromEmail(email);
+        var cloud = !!window.CRMO_ALLOW_CLOUD;
+
+        if(!cloud){
+          setPill(pill, 'OFFLINE', true);
+          return;
+        }
+
+        if(owner){
+          // Show as "Record" button (reverse of hard clear)
+          var suffix = provider ? (' | ' + provider) : '';
+          setPill(pill, 'RECORD' + suffix, false);
+          pill.title = email ? ('Save snapshot to Supabase as: ' + email) : 'Save snapshot to Supabase';
+        }else{
+          setPill(pill, 'RECORD – locked', true);
+          pill.title = 'Only owners can record snapshots';
+        }
+      }
+
+      pill.addEventListener('click', async function(){
+        try{
+          if(pill.disabled) return;
+          setPill(pill, 'RECORDING…', true);
+          var email = getEmailNow();
+          var provider = getProviderFromEmail(email);
+          // Prefer the site's existing cloud save function (full-state snapshot)
+          if(typeof window.CRMO_saveServerConfig === 'function'){
+            await window.CRMO_saveServerConfig();
+            setPill(pill, 'RECORDED ✓' + (provider ? (' | ' + provider) : ''), true);
+            setTimeout(function(){ refresh(); }, 1200);
+          }else{
+            setPill(pill, 'NO CLOUD API', true);
+          }
+        }catch(err){
+          try{ console.error(err); }catch(e){}
+          setPill(pill, 'RECORD FAILED', true);
+          setTimeout(function(){ refresh(); }, 1500);
+        }
+      });
+
+      // Refresh now and on auth changes
+      refresh();
+      try{
+        document.addEventListener('crmo-auth-changed', function(){ setTimeout(refresh, 50); });
+      }catch(e){}
+      try{
+        if(window.CRMO_getSbClient){
+          window.CRMO_getSbClient().then(function(sb){
+            try{
+              sb.auth.onAuthStateChange(function(){ setTimeout(refresh, 50); });
+            }catch(e){}
+          });
+        }
+      }catch(e){}
+    }catch(e){}
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', mount);
+  else mount();
 })();
 </script>
 
@@ -33340,246 +34053,5 @@ function CRMO_clearLocalDataAndReload(){
 })();
 </script>
 
-
-
-<script id="crmo_v1693_conditional_view_logic">
-/* v1694: Conditional view logic (triple descriptions + deep-link isolation + extended-state tracking).
-   NOTE: No setInterval is used here (prevents admin-bar flicker). */
-(function(){
-  function ensureTriple(el){
-    if (!el) return;
-    if (el.querySelector('.crmo-desc-mobile')) return;
-
-    var t = (el.textContent || '').trim();
-    el.textContent = '';
-    el.classList.add('crmo-desc3');
-    el.setAttribute('data-crmo-default-desc', t);
-
-    var m = document.createElement('span'); m.className = 'crmo-desc-mobile'; m.textContent = t;
-    var d = document.createElement('span'); d.className = 'crmo-desc-desktop'; d.textContent = t;
-    var e = document.createElement('span'); e.className = 'crmo-desc-extended'; e.textContent = t;
-
-    el.appendChild(m);
-    el.appendChild(d);
-    el.appendChild(e);
-  }
-
-  function initTripleForAllGalleries(){
-    try{
-      var main = document.querySelector('main');
-      if (!main) return;
-
-      var secs = main.querySelectorAll('section');
-      secs.forEach(function(sec){
-        if (!sec.querySelector('.gallery-grid')) return;
-        // Prefer the "main" description if present
-        var p = sec.querySelector('.narrow .desc') || sec.querySelector('.desc');
-        if (p) ensureTriple(p);
-      });
-
-      // Stands landing main-copy (explicit)
-      var stands = document.getElementById('stands');
-      if (stands){
-        var p0 = stands.querySelector('.stands-main-copy .desc');
-        if (p0) ensureTriple(p0);
-      }
-    }catch(e){}
-  }
-
-  function setupExtendedStateHooks(){
-    try{
-      var overlay = document.getElementById('crmoExtendedGalleryOverlay');
-      if (!overlay) return;
-
-      function clearExtendedMarker(){
-        try{
-          var sid = document.body ? document.body.getAttribute('data-crmo-extended-section') : '';
-          if (sid){
-            var sec = document.getElementById(sid);
-            if (sec) sec.classList.remove('crmo-project-extended');
-          }
-          if (document.body){
-            document.body.classList.remove('crmo-extended-open');
-            document.body.removeAttribute('data-crmo-extended-section');
-          }
-        }catch(e){}
-      }
-
-      // Wrap the existing open function to mark which section is "extended" (for Extended text + other logic)
-      if (window.CRMO_showExtendedGallery && !window.__crmo_showExtended_wrapped_v1690){
-        window.__crmo_showExtended_wrapped_v1690 = true;
-        var orig = window.CRMO_showExtendedGallery;
-        window.CRMO_showExtendedGallery = function(sectionId){
-          try{
-            clearExtendedMarker();
-            if (document.body){
-              document.body.classList.add('crmo-extended-open');
-              document.body.setAttribute('data-crmo-extended-section', String(sectionId||''));
-            }
-            var sec = document.getElementById(sectionId);
-            if (sec) sec.classList.add('crmo-project-extended');
-          }catch(e){}
-          return orig.apply(this, arguments);
-        };
-      }
-
-      // Add "clear" hooks (do not interfere with existing close behavior)
-      var closeBtn = document.getElementById('crmoExtendedClose');
-      if (closeBtn) closeBtn.addEventListener('click', clearExtendedMarker, {passive:true});
-
-      overlay.addEventListener('click', function(ev){
-        if (ev.target === overlay) clearExtendedMarker();
-      }, {passive:true});
-
-      document.addEventListener('keydown', function(ev){
-        if (ev.key === 'Escape') clearExtendedMarker();
-      }, {passive:true});
-    }catch(e){}
-  }
-
-  function applyIsolationFromURL(){
-    try{
-      var sp = new URLSearchParams(window.location.search || '');
-      var project = sp.get('project');
-      if (!project) return;
-
-      var targetId = String(project || '').trim();
-      if (!targetId) return;
-
-      var target = document.getElementById(targetId);
-      if (!target || !target.querySelector('.gallery-grid')) return;
-
-      document.body && document.body.classList.add('crmo-isolated-view');
-
-      // Hide all other main sections (including "הסטודיו"/about)
-      var main = document.querySelector('main');
-      if (main){
-        var secs = main.querySelectorAll('section');
-        secs.forEach(function(sec){
-          if (sec.id === targetId) return;
-          sec.classList.add('crmo-isolated-hide');
-        });
-      }
-
-      // Open in "Extended" state (12+ tiles) inline
-      try{
-        target.classList.add('crmo-project-extended');
-      }catch(e){}
-
-      try{ window.scrollTo(0,0); }catch(e){}
-    }catch(e){}
-  }
-
-  function applyBrandAssets(){
-    try{
-      if (!window.CRMO_BRAND_ASSETS) return;
-
-      // favicon
-      var ico = document.querySelector('link[rel="icon"]');
-      if (ico && window.CRMO_BRAND_ASSETS.favicon) ico.setAttribute('href', window.CRMO_BRAND_ASSETS.favicon);
-
-      // header logo (best-effort)
-      var hl = document.querySelector('header img#headerLogo, header img.logo, header img[alt="CRMO"]');
-      if (hl && window.CRMO_BRAND_ASSETS.headerLogo) hl.setAttribute('src', window.CRMO_BRAND_ASSETS.headerLogo);
-
-      // social meta (best-effort)
-      var og = document.querySelector('meta[property="og:image"]');
-      if (og && window.CRMO_BRAND_ASSETS.social && window.CRMO_BRAND_ASSETS.social.ogImage) og.setAttribute('content', window.CRMO_BRAND_ASSETS.social.ogImage);
-      var tw = document.querySelector('meta[name="twitter:image"]');
-      if (tw && window.CRMO_BRAND_ASSETS.social && window.CRMO_BRAND_ASSETS.social.twitterImage) tw.setAttribute('content', window.CRMO_BRAND_ASSETS.social.twitterImage);
-    }catch(e){}
-  }
-
-  function init(){
-    applyBrandAssets();
-    initTripleForAllGalleries();
-    setupExtendedStateHooks();
-    applyIsolationFromURL();
-  }
-
-  if (document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
-</script>
-
-<script id="crmo-admin-stabilizer-v1694">
-(function(){
-  function $(sel){ try{ return document.querySelector(sel);}catch(e){ return null; } }
-  function $all(sel){ try{ return Array.prototype.slice.call(document.querySelectorAll(sel)||[]);}catch(e){ return []; } }
-  function force(){
-    try{
-      if(!document.body || !document.body.classList.contains('is-admin')) return;
-      // Keep admin UI visible + clickable
-      var el;
-      el = document.getElementById('crmo-admin-bar'); if(el){ el.style.display='block'; el.style.visibility='visible'; el.style.opacity='1'; el.style.pointerEvents='auto'; }
-      el = document.getElementById('crmo-header-admin'); if(el){ el.style.display='block'; el.style.visibility='visible'; el.style.opacity='1'; el.style.pointerEvents='auto'; }
-      el = document.getElementById('crmo-galleries-admin'); if(el){ el.style.display='block'; el.style.visibility='visible'; el.style.opacity='1'; el.style.pointerEvents='auto'; }
-      $all('.tiles-manager-bar').forEach(function(b){ b.style.display='flex'; b.style.visibility='visible'; b.style.opacity='1'; b.style.pointerEvents='auto'; });
-    }catch(e){}
-  }
-  function init(){
-    try{
-      // Force once after load and after first paint
-      force();
-      requestAnimationFrame(force);
-      // Observe changes that might hide admin UI a few seconds later
-      var obs = new MutationObserver(function(){ force(); });
-      obs.observe(document.documentElement, {attributes:true, attributeFilter:['class','style'], subtree:true});
-      obs.observe(document.body, {attributes:true, attributeFilter:['class','style'], subtree:true});
-    }catch(e){}
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-</script>
-
-<script id="crmo-auth-admin-class-v1694">
-(function(){
-  function isAllowed(email){
-    try{
-      var list = (window.CRMO_ADMIN_EMAILS && Array.isArray(window.CRMO_ADMIN_EMAILS)) ? window.CRMO_ADMIN_EMAILS : ['boochin@gmail.com','boochin@walla.co.il'];
-      var em = String(email||'').toLowerCase().trim();
-      return !!em && list.map(function(x){return String(x||'').toLowerCase().trim();}).indexOf(em)!==-1;
-    }catch(e){ return false; }
-  }
-  async function attach(){
-    try{
-      if(!window.CRMO_getSbClient) return;
-      var sb = await window.CRMO_getSbClient();
-      if(!sb || !sb.auth) return;
-
-      var apply = function(email){
-        if(isAllowed(email)){
-          document.body.classList.add('is-admin','role-admin');
-        }
-      };
-
-      // Try current session
-      try{
-        var sess = (window.CRMO_safeGetSession) ? await window.CRMO_safeGetSession(sb) : null;
-        var em = sess && sess.user && sess.user.email;
-        apply(em);
-      }catch(e){}
-
-      // Listen to auth changes
-      try{
-        if(typeof sb.auth.onAuthStateChange === 'function'){
-          sb.auth.onAuthStateChange(function(evt, session){
-            try{
-              var email = session && session.user && session.user.email;
-              apply(email);
-            }catch(e){}
-          });
-        }
-      }catch(e){}
-    }catch(e){}
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', attach);
-  else attach();
-})();
-</script>
 </body>
 </html>
