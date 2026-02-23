@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1694 single -->
+<!-- CRMO_v1695 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -63,11 +63,11 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1693";
+window.CRMO_BUILD_VERSION = "1695";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 1694;
-window.CRMO_VERSION_NUMBER = 1694;
-window.CRMO_VERSION_TAG = "CRMO_v1694";
+window.CRMO_VERSION = 1695;
+window.CRMO_VERSION_NUMBER = 1695;
+window.CRMO_VERSION_TAG = "CRMO_v1695";
 
 /* v1694: Admin recognition by email only (for consistent admin bar across browsers). */
 window.CRMO_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
@@ -667,7 +667,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1694</title>
+<title>CRMO_v1695</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8044,8 +8044,10 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   }
 
   function applyUI(owner){
-    // v1694: FORCE ADMIN MODE ALWAYS ON
+    // v1695: FORCE ADMIN MODE ALWAYS ON (never hide admin UI)
     owner = true;
+    try{ document.body.classList.add("is-admin"); }catch(e){}
+    try{ document.body.classList.add("role-admin","role-master"); document.body.classList.remove("role-guest"); }catch(e){}
 
     setOwnerClasses(owner);
 
@@ -8110,7 +8112,8 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   let lastOwner = false;
 
     async function refresh(){
-    // v1694: FORCE ADMIN MODE - never hide UI
+    // v1695: FORCE ADMIN MODE - never hide UI
+    try{ document.body.classList.add("is-admin"); }catch(e){}
     let email = "";
     try{
       const r = await readOwnerFromSupabase();
@@ -8373,13 +8376,30 @@ body.is-admin .tiles-manager-bar{
 </style>
 
 
-<style id="crmo_admin_force_css_v1693">
+<style id="crmo_admin_force_css_v1695">
 body.is-admin .admin-bar, body.is-admin #admin-interface { display: flex !important; visibility: visible !important; opacity: 1 !important; }
 body.is-admin #crmo-admin-bar, body.is-admin #crmo-header-admin, body.is-admin #crmo-galleries-admin { display: block !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
 body.is-admin .tiles-manager-bar { display: flex !important; visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
 body.is-admin #crmo-admin-bar * , body.is-admin .tiles-manager-bar * { pointer-events: auto !important; }
 body.is-admin.crmo-internal-editor-open #crmo-admin-bar{ pointer-events: auto !important; }
 </style>
+
+<style id="crmo_force_admin_visible_v1695">
+/* v1695: hard-force admin UI visibility (prevents post-refresh disabling) */
+#crmo-admin-bar, #crmo-admin-subbar, .tile-edit-btn {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+/* keep other admin surfaces interactive */
+#crmo-role-toggle, #admin-interface, #crmo-header-admin, #crmo-galleries-admin, .tiles-manager-bar {
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+</style>
+
 </head>
 <body class="gallery-hover-ready role-guest">
 
