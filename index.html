@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1686 single -->
+<!-- CRMO_v1687 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -64,15 +64,45 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1686";
+window.CRMO_BUILD_VERSION = "1687";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1686';
-window.CRMO_VERSION_NUMBER = 1686;
+window.CRMO_VERSION = 'CRMO_v1687';
+window.CRMO_VERSION_NUMBER = 1687;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
+<script id="crmo-factory-reset-v1687">
+(function(){
+  try{
+    var FLAG = 'crmo_factory_reset_done__v1687';
+    if(localStorage.getItem(FLAG)==='1') return;
+
+    // Remove CRMO local state (but DO NOT touch Supabase auth tokens: keys starting with "sb-")
+    var keys=[];
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(!k) continue;
+      keys.push(k);
+    }
+    keys.forEach(function(k){
+      try{
+        if(k.indexOf('sb-')===0) return;              // keep supabase session
+        if(k.indexOf('supabase.')===0) return;        // keep supabase session (some builds)
+        if(k.indexOf('crmo_')===0) localStorage.removeItem(k);
+        if(k==='main') localStorage.removeItem(k);
+        if(k==='crmo_gallery_state_v1') localStorage.removeItem(k);
+        if(k==='crmo_content_data') localStorage.removeItem(k);
+      }catch(e){}
+    });
+
+    // Mark done
+    localStorage.setItem(FLAG,'1');
+  }catch(e){}
+})();
+</script>
+
 
 <script id="crmo_asset_paths_v1557">
 /* v1556: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
@@ -9044,6 +9074,17 @@ html.crmo-owner .tile-admin-icons{ display:flex !important; }
 html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
 </style>
 
+
+<style id="crmo-bars-always-visible-v1687">
+  /* Force user role bar + admin bar always visible (no flicker) */
+  #crmo-rolebar, #crmo-adminbar{
+    display:flex !important;
+    visibility:visible !important;
+    opacity:1 !important;
+    pointer-events:auto !important;
+  }
+</style>
+
 </head>
 <body class="gallery-hover-ready role-guest">
 
@@ -16352,1487 +16393,812 @@ const items = ensureDataset(tempGrid);
   "projects": [
     {
       "id": "intro-1",
-      "title": "חנויות וחללי מסחר",
-      "shortDescription": "חנות דגל לרשת אופנה – תכנון מסע לקוח, ויטרינה חכמה וקופה שמייצרת סגירת מכירה. טקסט דמה נוסף לשתי שורות נוספות, כדי לבדוק שהאוברליי מתנהג נכון גם כשיש תיאור ארוך יותר מהרגיל.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "intro"
-      ],
-      "type": "image",
-      "status": "active",
-      "featured": true,
-      "assets": [
-        {
-          "index": 1,
-          "file": "intro-1",
-          "caption": "חנות דגל לרשת אופנה – תכנון מסע לקוח, ויטרינה חכמה וקופה שמייצרת סגירת מכירה. טקסט דמה נוסף לשתי שורות נוספות, כדי לבדוק שהאוברליי מתנהג נכון גם כשיש תיאור ארוך יותר מהרגיל."
-        }
-      ],
-      "captionMode": "shared",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
+      "featured": false,
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "intro",
-          "position": 1
-        }
+        "intro"
       ]
     },
     {
       "id": "intro-2",
-      "title": "תערוכות וביתנים",
-      "shortDescription": "ביתן פתוח שמושך תנועה מהמעבר, עם מסר חד ותצוגת מוצר שמספרת סיפור.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "intro"
-      ],
-      "type": "image",
-      "status": "active",
-      "featured": true,
-      "assets": [
-        {
-          "index": 1,
-          "file": "intro-2",
-          "caption": "ביתן פתוח שמושך תנועה מהמעבר, עם מסר חד ותצוגת מוצר שמספרת סיפור."
-        }
-      ],
-      "captionMode": "shared",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
+      "featured": false,
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "intro",
-          "position": 2
-        }
+        "intro"
       ]
     },
     {
       "id": "intro-3",
-      "title": "סטנדים ותצוגות מדף",
-      "shortDescription": "סטנדים רצפתיים ודלפקיים שמבליטים את המוצר בנקודת המכירה ומגדילים שטח מדף אפקטיבי.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "intro"
-      ],
-      "type": "image",
-      "status": "active",
-      "featured": true,
-      "assets": [
-        {
-          "index": 1,
-          "file": "intro-3",
-          "caption": "סטנדים רצפתיים ודלפקיים שמבליטים את המוצר בנקודת המכירה ומגדילים שטח מדף אפקטיבי."
-        }
-      ],
-      "captionMode": "shared",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
+      "featured": false,
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "intro",
-          "position": 3
-        }
+        "intro"
       ]
     },
     {
       "id": "intro-4",
-      "title": "מיתוג וזהות חזותית",
-      "shortDescription": "שפה גרפית אחידה – לוגו, צבעים, טיפוגרפיה ושילוט שמחברים את כל נקודות המגע.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "intro"
-      ],
-      "type": "image",
-      "status": "active",
-      "featured": true,
-      "assets": [
-        {
-          "index": 1,
-          "file": "intro-4",
-          "caption": "שפה גרפית אחידה – לוגו, צבעים, טיפוגרפיה ושילוט שמחברים את כל נקודות המגע."
-        }
-      ],
-      "captionMode": "shared",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
+      "featured": false,
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "intro",
-          "position": 4
-        }
+        "intro"
       ]
     },
     {
       "id": "intro-5",
-      "title": "אריזות ומוצרים",
-      "shortDescription": "אריזות מדף, קיטים ופתרונות מבניים שמתרגמים יתרון מוצר לבחירה מיידית.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "intro"
-      ],
-      "type": "image",
-      "status": "active",
-      "featured": true,
-      "assets": [
-        {
-          "index": 1,
-          "file": "intro-5",
-          "caption": "אריזות מדף, קיטים ופתרונות מבניים שמתרגמים יתרון מוצר לבחירה מיידית."
-        }
-      ],
-      "captionMode": "shared",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
+      "featured": false,
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "intro",
-          "position": 5
-        }
+        "intro"
       ]
     },
     {
       "id": "intro-6",
-      "title": "עסקים קטנים",
-      "shortDescription": "חנות רחוב, קליניקה או בית קפה – פתרונות ממוקדים שעובדים גם בתקציב חכם.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "intro"
-      ],
-      "type": "image",
-      "status": "active",
-      "featured": true,
-      "assets": [
-        {
-          "index": 1,
-          "file": "intro-6",
-          "caption": "חנות רחוב, קליניקה או בית קפה – פתרונות ממוקדים שעובדים גם בתקציב חכם."
-        }
-      ],
-      "captionMode": "shared",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
+      "featured": false,
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "intro",
-          "position": 6
-        }
+        "intro"
       ]
     },
     {
       "id": "secondary-gallery-1",
-      "title": "dream",
-      "shortDescription": "הקשבה, מחקר ודיוק חלום המותג. מגדירים מה הלקוח צריך להרגיש כשהוא פוגש את המותג.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "secondary-gallery"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "multi",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "secondary-gallery-1",
-          "caption": "הקשבה, מחקר ודיוק חלום המותג. מגדירים מה הלקוח צריך להרגיש כשהוא פוגש את המותג."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "secondary-gallery",
-          "position": 1
-        }
+        "secondary-gallery"
       ]
     },
     {
       "id": "secondary-gallery-2",
-      "title": "define",
-      "shortDescription": "ממפים משימה, קהלים ומטרות מכירה. מגדירים מדדי הצלחה ברורים ויעדים מדידים.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "secondary-gallery"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "multi",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "secondary-gallery-2",
-          "caption": "ממפים משימה, קהלים ומטרות מכירה. מגדירים מדדי הצלחה ברורים ויעדים מדידים."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "secondary-gallery",
-          "position": 2
-        }
+        "secondary-gallery"
       ]
     },
     {
       "id": "secondary-gallery-3",
-      "title": "design",
-      "shortDescription": "מתרגמים אסטרטגיה לשפה חזותית, חלל ומוצר. בוחנים חלופות עד לפתרון חד וברור.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "secondary-gallery"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "multi",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "secondary-gallery-3",
-          "caption": "מתרגמים אסטרטגיה לשפה חזותית, חלל ומוצר. בוחנים חלופות עד לפתרון חד וברור."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "secondary-gallery",
-          "position": 3
-        }
+        "secondary-gallery"
       ]
     },
     {
       "id": "secondary-gallery-4",
-      "title": "deliver",
-      "shortDescription": "מכינים קבצי ביצוע, מפקחים על הייצור ומלווים עד התקנה בשטח.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "secondary-gallery"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "multi",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "secondary-gallery-4",
-          "caption": "מכינים קבצי ביצוע, מפקחים על הייצור ומלווים עד התקנה בשטח."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "secondary-gallery",
-          "position": 4
-        }
+        "secondary-gallery"
+      ]
+    },
+    {
+      "id": "secondary-gallery-5",
+      "title": "",
+      "shortDescription": "",
+      "brand": null,
+      "tags": [],
+      "type": "multi",
+      "status": "draft",
+      "featured": false,
+      "assets": [],
+      "captionMode": "off",
+      "galleries": [
+        "secondary-gallery"
+      ]
+    },
+    {
+      "id": "secondary-gallery-6",
+      "title": "",
+      "shortDescription": "",
+      "brand": null,
+      "tags": [],
+      "type": "multi",
+      "status": "draft",
+      "featured": false,
+      "assets": [],
+      "captionMode": "off",
+      "galleries": [
+        "secondary-gallery"
       ]
     },
     {
       "id": "stores-1",
-      "title": "חנות דגל",
-      "shortDescription": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stores"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "img1",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 2,
-          "file": "img2",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 3,
-          "file": "img3",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 4,
-          "file": "img4",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 5,
-          "file": "img5",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 6,
-          "file": "img6",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 7,
-          "file": "img7",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 8,
-          "file": "img8",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 9,
-          "file": "img9",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 10,
-          "file": "img10",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 11,
-          "file": "img11",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        },
-        {
-          "index": 12,
-          "file": "img12",
-          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stores",
-          "position": 1
-        }
+        "stores"
       ]
     },
     {
       "id": "stores-2",
-      "title": "אזור מותג ברשת",
-      "shortDescription": "אי מותג בתוך רשת פארם – קיר מדף, דלפק הדגמה ונקודת ריסוט חזקה.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stores"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stores-2",
-          "caption": "אי מותג בתוך רשת פארם – קיר מדף, דלפק הדגמה ונקודת ריסוט חזקה."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stores",
-          "position": 2
-        }
+        "stores"
       ]
     },
     {
       "id": "stores-3",
-      "title": "פופ-אפ עונתי",
-      "shortDescription": "פופ-אפ בקניון לתקופת השקה – פתרון מודולרי לפירוק והרכבה מהירה.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stores"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stores-3",
-          "caption": "פופ-אפ בקניון לתקופת השקה – פתרון מודולרי לפירוק והרכבה מהירה."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stores",
-          "position": 3
-        }
+        "stores"
       ]
     },
     {
       "id": "stores-4",
-      "title": "חלון ראווה",
-      "shortDescription": "תצוגת חלון מתחלפת לעונות השנה, עם מסר קצר וברור מרחוק.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stores"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stores-4",
-          "caption": "תצוגת חלון מתחלפת לעונות השנה, עם מסר קצר וברור מרחוק."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stores",
-          "position": 4
-        }
+        "stores"
       ]
     },
     {
       "id": "stores-5",
-      "title": "חנות עודפים",
-      "shortDescription": "סידור חלל עודפים בצורה נקייה שמדגישה מציאות במקום בלגן.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stores"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stores-5",
-          "caption": "סידור חלל עודפים בצורה נקייה שמדגישה מציאות במקום בלגן."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stores",
-          "position": 5
-        }
+        "stores"
       ]
     },
     {
       "id": "stores-6",
-      "title": "קיוסק במעבר",
-      "shortDescription": "קיוסק אי במעבר ראשי – שילוב של אחסון סגור ותצוגת מדף פתוחה.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stores"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stores-6",
-          "caption": "קיוסק אי במעבר ראשי – שילוב של אחסון סגור ותצוגת מדף פתוחה."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stores",
-          "position": 6
-        }
-      ]
-    },
-    {
-      "id": "stores-7",
-      "title": "אזור קופה",
-      "shortDescription": "אזור קופה משודרג עם סטנד קו אחרון ושילוט מבצע נקודתי.",
-      "brand": null,
-      "tags": [
         "stores"
-      ],
-      "type": "image",
-      "status": "active",
-      "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stores-7",
-          "caption": "אזור קופה משודרג עם סטנד קו אחרון ושילוט מבצע נקודתי."
-        }
-      ],
-      "captionMode": "shared",
-      "galleries": [
-        {
-          "galleryId": "stores",
-          "position": 7
-        }
-      ]
-    },
-    {
-      "id": "stores-8",
-      "title": "אי פעילות",
-      "shortDescription": "אי הפעלה פתוח באמצע החלל – מקום להדגמות ולנוכחות מותג.",
-      "brand": null,
-      "tags": [
-        "stores"
-      ],
-      "type": "image",
-      "status": "active",
-      "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stores-8",
-          "caption": "אי הפעלה פתוח באמצע החלל – מקום להדגמות ולנוכחות מותג."
-        }
-      ],
-      "captionMode": "shared",
-      "galleries": [
-        {
-          "galleryId": "stores",
-          "position": 8
-        }
-      ]
-    },
-    {
-      "id": "stores-9",
-      "title": "פינת מדידה",
-      "shortDescription": "אזור מדידה מתוכנן לנוחות הלקוח, כולל מראה, תלייה ותאורה מאירת פנים.",
-      "brand": null,
-      "tags": [
-        "stores"
-      ],
-      "type": "image",
-      "status": "active",
-      "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stores-9",
-          "caption": "אזור מדידה מתוכנן לנוחות הלקוח, כולל מראה, תלייה ותאורה מאירת פנים."
-        }
-      ],
-      "captionMode": "shared",
-      "galleries": [
-        {
-          "galleryId": "stores",
-          "position": 9
-        }
       ]
     },
     {
       "id": "exhibitions-1",
-      "title": "ביתן שורה",
-      "shortDescription": "ביתן שורה קומפקטי עם חזית בולטת, מקום לדלפק ורקע גרפי ברור מרחוק.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "exhibitions"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "exhibitions-1",
-          "caption": "ביתן שורה קומפקטי עם חזית בולטת, מקום לדלפק ורקע גרפי ברור מרחוק."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "exhibitions",
-          "position": 1
-        }
+        "exhibitions"
       ]
     },
     {
       "id": "exhibitions-2",
-      "title": "ביתן אי",
-      "shortDescription": "ביתן אי פתוח מכל הכיוונים – מסלול כניסה טבעי ותצוגת מוצר מרכזית.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "exhibitions"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "exhibitions-2",
-          "caption": "ביתן אי פתוח מכל הכיוונים – מסלול כניסה טבעי ותצוגת מוצר מרכזית."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "exhibitions",
-          "position": 2
-        }
+        "exhibitions"
       ]
     },
     {
       "id": "exhibitions-3",
-      "title": "אזור הדגמה",
-      "shortDescription": "עמדת הדגמה חיה עם מסך, משטח עבודה ואחסון לדגימות.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "exhibitions"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "exhibitions-3",
-          "caption": "עמדת הדגמה חיה עם מסך, משטח עבודה ואחסון לדגימות."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "exhibitions",
-          "position": 3
-        }
+        "exhibitions"
       ]
     },
     {
       "id": "exhibitions-4",
-      "title": "פינת ישיבות",
-      "shortDescription": "פינת ישיבה פתוחה לשיחות מכירה, עם בידול עדין מהמעבר.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "exhibitions"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "exhibitions-4",
-          "caption": "פינת ישיבה פתוחה לשיחות מכירה, עם בידול עדין מהמעבר."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "exhibitions",
-          "position": 4
-        }
+        "exhibitions"
       ]
     },
     {
       "id": "exhibitions-5",
-      "title": "שפת תערוכה",
-      "shortDescription": "סט גרפיקות חוזרות לכל הנראות בתערוכה, לשמירה על זיהוי מותג מיידי.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "exhibitions"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "exhibitions-5",
-          "caption": "סט גרפיקות חוזרות לכל הנראות בתערוכה, לשמירה על זיהוי מותג מיידי."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "exhibitions",
-          "position": 5
-        }
+        "exhibitions"
       ]
     },
     {
       "id": "exhibitions-6",
-      "title": "ביתן מודולרי",
-      "shortDescription": "מבנה מודולרי לשימוש חוזר בכמה תערוכות, עם חלקים שניתן להרכיב לפי הצורך.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "exhibitions"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "exhibitions-6",
-          "caption": "מבנה מודולרי לשימוש חוזר בכמה תערוכות, עם חלקים שניתן להרכיב לפי הצורך."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "exhibitions",
-          "position": 6
-        }
+        "exhibitions"
       ]
     },
     {
       "id": "stands-1",
-      "title": "מתחם מכירה",
-      "shortDescription": "מתחם מכירה פתוח עם שילוב של סטנדים רצפתיים, מדף וקופה.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stands"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stands-1",
-          "caption": "מתחם מכירה פתוח עם שילוב של סטנדים רצפתיים, מדף וקופה."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stands",
-          "position": 1
-        }
+        "stands"
       ]
     },
     {
       "id": "stands-2",
-      "title": "סטנד רצפתי",
-      "shortDescription": "סטנד רצפתי עצמאי שמייצר נוכחות במסדרון ומספר סיפור שלם.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stands"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stands-2",
-          "caption": "סטנד רצפתי עצמאי שמייצר נוכחות במסדרון ומספר סיפור שלם."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stands",
-          "position": 2
-        }
+        "stands"
       ]
     },
     {
       "id": "stands-3",
-      "title": "סטנד דלפקי",
-      "shortDescription": "פתרון קומפקטי ליד הקופה לקניית אימפולס.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stands"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stands-3",
-          "caption": "פתרון קומפקטי ליד הקופה לקניית אימפולס."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stands",
-          "position": 3
-        }
+        "stands"
       ]
     },
     {
       "id": "stands-4",
-      "title": "כובש מדף",
-      "shortDescription": "אלמנט מדף שמושך את העין ומפנה מקום לפנייה ברורה למותג.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stands"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stands-4",
-          "caption": "אלמנט מדף שמושך את העין ומפנה מקום לפנייה ברורה למותג."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stands",
-          "position": 4
-        }
+        "stands"
       ]
     },
     {
       "id": "stands-5",
-      "title": "עמדת טעימה",
-      "shortDescription": "עמדה ניידת לדגימות ופעילויות קד\"מ.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stands"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stands-5",
-          "caption": "עמדה ניידת לדגימות ופעילויות קד\"מ."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stands",
-          "position": 5
-        }
+        "stands"
       ]
     },
     {
       "id": "stands-6",
-      "title": "פתרון מיוחד",
-      "shortDescription": "מבנה תצוגה לא שגרתי לבעיה לא שגרתית – תפירה אישית לצורך שיווקי.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "stands"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "stands-6",
-          "caption": "מבנה תצוגה לא שגרתי לבעיה לא שגרתית – תפירה אישית לצורך שיווקי."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "stands",
-          "position": 6
-        }
+        "stands"
       ]
     },
     {
       "id": "identity-1",
-      "title": "לוגו וחתימת מותג",
-      "shortDescription": "לוגו, סמל וסלוגן בגירסאות מותאמות למדיה, לחנות ולדיגיטל.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "identity"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "identity-1",
-          "caption": "לוגו, סמל וסלוגן בגירסאות מותאמות למדיה, לחנות ולדיגיטל."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "identity",
-          "position": 1
-        }
+        "identity"
       ]
     },
     {
       "id": "identity-2",
-      "title": "שפת צבעים וטיפוגרפיה",
-      "shortDescription": "הגדרת פלטת צבעים, פונטים והיררכיית כותרות ליישום בכל חומר.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "identity"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "identity-2",
-          "caption": "הגדרת פלטת צבעים, פונטים והיררכיית כותרות ליישום בכל חומר."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "identity",
-          "position": 2
-        }
+        "identity"
       ]
     },
     {
       "id": "identity-3",
-      "title": "ערכת אריזות",
-      "shortDescription": "משפחה של אריזות בגבהים ורוחבים שונים תחת שפה אחת אחידה.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "identity"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "identity-3",
-          "caption": "משפחה של אריזות בגבהים ורוחבים שונים תחת שפה אחת אחידה."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "identity",
-          "position": 3
-        }
+        "identity"
       ]
     },
     {
       "id": "identity-4",
-      "title": "אייקונים ופיקטוגרמות",
-      "shortDescription": "מערכת אייקונים לזיהוי מהיר של קטגוריות, טעמים או יתרונות.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "identity"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "identity-4",
-          "caption": "מערכת אייקונים לזיהוי מהיר של קטגוריות, טעמים או יתרונות."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "identity",
-          "position": 4
-        }
+        "identity"
       ]
     },
     {
       "id": "identity-5",
-      "title": "ספר מותג",
-      "shortDescription": "מסמך מסודר שמרכז חוקים, דוגמאות ומקרי מבחן ליישום נכון.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "identity"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "identity-5",
-          "caption": "מסמך מסודר שמרכז חוקים, דוגמאות ומקרי מבחן ליישום נכון."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "identity",
-          "position": 5
-        }
+        "identity"
       ]
     },
     {
       "id": "identity-6",
-      "title": "POS וחומרי מדף",
-      "shortDescription": "רול-אפים, מדבקות מדף, מוביילים ותלי מדף – כל מה שמשרת מכירה.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "identity"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "identity-6",
-          "caption": "רול-אפים, מדבקות מדף, מוביילים ותלי מדף – כל מה שמשרת מכירה."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "identity",
-          "position": 6
-        }
+        "identity"
       ]
     },
     {
       "id": "product-1",
-      "title": "מוצר מדף",
-      "shortDescription": "עיצוב מוצר שנראה טוב גם מרחוק וגם כשהלקוח מחזיק אותו ביד.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "product"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "product-1",
-          "caption": "עיצוב מוצר שנראה טוב גם מרחוק וגם כשהלקוח מחזיק אותו ביד."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "product",
-          "position": 1
-        }
+        "product"
       ]
     },
     {
       "id": "product-2",
-      "title": "ערכת השקה",
-      "shortDescription": "קיט מוצר להשקה – מארז, אינסרט והסבר שימוש.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "product"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "product-2",
-          "caption": "קיט מוצר להשקה – מארז, אינסרט והסבר שימוש."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "product",
-          "position": 2
-        }
+        "product"
       ]
     },
     {
       "id": "product-3",
-      "title": "משפחת מוצרים",
-      "shortDescription": "קבוצה של מוצרים תחת שפה אחת, עם הבדלה ברורה בין וריאנטים.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "product"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "product-3",
-          "caption": "קבוצה של מוצרים תחת שפה אחת, עם הבדלה ברורה בין וריאנטים."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "product",
-          "position": 3
-        }
+        "product"
       ]
     },
     {
       "id": "product-4",
-      "title": "פתרון מבני",
-      "shortDescription": "שינוי צורה או פתיחה של המוצר כדי לשפר שימוש וחוויית פתיחה.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "product"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "product-4",
-          "caption": "שינוי צורה או פתיחה של המוצר כדי לשפר שימוש וחוויית פתיחה."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "product",
-          "position": 4
-        }
+        "product"
       ]
     },
     {
       "id": "product-5",
-      "title": "מוצר דיגיטלי פיזי",
-      "shortDescription": "מוצרים שמשלבים מסך, חיווי או ותאורה – תכנון חוויית שימוש.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "product"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "product-5",
-          "caption": "מוצרים שמשלבים מסך, חיווי או ותאורה – תכנון חוויית שימוש."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "product",
-          "position": 5
-        }
+        "product"
       ]
     },
     {
       "id": "product-6",
-      "title": "צילום מוצר",
-      "shortDescription": "פתרונות צילום ונראות למדיה דיגיטלית ואיקומרס.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "product"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "product-6",
-          "caption": "פתרונות צילום ונראות למדיה דיגיטלית ואיקומרס."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "product",
-          "position": 6
-        }
+        "product"
       ]
     },
     {
       "id": "packages-1",
-      "title": "אריזת פרימיום",
-      "shortDescription": "קופסה מרובדת עם אינסרט פנימי, לחוויה של 'פתיחת מתנה'.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "packages"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "packages-1",
-          "caption": "קופסה מרובדת עם אינסרט פנימי, לחוויה של 'פתיחת מתנה'."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "packages",
-          "position": 1
-        }
+        "packages"
       ]
     },
     {
       "id": "packages-2",
-      "title": "אריזת מדף חכמה",
-      "shortDescription": "אריזה שנבנית מהמוצר החוצה – מסר ברור באזור הכי נראה.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "packages"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "packages-2",
-          "caption": "אריזה שנבנית מהמוצר החוצה – מסר ברור באזור הכי נראה."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "packages",
-          "position": 2
-        }
+        "packages"
       ]
     },
     {
       "id": "packages-3",
-      "title": "סט אריזות",
-      "shortDescription": "שלוש רמות מחיר באותה משפחת מוצרים, עם הבדלה ברורה על המדף.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "packages"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "packages-3",
-          "caption": "שלוש רמות מחיר באותה משפחת מוצרים, עם הבדלה ברורה על המדף."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "packages",
-          "position": 3
-        }
+        "packages"
       ]
     },
     {
       "id": "packages-4",
-      "title": "שרוול ומדבקות",
-      "shortDescription": "פתרון מהיר לעדכון אריזה קיימת באמצעות שרוול או מדבקה חכמה.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "packages"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "packages-4",
-          "caption": "פתרון מהיר לעדכון אריזה קיימת באמצעות שרוול או מדבקה חכמה."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "packages",
-          "position": 4
-        }
+        "packages"
       ]
     },
     {
       "id": "packages-5",
-      "title": "קיט מתנה",
-      "shortDescription": "מארז מהודר למכירה עונתית או כמתנה ממותגת.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "packages"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "packages-5",
-          "caption": "מארז מהודר למכירה עונתית או כמתנה ממותגת."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "packages",
-          "position": 5
-        }
+        "packages"
       ]
     },
     {
       "id": "packages-6",
-      "title": "מארז תצוגה",
-      "shortDescription": "אריזה שמתפקדת גם כסטנד מדף קטן בחנות.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "packages"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "packages-6",
-          "caption": "אריזה שמתפקדת גם כסטנד מדף קטן בחנות."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "packages",
-          "position": 6
-        }
+        "packages"
       ]
     },
     {
       "id": "small-1",
-      "title": "קפה שכונתי",
-      "shortDescription": "מיתוג, שילוט חוץ ופנים ותפריטים לקפה קטן עם אופי מקומי.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "small"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "small-1",
-          "caption": "מיתוג, שילוט חוץ ופנים ותפריטים לקפה קטן עם אופי מקומי."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "small",
-          "position": 1
-        }
+        "small"
       ]
     },
     {
       "id": "small-2",
-      "title": "קליניקת בוטיק",
-      "shortDescription": "עיצוב שקט ובטוח – שילוט, דלת כניסה וחומרי מידע.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "small"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "small-2",
-          "caption": "עיצוב שקט ובטוח – שילוט, דלת כניסה וחומרי מידע."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "small",
-          "position": 2
-        }
+        "small"
       ]
     },
     {
       "id": "small-3",
-      "title": "חנות רחוב",
-      "shortDescription": "חנות קטנה במרכז העיר – חזית, מדפים ותצוגה לחלון.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "small"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "small-3",
-          "caption": "חנות קטנה במרכז העיר – חזית, מדפים ותצוגה לחלון."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "small",
-          "position": 3
-        }
+        "small"
       ]
     },
     {
       "id": "small-4",
-      "title": "רכב ממותג",
-      "shortDescription": "גרפיקה לרכב עבודה שממשיכה את סיפור המותג לרחוב.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "small"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "small-4",
-          "caption": "גרפיקה לרכב עבודה שממשיכה את סיפור המותג לרחוב."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "small",
-          "position": 4
-        }
+        "small"
       ]
     },
     {
       "id": "small-5",
-      "title": "עסק מהבית",
-      "shortDescription": "פתרונות דיגיטליים וחומרי הדפסה לעסק שפועל מהבית.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "small"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "small-5",
-          "caption": "פתרונות דיגיטליים וחומרי הדפסה לעסק שפועל מהבית."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "small",
-          "position": 5
-        }
+        "small"
       ]
     },
     {
       "id": "small-6",
-      "title": "נקודת מכירה ראשונה",
-      "shortDescription": "סט פתיחה – לוגו, כרטיס ביקור, שלט וחומרי מדף בסיסיים.",
+      "title": "",
+      "shortDescription": "",
       "brand": null,
-      "tags": [
-        "small"
-      ],
-      "type": "image",
-      "status": "active",
+      "tags": [],
+      "type": "standard",
+      "status": "draft",
       "featured": false,
-      "assets": [
-        {
-          "index": 1,
-          "file": "small-6",
-          "caption": "סט פתיחה – לוגו, כרטיס ביקור, שלט וחומרי מדף בסיסיים."
-        }
-      ],
-      "captionMode": "shared",
+      "assets": [],
+      "captionMode": "off",
       "galleries": [
-        {
-          "galleryId": "small",
-          "position": 6
-        }
+        "small"
       ]
     }
   ],
@@ -17888,7 +17254,9 @@ const items = ensureDataset(tempGrid);
         "secondary-gallery-1",
         "secondary-gallery-2",
         "secondary-gallery-3",
-        "secondary-gallery-4"
+        "secondary-gallery-4",
+        "secondary-gallery-5",
+        "secondary-gallery-6"
       ]
     },
     {
@@ -17896,14 +17264,14 @@ const items = ensureDataset(tempGrid);
       "slug": "stores",
       "type": "standard",
       "title": {
-        "desktop": "עיצוב ותכנון חווית לקוח, הופכים חלל מסחרי למנוע מכירות.",
-        "tablet": "עיצוב ותכנון חווית לקוח, הופכים חלל מסחרי למנוע מכירות.",
-        "mobile": "עיצוב ותכנון חווית לקוח, הופכים חלל מסחרי למנוע מכירות."
+        "desktop": null,
+        "tablet": null,
+        "mobile": null
       },
       "subtitle": {
-        "desktop": "ממתחמים קמעונאיים וחנויות דגל ועד דוכני מכירה ממוקדים בקניונים, אנו מתכננים מסע לקוח המוביל לבחירה ולקנייה, ממקסם כל מטר ומחבר את סיפור המותג לחלל.",
-        "tablet": "ממתחמים קמעונאיים וחנויות דגל ועד דוכני מכירה ממוקדים בקניונים, אנו מתכננים מסע לקוח המוביל לבחירה ולקנייה, ממקסם כל מטר ומחבר את סיפור המותג לחלל.",
-        "mobile": "ממתחמים קמעונאיים וחנויות דגל ועד דוכני מכירה ממוקדים בקניונים, אנו מתכננים מסע לקוח המוביל לבחירה ולקנייה, ממקסם כל מטר ומחבר את סיפור המותג לחלל."
+        "desktop": null,
+        "tablet": null,
+        "mobile": null
       },
       "layout": {
         "desktopTiles": 6,
@@ -17916,10 +17284,7 @@ const items = ensureDataset(tempGrid);
         "stores-3",
         "stores-4",
         "stores-5",
-        "stores-6",
-        "stores-7",
-        "stores-8",
-        "stores-9"
+        "stores-6"
       ]
     },
     {
@@ -17927,14 +17292,14 @@ const items = ensureDataset(tempGrid);
       "slug": "exhibitions",
       "type": "standard",
       "title": {
-        "desktop": "ביתן שמספר מהר ומשאיר רושם.",
-        "tablet": "ביתן שמספר מהר ומשאיר רושם.",
-        "mobile": "ביתן שמספר מהר ומשאיר רושם."
+        "desktop": null,
+        "tablet": null,
+        "mobile": null
       },
       "subtitle": {
-        "desktop": "בעולם של תערוכות, יש לכם שניות בודדות ללכוד תשומת לב. אנחנו מעצבים ביתנים ודוכנים עם מסר ברור, זרימה נכונה וחוויה שמייצרת עניין ולידים בשטח. מתכנון ועד הרכבה ופירוק.",
-        "tablet": "בעולם של תערוכות, יש לכם שניות בודדות ללכוד תשומת לב. אנחנו מעצבים ביתנים ודוכנים עם מסר ברור, זרימה נכונה וחוויה שמייצרת עניין ולידים בשטח. מתכנון ועד הרכבה ופירוק.",
-        "mobile": "בעולם של תערוכות, יש לכם שניות בודדות ללכוד תשומת לב. אנחנו מעצבים ביתנים ודוכנים עם מסר ברור, זרימה נכונה וחוויה שמייצרת עניין ולידים בשטח. מתכנון ועד הרכבה ופירוק."
+        "desktop": null,
+        "tablet": null,
+        "mobile": null
       },
       "layout": {
         "desktopTiles": 6,
@@ -17955,14 +17320,14 @@ const items = ensureDataset(tempGrid);
       "slug": "stands",
       "type": "standard",
       "title": {
-        "desktop": "פתרונות מדף, רצפה וחלל שממקסמים מכירה.",
-        "tablet": "פתרונות מדף, רצפה וחלל שממקסמים מכירה.",
-        "mobile": "פתרונות מדף, רצפה וחלל שממקסמים מכירה."
+        "desktop": null,
+        "tablet": null,
+        "mobile": null
       },
       "subtitle": {
-        "desktop": "אנחנו מעצבים סטנדים ומתקני תצוגה שמייצרים נוכחות בולטת, מספרים את סיפור המותג ומניעים לקנייה מדויקת, בכל נקודת מגע.",
-        "tablet": "אנחנו מעצבים סטנדים ומתקני תצוגה שמייצרים נוכחות בולטת, מספרים את סיפור המותג ומניעים לקנייה מדויקת, בכל נקודת מגע.",
-        "mobile": "אנחנו מעצבים סטנדים ומתקני תצוגה שמייצרים נוכחות בולטת, מספרים את סיפור המותג ומניעים לקנייה מדויקת, בכל נקודת מגע."
+        "desktop": null,
+        "tablet": null,
+        "mobile": null
       },
       "layout": {
         "desktopTiles": 6,
@@ -17983,14 +17348,14 @@ const items = ensureDataset(tempGrid);
       "slug": "identity",
       "type": "standard",
       "title": {
-        "desktop": "שפה חזותית אחידה שמתחברת לכל נקודת מגע.",
-        "tablet": "שפה חזותית אחידה שמתחברת לכל נקודת מגע.",
-        "mobile": "שפה חזותית אחידה שמתחברת לכל נקודת מגע."
+        "desktop": null,
+        "tablet": null,
+        "mobile": null
       },
       "subtitle": {
-        "desktop": "אנחנו מגדירים אסטרטגיית מותג ומתרגמים אותה לשפה חזותית. זהות שמחזיקה את כל נקודות המגע של הלקוח, במדיה, נקודת המכירה ובכנס המקצועי.",
-        "tablet": "אנחנו מגדירים אסטרטגיית מותג ומתרגמים אותה לשפה חזותית. זהות שמחזיקה את כל נקודות המגע של הלקוח, במדיה, נקודת המכירה ובכנס המקצועי.",
-        "mobile": "אנחנו מגדירים אסטרטגיית מותג ומתרגמים אותה לשפה חזותית. זהות שמחזיקה את כל נקודות המגע של הלקוח, במדיה, נקודת המכירה ובכנס המקצועי."
+        "desktop": null,
+        "tablet": null,
+        "mobile": null
       },
       "layout": {
         "desktopTiles": 6,
@@ -18011,14 +17376,14 @@ const items = ensureDataset(tempGrid);
       "slug": "product",
       "type": "standard",
       "title": {
-        "desktop": "איפיון, פיתוח ועיצוב מוצרים שמוכרים יותר.",
-        "tablet": "איפיון, פיתוח ועיצוב מוצרים שמוכרים יותר.",
-        "mobile": "איפיון, פיתוח ועיצוב מוצרים שמוכרים יותר."
+        "desktop": null,
+        "tablet": null,
+        "mobile": null
       },
       "subtitle": {
-        "desktop": "פתרונות פרקטיים, יעילים ומוכרים. עיצוב המשלב פסיכולוגיה והנדסת אנוש, טכנולוגיה ויצירתיות.",
-        "tablet": "פתרונות פרקטיים, יעילים ומוכרים. עיצוב המשלב פסיכולוגיה והנדסת אנוש, טכנולוגיה ויצירתיות.",
-        "mobile": "פתרונות פרקטיים, יעילים ומוכרים. עיצוב המשלב פסיכולוגיה והנדסת אנוש, טכנולוגיה ויצירתיות."
+        "desktop": null,
+        "tablet": null,
+        "mobile": null
       },
       "layout": {
         "desktopTiles": 6,
@@ -18091,202 +17456,7 @@ const items = ensureDataset(tempGrid);
       ]
     }
   ],
-  "brands": [
-    {
-      "id": "brand-01",
-      "name": "מותג 1",
-      "description": "5 עבודות לדוגמה למותג 1",
-      "logo": null,
-      "hasLightbox": true,
-      "linkedProjects": [],
-      "assets": [
-        {
-          "index": 1,
-          "file": "b1-1",
-          "caption": "5 עבודות לדוגמה למותג 1"
-        },
-        {
-          "index": 2,
-          "file": "b1-2",
-          "caption": "5 עבודות לדוגמה למותג 1"
-        },
-        {
-          "index": 3,
-          "file": "b1-3",
-          "caption": "5 עבודות לדוגמה למותג 1"
-        },
-        {
-          "index": 4,
-          "file": "b1-4",
-          "caption": "5 עבודות לדוגמה למותג 1"
-        },
-        {
-          "index": 5,
-          "file": "b1-5",
-          "caption": "5 עבודות לדוגמה למותג 1"
-        }
-      ]
-    },
-    {
-      "id": "brand-02",
-      "name": "מותג 2",
-      "description": "עבודה אחת לדוגמה למותג 2",
-      "logo": null,
-      "hasLightbox": true,
-      "linkedProjects": [],
-      "assets": [
-        {
-          "index": 1,
-          "file": "b2-1",
-          "caption": "עבודה אחת לדוגמה למותג 2"
-        }
-      ]
-    },
-    {
-      "id": "brand-03",
-      "name": "brand-03",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-04",
-      "name": "brand-04",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-05",
-      "name": "brand-05",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-06",
-      "name": "brand-06",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-07",
-      "name": "brand-07",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-08",
-      "name": "brand-08",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-09",
-      "name": "brand-09",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-10",
-      "name": "brand-10",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-11",
-      "name": "brand-11",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-12",
-      "name": "brand-12",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-13",
-      "name": "brand-13",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-14",
-      "name": "brand-14",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-15",
-      "name": "brand-15",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-16",
-      "name": "brand-16",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-17",
-      "name": "brand-17",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    },
-    {
-      "id": "brand-18",
-      "name": "brand-18",
-      "description": "",
-      "logo": null,
-      "hasLightbox": false,
-      "linkedProjects": [],
-      "assets": []
-    }
-  ]
+  "brands": []
 }
 </script>
 <script id="crmo-gallery-meta-store" type="application/json">
@@ -33900,6 +33070,59 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
   document.addEventListener('DOMContentLoaded', forceOwnerTab);
   window.addEventListener('pageshow', forceOwnerTab);
   window.addEventListener('crmo-auth-changed', forceOwnerTab);
+})();
+</script>
+
+
+<script id="crmo-ui-force-bars-v1687">
+(function(){
+  function forceVisible(){
+    try{
+      var rolebar=document.getElementById('crmo-rolebar');
+      var adminbar=document.getElementById('crmo-adminbar');
+      if(rolebar){ rolebar.style.display='flex'; rolebar.style.visibility='visible'; rolebar.style.opacity='1'; }
+      if(adminbar){ adminbar.style.display='flex'; adminbar.style.visibility='visible'; adminbar.style.opacity='1'; }
+    }catch(e){}
+  }
+
+  function forceOwnerSelected(){
+    try{
+      // prefer explicit data-role if exists
+      var ownerBtn = document.querySelector('#crmo-rolebar [data-role="owner"], #crmo-rolebar [data-role="OWNER"]');
+      if(!ownerBtn){
+        // fallback: find tab containing the word "בעלים"
+        var btns=[].slice.call(document.querySelectorAll('#crmo-rolebar button, #crmo-rolebar .crmo-role-tab'));
+        ownerBtn = btns.find(function(b){ return (b && (b.textContent||'').indexOf('בעלים')>-1); }) || null;
+      }
+      if(!ownerBtn) return;
+      // clear active from siblings
+      var all=[].slice.call(document.querySelectorAll('#crmo-rolebar .active, #crmo-rolebar .is-active, #crmo-rolebar [aria-selected="true"]'));
+      all.forEach(function(el){
+        try{
+          el.classList.remove('active','is-active');
+          el.setAttribute('aria-selected','false');
+        }catch(e){}
+      });
+      try{
+        ownerBtn.classList.add('active','is-active');
+        ownerBtn.setAttribute('aria-selected','true');
+      }catch(e){}
+    }catch(e){}
+  }
+
+  function boot(){
+    forceVisible();
+    forceOwnerSelected();
+    // re-assert on refresh-like events
+    window.addEventListener('focus', function(){ forceVisible(); forceOwnerSelected(); }, true);
+    window.addEventListener('pageshow', function(){ forceVisible(); forceOwnerSelected(); }, true);
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden){ forceVisible(); forceOwnerSelected(); } }, true);
+    // periodic light re-assert (very low frequency to avoid flicker)
+    setInterval(function(){ forceVisible(); forceOwnerSelected(); }, 2000);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
 
