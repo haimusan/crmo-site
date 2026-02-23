@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1685 single -->
+<!-- CRMO_v1686 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -64,10 +64,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1685";
+window.CRMO_BUILD_VERSION = "1686";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1685';
-window.CRMO_VERSION_NUMBER = 1685;
+window.CRMO_VERSION = 'CRMO_v1686';
+window.CRMO_VERSION_NUMBER = 1686;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1379,7 +1379,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1685</title>
+<title>CRMO_v1686</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -5111,13 +5111,11 @@ mpAdd.addEventListener('click', function(){
       if(!wrapper) return;
       var anchor = wrapper.querySelector('a.ph');
       if(!anchor) return;
-      // v1685: open Tile Editor modal on pencil click (and stop tile click navigation)
+      // v1686: open Tile Editor modal on pencil click (and stop tile click navigation)
       try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
       try{
-        if(window.CRMO_openTileEditor){
-          var grid = wrapper.closest('.gallery-grid, .grid, #stands, #exhibitions, #brands, #stores, #retail-interiors') || wrapper.parentElement;
-          var wrappers = [];
-          try{ wrappers = Array.prototype.slice.call((grid && grid.querySelectorAll) ? grid.querySelectorAll('.tile-edit-wrapper') : []); }catch(e){}
+        // v1686: legacy TileEditorModal path disabled (keep unified tile editor only)
+      }catch(e){}
           var idx = wrappers.length ? wrappers.indexOf(wrapper) : -1;
           if(idx < 0){
             try{
@@ -9039,8 +9037,8 @@ html.crmo-owner #crmo-admin-subbar{ display:block !important; }
 </style>
 
 
-<style id="crmo-owner-tile-edit-visible-v1685">
-/* v1685: ensure tile edit UI is visible for owner (some legacy rules hide it with !important) */
+<style id="crmo-owner-tile-edit-visible-v1686">
+/* v1686: ensure tile edit UI is visible for owner (some legacy rules hide it with !important) */
 html.crmo-owner .tile-edit-btn,
 html.crmo-owner .tile-admin-icons{ display:flex !important; }
 html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
@@ -22609,6 +22607,8 @@ if (key === currentGalleryKey){
   var currentEditIndex = null;
   var currentEditGalleryKey = null;
   function openTileEditor(key, idx){
+    // v1686: legacy TileEditorModal disabled (use unified editor #tile-editor only)
+    return;
     ensureGalleryState(key);
     var arr = galleryState[key];
     if (!arr || !arr[idx]) return;
@@ -22669,7 +22669,7 @@ if (key === currentGalleryKey){
     }
     closeTileEditor();
     try{ persistGalleryState(currentEditGalleryKey); }catch(e){}
-    // v1685: push to DB (Supabase) immediately
+    // v1686: push to DB (Supabase) immediately
     if (window.CRMO_saveMainNow){
       window.CRMO_saveMainNow().then(function(r){
         try{ if(window.CRMO_showSaveNotice) window.CRMO_showSaveNotice(r && r.ok ? ('נשמר לשרת ✓ (' + (r.result && r.result.data && r.result.data.updated_at ? r.result.data.updated_at : 'ok') + ')') : 'שמירה לשרת נכשלה'); }catch(e){}
@@ -33822,7 +33822,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 </script>
 
 
-<script id="crmo-save-notice-v1685">
+<script id="crmo-save-notice-v1686">
 (function(){
   if(window.CRMO_showSaveNotice) return;
   function ensure(){
@@ -33862,7 +33862,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 </script>
 
 
-<script id="crmo-gallerykey-sync-v1685">
+<script id="crmo-gallerykey-sync-v1686">
 (function(){
   try{
     setInterval(function(){
@@ -33873,6 +33873,33 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
       }catch(e){}
     }, 800);
   }catch(e){}
+})();
+</script>
+
+
+<script id="crmo_v1686_force_owner_default">
+(function(){
+  function forceOwnerTab(){
+    try{
+      var isOwner = false;
+      try{ isOwner = document.documentElement.classList.contains('crmo-owner') || document.body.classList.contains('role-master') || window.CRMO_IS_OWNER === true; }catch(e){}
+      if(!isOwner) return;
+      var bar = document.getElementById('crmo-role-toggle');
+      if(!bar) return;
+      var btns = bar.querySelectorAll('button[data-role]');
+      btns.forEach(function(b){
+        var role = b.getAttribute('data-role');
+        var on = (role === 'master');
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      document.body.classList.add('role-master');
+      document.body.classList.remove('role-guest','role-user','role-social','role-client','role-admin','role-ux');
+    }catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded', forceOwnerTab);
+  window.addEventListener('pageshow', forceOwnerTab);
+  window.addEventListener('crmo-auth-changed', forceOwnerTab);
 })();
 </script>
 
