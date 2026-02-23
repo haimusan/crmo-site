@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1685 single -->
+<!-- CRMO_v1690 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -79,16 +79,29 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1685";
+window.CRMO_BUILD_VERSION = "1690";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 1685;
-window.CRMO_VERSION_NUMBER = 1685;
-window.CRMO_VERSION_TAG = "CRMO_v1685";
+window.CRMO_VERSION = 1690;
+window.CRMO_VERSION_NUMBER = 1690;
+window.CRMO_VERSION_TAG = "CRMO_v1690";
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION_TAG || window.CRMO_VERSION_NUMBER || window.CRMO_VERSION || ""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
+
+<script id="crmo_brand_assets_v1690">
+/* v1690: Brand assets registry (future DB-driven). */
+window.CRMO_BRAND_ASSETS = window.CRMO_BRAND_ASSETS || {
+  favicon: "assets/branding/logo/favicon.svg",
+  headerLogo: "assets/branding/logo/logo.svg",
+  social: {
+    ogImage: "assets/branding/logo/logo.svg",
+    twitterImage: "assets/branding/logo/logo.svg"
+  }
+};
+</script>
+
 
 <script id="crmo_asset_paths_v1557">
 /* v1556: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
@@ -433,7 +446,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
     return window.CRMO_IS_OWNER === true;
   }
 
-  /* ===== CRMO RBAC (v1685) ===== */
+  /* ===== CRMO RBAC (v1690) ===== */
   (function(){
     // Hide admin UI by default; we only show it for owners after a role check.
     // IMPORTANT: We never remove/recreate admin DOM to avoid flicker.
@@ -602,7 +615,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
   /* ===== /CRMO RBAC ===== */
 
       
-  /* v1685: legacy admin-email fallback removed (RBAC owners only). */
+  /* v1690: legacy admin-email fallback removed (RBAC owners only). */
 
   async function ensureAuthed(){
     var sb = await getSbOrThrow();
@@ -2883,6 +2896,46 @@ a.ph, .ph { position: relative; }
   display:none;
 }
 </style>
+
+<style id="crmo_v1690_conditional_view_css">
+/* v1690: Conditional view logic (triple description + visibility flags + isolation). */
+
+/* Triple description (Mobile / Desktop / Extended) */
+.crmo-desc3 .crmo-desc-mobile{ display:inline; }
+.crmo-desc3 .crmo-desc-desktop{ display:none; }
+.crmo-desc3 .crmo-desc-extended{ display:none; }
+
+@media (min-width: 901px){
+  .crmo-desc3 .crmo-desc-mobile{ display:none; }
+  .crmo-desc3 .crmo-desc-desktop{ display:inline; }
+}
+
+/* "Project extended" mode overrides: show Extended text only */
+.crmo-project-extended .crmo-desc3 .crmo-desc-mobile,
+.crmo-project-extended .crmo-desc3 .crmo-desc-desktop{ display:none; }
+.crmo-project-extended .crmo-desc3 .crmo-desc-extended{ display:inline; }
+
+/* Admin visibility toggles */
+.crmo-gallery-hidden{ display:none !important; }
+@media (max-width: 640px){
+  .crmo-hide-mobile{ display:none !important; }
+}
+
+/* Deep-link isolation */
+.crmo-isolated-hide{ display:none !important; }
+
+
+/* Extended mode should also reveal extra tiles (12+) */
+.crmo-project-extended .tile-hidden-extra{ display:block !important; }
+body.crmo-route-gallery .tile-hidden-extra{ display:block !important; }
+
+/* Route-gallery is also an "extended" context for text */
+body.crmo-route-gallery .crmo-desc3 .crmo-desc-mobile,
+body.crmo-route-gallery .crmo-desc3 .crmo-desc-desktop{ display:none !important; }
+body.crmo-route-gallery .crmo-desc3 .crmo-desc-extended{ display:inline !important; }
+
+</style>
+
 
 <style id="crmo_extended_gallery_css">
 #crmoExtendedGalleryOverlay .crmo-ext-frame{
@@ -6654,7 +6707,7 @@ body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
 .crmo-admin-subtab:hover{ background: rgba(255,255,255,.92); }
 
 
-/* v1685 adminbar alignment */
+/* v1690 adminbar alignment */
 body.is-admin #crmo-admin-bar .crmo-admin-tabs{
   justify-content: flex-start !important; /* in RTL this is right aligned */
   width: 100% !important;
@@ -9272,12 +9325,12 @@ body:is(.role-admin,.is-admin) #crmo-admin-subbar .crmo-admin-subtabs{
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1685</span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1690</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
         <div class="crmo-admin-bar-row crmo-admin-tabs" dir="rtl">
-      <span id="crmo-admin-version-badge" class="crmo-admin-bar-btn crmo-admin-version-badge" data-static="1" aria-label="גרסה">v1685</span>
+      <span id="crmo-admin-version-badge" class="crmo-admin-bar-btn crmo-admin-version-badge" data-static="1" aria-label="גרסה">v1690</span>
 
       
       <button type="button" class="crmo-admin-bar-btn crmo-hard-reset-btn" id="crmo-adminbar-hardreset" title="ניקוי קשיח (בדיקות שמישות)" onclick="CRMO_clearLocalDataAndReload()">ניקוי קשיח</button>
@@ -22368,6 +22421,16 @@ window.CRMO_MasterGalleries = {
         <span>להציג כפתור "לכל העבודות" בגלריה (לא מציף)</span>
       </label>
 
+      <label class="tm-meta-note" style="display:flex; gap:10px; align-items:center; margin-top:10px;">
+        <input type="checkbox" id="tm-meta-visible" style="width:auto; transform:scale(1.05);" />
+        <span>Show/Hide: להציג את הגלריה באתר</span>
+      </label>
+      <label class="tm-meta-note" style="display:flex; gap:10px; align-items:center; margin-top:6px;">
+        <input type="checkbox" id="tm-meta-hide-mobile" style="width:auto; transform:scale(1.05);" />
+        <span>Hide on Mobile: להסתיר את הגלריה במובייל</span>
+      </label>
+
+
     </div>
 
     <div class="tm-tiles-wrapper" id="tm-tiles"></div>
@@ -23643,6 +23706,8 @@ data.push({
       galleryMetaState[key] = { title:{}, subtitle:{}, expandPageEnabled:false };
     }
     if (typeof galleryMetaState[key].expandPageEnabled === 'undefined') galleryMetaState[key].expandPageEnabled = false;
+    if (typeof galleryMetaState[key].isVisible === 'undefined') galleryMetaState[key].isVisible = true;
+    if (typeof galleryMetaState[key].hideOnMobile === 'undefined') galleryMetaState[key].hideOnMobile = false;
     var t = galleryMetaState[key].title || (galleryMetaState[key].title = {});
     var s = galleryMetaState[key].subtitle || (galleryMetaState[key].subtitle = {});
     ['mobile','desktop','expanded','tablet'].forEach(function(k){
@@ -23797,9 +23862,12 @@ data.push({
       var pS = box.querySelector('.desc');
       if (hS && titleTxt) hS.textContent = titleTxt;
       if (pS){
-        if (subTxt){ pS.textContent = subTxt; pS.style.display = ''; }
-        else { /* אם אין טקסט – נשאיר כמו שהוא */ }
+        if (!tmSetTripleDescText(pS, galleryMetaState[key].subtitle)){
+          if (subTxt){ pS.textContent = subTxt; pS.style.display = ''; }
+          else { /* אם אין טקסט – נשאיר כמו שהוא */ }
+        }
       }
+      tmApplyVisibilityToSection(key);
       return;
     }
     if (!GALLERIES[key]) return;
@@ -23810,15 +23878,61 @@ data.push({
     var p = sec.querySelector('.narrow .desc') || sec.querySelector('.desc');
     if (h && titleTxt) h.textContent = titleTxt;
     if (p){
-      if (subTxt){ p.textContent = subTxt; p.style.display = ''; }
-      else { /* אם אין טקסט – נשאיר כמו שהוא */ }
+      if (!tmSetTripleDescText(p, galleryMetaState[key].subtitle)){
+        if (subTxt){ p.textContent = subTxt; p.style.display = ''; }
+        else { /* אם אין טקסט – נשאיר כמו שהוא */ }
+      }
     }
+    tmApplyVisibilityToSection(key);
   }
+  function tmApplyVisibilityToSection(key){
+    try{
+      if (!key) return;
+      tmEnsureMetaKey(key);
+
+      var cfg = (GALLERIES && GALLERIES[key]) ? GALLERIES[key] : null;
+      var sid = (cfg && cfg.sectionId) ? cfg.sectionId : key;
+      var section = document.getElementById(sid);
+      if (!section) return;
+
+      var isVisible = (galleryMetaState[key].isVisible !== false);
+      section.classList.toggle('crmo-gallery-hidden', !isVisible);
+      section.classList.toggle('crmo-hide-mobile', !!galleryMetaState[key].hideOnMobile);
+    }catch(e){}
+  }
+
+  function tmSetTripleDescText(pEl, subObj){
+    try{
+      if (!pEl) return false;
+      var mEl = pEl.querySelector('.crmo-desc-mobile');
+      var dEl = pEl.querySelector('.crmo-desc-desktop');
+      var eEl = pEl.querySelector('.crmo-desc-extended');
+      if (!mEl && !dEl && !eEl) return false;
+
+      var base = (pEl.getAttribute('data-crmo-default-desc') || '').trim();
+      if (!base){
+        base = (pEl.textContent || '').trim();
+        pEl.setAttribute('data-crmo-default-desc', base);
+      }
+
+      var mob = (subObj ? tmPickMetaText(subObj, 'mobile') : '') || base;
+      var desk = (subObj ? tmPickMetaText(subObj, 'desktop') : '') || base;
+      var exp = (subObj ? tmPickMetaText(subObj, 'expanded') : '') || base;
+
+      if (mEl) mEl.textContent = mob;
+      if (dEl) dEl.textContent = desk;
+      if (eEl) eEl.textContent = exp;
+      return true;
+    }catch(e){}
+    return false;
+  }
+
   function tmApplyMetaToAllSections(){
     try{
       Object.keys(GALLERIES).forEach(function(k){
         if (!GALLERIES[k]) return;
-        if (galleryMetaState[k] && (tmPickMetaText(galleryMetaState[k].title,'desktop') || tmPickMetaText(galleryMetaState[k].subtitle,'desktop'))){
+        tmApplyVisibilityToSection(k);
+        if (galleryMetaState[k] && (tmPickMetaText(galleryMetaState[k].title,'desktop') || tmPickMetaText(galleryMetaState[k].subtitle,'desktop') || typeof galleryMetaState[k].isVisible !== 'undefined' || typeof galleryMetaState[k].hideOnMobile !== 'undefined')){
           tmApplyMetaToSection(k);
         }
       });
@@ -24371,6 +24485,7 @@ var a = tiles[i].querySelector && tiles[i].querySelector('a.ph');
   var tmMetaTitleMobile, tmMetaTitleDesktop, tmMetaTitleExpanded;
   var tmMetaSubMobile, tmMetaSubDesktop, tmMetaSubExpanded;
   var tmMetaExpandEnabled;
+  var tmMetaVisible, tmMetaHideMobile;
   function tmReadMetaInputsToState(key){
     if (!key) return;
     tmEnsureMetaKey(key);
@@ -24381,6 +24496,8 @@ var a = tiles[i].querySelector && tiles[i].querySelector('a.ph');
     if (tmMetaSubDesktop)    galleryMetaState[key].subtitle.desktop  = (tmMetaSubDesktop.value||'');
     if (tmMetaSubExpanded)   galleryMetaState[key].subtitle.expanded = (tmMetaSubExpanded.value||'');
     if (tmMetaExpandEnabled) galleryMetaState[key].expandPageEnabled = !!tmMetaExpandEnabled.checked;
+    if (tmMetaVisible)    galleryMetaState[key].isVisible    = !!tmMetaVisible.checked;
+    if (tmMetaHideMobile) galleryMetaState[key].hideOnMobile = !!tmMetaHideMobile.checked;
     galleryMetaState[key].title.tablet = galleryMetaState[key].title.desktop;
     galleryMetaState[key].subtitle.tablet = galleryMetaState[key].subtitle.desktop;
   }
@@ -24394,6 +24511,8 @@ var a = tiles[i].querySelector && tiles[i].querySelector('a.ph');
     if (tmMetaSubDesktop)    tmMetaSubDesktop.value    = galleryMetaState[key].subtitle.desktop  || '';
     if (tmMetaSubExpanded)   tmMetaSubExpanded.value   = galleryMetaState[key].subtitle.expanded || '';
     if (tmMetaExpandEnabled) tmMetaExpandEnabled.checked = !!galleryMetaState[key].expandPageEnabled;
+    if (tmMetaVisible)    tmMetaVisible.checked    = (galleryMetaState[key].isVisible !== false);
+    if (tmMetaHideMobile) tmMetaHideMobile.checked = !!galleryMetaState[key].hideOnMobile;
   }
   function tmOnMetaInput(){
     try{
@@ -24442,7 +24561,9 @@ document.addEventListener("DOMContentLoaded", function(){
     tmMetaSubDesktop    = document.getElementById("tm-meta-sub-desktop");
     tmMetaSubExpanded   = document.getElementById("tm-meta-sub-expanded");
     tmMetaExpandEnabled = document.getElementById("tm-meta-expand-enabled");
-    [tmMetaTitleMobile, tmMetaTitleDesktop, tmMetaTitleExpanded, tmMetaSubMobile, tmMetaSubDesktop, tmMetaSubExpanded, tmMetaExpandEnabled].forEach(function(el){
+    tmMetaVisible      = document.getElementById("tm-meta-visible");
+    tmMetaHideMobile   = document.getElementById("tm-meta-hide-mobile");
+    [tmMetaTitleMobile, tmMetaTitleDesktop, tmMetaTitleExpanded, tmMetaSubMobile, tmMetaSubDesktop, tmMetaSubExpanded, tmMetaExpandEnabled, tmMetaVisible, tmMetaHideMobile].forEach(function(el){
       if(!el) return;
       el.addEventListener("input", tmOnMetaInput, {passive:true});
       el.addEventListener("change", tmOnMetaInput, {passive:true});
@@ -34053,5 +34174,169 @@ function CRMO_clearLocalDataAndReload(){
 })();
 </script>
 
+
+
+<script id="crmo_v1690_conditional_view_logic">
+/* v1690: Conditional view logic (triple descriptions + deep-link isolation + extended-state tracking).
+   NOTE: No setInterval is used here (prevents admin-bar flicker). */
+(function(){
+  function ensureTriple(el){
+    if (!el) return;
+    if (el.querySelector('.crmo-desc-mobile')) return;
+
+    var t = (el.textContent || '').trim();
+    el.textContent = '';
+    el.classList.add('crmo-desc3');
+    el.setAttribute('data-crmo-default-desc', t);
+
+    var m = document.createElement('span'); m.className = 'crmo-desc-mobile'; m.textContent = t;
+    var d = document.createElement('span'); d.className = 'crmo-desc-desktop'; d.textContent = t;
+    var e = document.createElement('span'); e.className = 'crmo-desc-extended'; e.textContent = t;
+
+    el.appendChild(m);
+    el.appendChild(d);
+    el.appendChild(e);
+  }
+
+  function initTripleForAllGalleries(){
+    try{
+      var main = document.querySelector('main');
+      if (!main) return;
+
+      var secs = main.querySelectorAll('section');
+      secs.forEach(function(sec){
+        if (!sec.querySelector('.gallery-grid')) return;
+        // Prefer the "main" description if present
+        var p = sec.querySelector('.narrow .desc') || sec.querySelector('.desc');
+        if (p) ensureTriple(p);
+      });
+
+      // Stands landing main-copy (explicit)
+      var stands = document.getElementById('stands');
+      if (stands){
+        var p0 = stands.querySelector('.stands-main-copy .desc');
+        if (p0) ensureTriple(p0);
+      }
+    }catch(e){}
+  }
+
+  function setupExtendedStateHooks(){
+    try{
+      var overlay = document.getElementById('crmoExtendedGalleryOverlay');
+      if (!overlay) return;
+
+      function clearExtendedMarker(){
+        try{
+          var sid = document.body ? document.body.getAttribute('data-crmo-extended-section') : '';
+          if (sid){
+            var sec = document.getElementById(sid);
+            if (sec) sec.classList.remove('crmo-project-extended');
+          }
+          if (document.body){
+            document.body.classList.remove('crmo-extended-open');
+            document.body.removeAttribute('data-crmo-extended-section');
+          }
+        }catch(e){}
+      }
+
+      // Wrap the existing open function to mark which section is "extended" (for Extended text + other logic)
+      if (window.CRMO_showExtendedGallery && !window.__crmo_showExtended_wrapped_v1690){
+        window.__crmo_showExtended_wrapped_v1690 = true;
+        var orig = window.CRMO_showExtendedGallery;
+        window.CRMO_showExtendedGallery = function(sectionId){
+          try{
+            clearExtendedMarker();
+            if (document.body){
+              document.body.classList.add('crmo-extended-open');
+              document.body.setAttribute('data-crmo-extended-section', String(sectionId||''));
+            }
+            var sec = document.getElementById(sectionId);
+            if (sec) sec.classList.add('crmo-project-extended');
+          }catch(e){}
+          return orig.apply(this, arguments);
+        };
+      }
+
+      // Add "clear" hooks (do not interfere with existing close behavior)
+      var closeBtn = document.getElementById('crmoExtendedClose');
+      if (closeBtn) closeBtn.addEventListener('click', clearExtendedMarker, {passive:true});
+
+      overlay.addEventListener('click', function(ev){
+        if (ev.target === overlay) clearExtendedMarker();
+      }, {passive:true});
+
+      document.addEventListener('keydown', function(ev){
+        if (ev.key === 'Escape') clearExtendedMarker();
+      }, {passive:true});
+    }catch(e){}
+  }
+
+  function applyIsolationFromURL(){
+    try{
+      var sp = new URLSearchParams(window.location.search || '');
+      var project = sp.get('project');
+      if (!project) return;
+
+      var targetId = String(project || '').trim();
+      if (!targetId) return;
+
+      var target = document.getElementById(targetId);
+      if (!target || !target.querySelector('.gallery-grid')) return;
+
+      document.body && document.body.classList.add('crmo-isolated-view');
+
+      // Hide all other main sections (including "הסטודיו"/about)
+      var main = document.querySelector('main');
+      if (main){
+        var secs = main.querySelectorAll('section');
+        secs.forEach(function(sec){
+          if (sec.id === targetId) return;
+          sec.classList.add('crmo-isolated-hide');
+        });
+      }
+
+      // Open in "Extended" state (12+ tiles) inline
+      try{
+        target.classList.add('crmo-project-extended');
+      }catch(e){}
+
+      try{ window.scrollTo(0,0); }catch(e){}
+    }catch(e){}
+  }
+
+  function applyBrandAssets(){
+    try{
+      if (!window.CRMO_BRAND_ASSETS) return;
+
+      // favicon
+      var ico = document.querySelector('link[rel="icon"]');
+      if (ico && window.CRMO_BRAND_ASSETS.favicon) ico.setAttribute('href', window.CRMO_BRAND_ASSETS.favicon);
+
+      // header logo (best-effort)
+      var hl = document.querySelector('header img#headerLogo, header img.logo, header img[alt="CRMO"]');
+      if (hl && window.CRMO_BRAND_ASSETS.headerLogo) hl.setAttribute('src', window.CRMO_BRAND_ASSETS.headerLogo);
+
+      // social meta (best-effort)
+      var og = document.querySelector('meta[property="og:image"]');
+      if (og && window.CRMO_BRAND_ASSETS.social && window.CRMO_BRAND_ASSETS.social.ogImage) og.setAttribute('content', window.CRMO_BRAND_ASSETS.social.ogImage);
+      var tw = document.querySelector('meta[name="twitter:image"]');
+      if (tw && window.CRMO_BRAND_ASSETS.social && window.CRMO_BRAND_ASSETS.social.twitterImage) tw.setAttribute('content', window.CRMO_BRAND_ASSETS.social.twitterImage);
+    }catch(e){}
+  }
+
+  function init(){
+    applyBrandAssets();
+    initTripleForAllGalleries();
+    setupExtendedStateHooks();
+    applyIsolationFromURL();
+  }
+
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 </body>
 </html>
