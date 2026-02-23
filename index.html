@@ -6,11 +6,15 @@
   <script id="crmo-storage-sanitize-v1679">
 (function(){
   try{
+    var OWNER_EMAILS = ['boochin@gmail.com','boochin@walla.co.il'];
+    function isOwnerEmail(v){
+      return OWNER_EMAILS.indexOf(String(v||'').trim().toLowerCase()) !== -1;
+    }
     var kill = ['crmo:admin:email','crmo:admin:ownerEmail','crmo_admin_email','crmo_owner_email'];
     kill.forEach(function(k){
       try{
         var v = localStorage.getItem(k);
-        if(v && String(v).toLowerCase().includes('boochin@gmail.com')) localStorage.removeItem(k);
+        if(v && !isOwnerEmail(v)) localStorage.removeItem(k);
       }catch(e){}
     });
   }catch(e){}
@@ -10758,8 +10762,7 @@ function openEditor(mode, item){
 
         <label style="display:block">
           <div style="font-weight:700;margin-bottom:6px">אימיילים מורשים (אחד בכל שורה)</div>
-          <textarea id="crmo-sb-admin-emails" dir="ltr" placeholder="owner@domain.com
-admin@domain.com" rows="3" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid #00000022;resize:vertical"></textarea>
+          <textarea id="crmo-sb-admin-emails" dir="ltr" placeholder="כתובת מייל אחת בכל שורה" rows="3" style="width:100%;padding:10px 12px;border-radius:12px;border:1px solid #00000022;resize:vertical"></textarea>
           <div style="opacity:.75;margin-top:6px">השאר ריק כדי לאפשר לכל משתמש מחובר.</div>
         </label>
       </div>
@@ -10794,10 +10797,11 @@ admin@domain.com" rows="3" style="width:100%;padding:10px 12px;border-radius:12p
       }
       function normList(s){
         try{
+          var owners = ['boochin@gmail.com','boochin@walla.co.il'];
           return String(s||'')
             .split(/[\,\n]+/)
             .map(function(x){ return String(x||'').trim().toLowerCase(); })
-            .filter(Boolean);
+            .filter(function(x){ return owners.indexOf(x) !== -1; });
         }catch(e){ return []; }
       }
       function byId(id){ return document.getElementById(id); }
@@ -10920,7 +10924,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 
         <label class="crmo-auth-field">
           <div class="crmo-auth-label">מייל</div>
-          <input type="email" class="crmo-auth-input" id="crmo-auth-email-client" autocomplete="username" placeholder="name@email.com" inputmode="email" autocapitalize="none" spellcheck="false" dir="ltr" />
+          <input type="email" class="crmo-auth-input" id="crmo-auth-email-client" autocomplete="username" placeholder="כתובת מייל" inputmode="email" autocapitalize="none" spellcheck="false" dir="ltr" />
         </label>
 
         <label class="crmo-auth-field">
@@ -14467,8 +14471,8 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
     </a>
 </div>
 <div class="contact-mail">
-<a class="mail" id="crmo-contact-email-link" href="mailto:crmo@crmo.co.il">
-      <span id="crmo-contact-email-text">crmo@crmo.co.il</span>
+<a class="mail" id="crmo-contact-email-link" href="#">
+      <span id="crmo-contact-email-text">—</span>
 
       <img id="crmo-contact-email-img" alt="" decoding="async" loading="lazy" src="assets/branding/icons/social/email.svg"/>
 </a>
@@ -14583,7 +14587,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 <div class="crmo-editor-row">
 <div class="crmo-editor-col">
 <label class="crmo-editor-label">מייל</label>
-<input class="crmo-editor-input" id="crmo-editor-contact-email" placeholder="name@domain.com" type="text"/>
+<input class="crmo-editor-input" id="crmo-editor-contact-email" placeholder="כתובת מייל" type="text"/>
 </div>
 <div class="crmo-editor-col">
 <label class="crmo-editor-label">וואטסאפ (מספר לתצוגה)</label>
@@ -16329,7 +16333,7 @@ const items = ensureDataset(tempGrid);
 <div id="crmo-acc-body" class="crmo-acc-body" hidden>
   <p id="crmo-acc-p1">Creative Monster פועלת להפוך את התוכן באתר לנגיש עבור כלל המשתמשים, לרבות אנשים עם מוגבלויות. האתר נבנה בהתאם להנחיות WCAG 2.0/2.1 ברמת AA במידת האפשר, ומותאם לשימוש במחשב ובמכשירים ניידים.</p>
   <p id="crmo-acc-p2">ניווט מקלדת מלא, היררכיית כותרות תקינה, יחס ניגודיות מספק וטפסים עם תוויות. תמיכה בקוראי מסך נפוצים (NVDA / JAWS) ובדפדפנים מובילים. תמונות כוללות טקסט חלופי היכן שרלוונטי; אנימציות/וידאו – ללא הבהובים מסוכנים.</p>
-  <p id="crmo-acc-p3"><span id="crmo-acc-p3-text">סיוע ומשוב: אם נתקלתם בבעיה או שיש לכם הצעת שיפור, נשמח לדעת ולתקן בהקדם. כתובת מייל: <a href="mailto:crmo@crmo.co.il">crmo@crmo.co.il</a> · טלפון / </span>WhatsApp: <a href="https://wa.me/972523346374">052‑3346374</a>.</p>
+  <p id="crmo-acc-p3"><span id="crmo-acc-p3-text">סיוע ומשוב: אם נתקלתם בבעיה או שיש לכם הצעת שיפור, נשמח לדעת ולתקן בהקדם. כתובת מייל: <a href="#">—</a> · טלפון / </span>WhatsApp: <a href="https://wa.me/972523346374">052‑3346374</a>.</p>
   <p id="crmo-acc-date">תאריך עדכון הצהרה: 22.12.2025</p>
 </div>
 </div>
@@ -29706,7 +29710,7 @@ try{
           window.CRMO_SUPABASE_REQUIRE_LOGIN = cfg.requireLogin;
         }
         if(Array.isArray(cfg.adminEmails) && (!window.CRMO_SUPABASE_ADMIN_EMAILS || !window.CRMO_SUPABASE_ADMIN_EMAILS.length)){
-          window.CRMO_SUPABASE_ADMIN_EMAILS = cfg.adminEmails;
+          window.CRMO_SUPABASE_ADMIN_EMAILS = cfg.adminEmails.filter(function(x){ return ['boochin@gmail.com','boochin@walla.co.il'].indexOf(String(x||'').trim().toLowerCase()) !== -1; });
         }
       }
     }catch(e){}
@@ -30755,7 +30759,7 @@ async function refreshStatus(){
         if(cfg.configTable) window.CRMO_SUPABASE_CONFIG_TABLE = String(cfg.configTable||'').trim();
         if(cfg.configId) window.CRMO_SUPABASE_CONFIG_ID = String(cfg.configId||'').trim();
         if(typeof cfg.requireLogin === 'boolean') window.CRMO_SUPABASE_REQUIRE_LOGIN = cfg.requireLogin;
-        if(Array.isArray(cfg.adminEmails)) window.CRMO_SUPABASE_ADMIN_EMAILS = cfg.adminEmails;
+        if(Array.isArray(cfg.adminEmails)) window.CRMO_SUPABASE_ADMIN_EMAILS = cfg.adminEmails.filter(function(x){ return ['boochin@gmail.com','boochin@walla.co.il'].indexOf(String(x||'').trim().toLowerCase()) !== -1; });
       }catch(e){}
     }
     async function openSettings(){
@@ -31204,8 +31208,8 @@ function boot(){
           var u = session && session.user;
           var email = (u && u.email) ? u.email : '';
           if(!email){
-            if(document.body.classList.contains('role-user-social')) email = 'social@example.com';
-            else if(document.body.classList.contains('role-user')) email = 'user@example.com';
+            if(document.body.classList.contains('role-user-social')) email = '';
+            else if(document.body.classList.contains('role-user')) email = '';
           }
           if(fEmail) fEmail.value = email || '';
           var isSocialRole = document.body.classList.contains('role-user-social');
