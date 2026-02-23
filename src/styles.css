@@ -1,0 +1,189 @@
+:root {
+  font-family: Arial, sans-serif;
+  color: #111;
+  background: #fafafa;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 1120px; margin: 0 auto; padding: 24px; }
+header { margin-bottom: 24px; }
+input, textarea, button { font: inherit; }
+
+.gallery-header { margin-bottom: 14px; }
+.gallery-header h2 { margin: 0 0 8px; }
+.gallery-header p { margin: 0; color: #555; }
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.gallery-grid.is-expanded-grid {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.tile {
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.tile img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+}
+
+.tile-content { padding: 12px; }
+.client { margin: 0 0 8px; color: #666; font-size: 14px; }
+.tile-content h3 { margin: 0 0 8px; font-size: 18px; }
+.tile-content p { margin: 0 0 10px; }
+.tile-content a { font-weight: 700; color: #000; text-decoration: none; }
+.tile-extra-images { color: #4a4a4a; display: block; margin-bottom: 8px; }
+.tile-code { font-size: 12px; display: block; margin-top: 8px; color: #666; }
+
+.admin-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  margin-bottom: 16px;
+  border: 1px solid #111;
+  border-radius: 10px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+}
+
+.admin-bar__left {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-bar__email {
+  color: #666;
+  font-size: 13px;
+}
+
+.admin-bar__btn,
+.import-export button,
+.tile-editor-head button {
+  border: 1px solid #111;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-weight: 700;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+main.is-admin-mode .tile {
+  box-shadow: 0 0 0 2px rgba(22, 108, 255, 0.35);
+}
+
+.management-panel {
+  border: 1px solid #cacaca;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+  margin-bottom: 24px;
+}
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.asset-grid label,
+.text-grid input,
+.text-grid textarea,
+.tile-editor-item input {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.asset-grid input,
+.text-grid input,
+.tile-editor-item input,
+.text-grid textarea,
+.import-export textarea {
+  border: 1px solid #bbb;
+  border-radius: 8px;
+  padding: 8px;
+  width: 100%;
+}
+
+.editor-gallery {
+  margin-top: 16px;
+  border-top: 1px solid #ececec;
+  padding-top: 12px;
+}
+
+.toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.text-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.tile-editor-list {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.tile-editor-item {
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fcfcfc;
+}
+
+.tile-editor-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.import-export {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+.import-export textarea {
+  min-height: 140px;
+}
+
+.notice,
+.expanded-badge,
+.route-note {
+  border-radius: 8px;
+  background: #f2f6ff;
+  padding: 8px 10px;
+  color: #14357e;
+}
+
+.contact-section {
+  margin: 30px 0;
+  border-top: 1px solid #ddd;
+  padding-top: 16px;
+}
