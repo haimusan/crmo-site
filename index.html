@@ -9098,11 +9098,35 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
           if(!(whoEl.textContent||'').trim()) whoEl.textContent = 'מי מחובר: לא מזוהה';
         }
 
-        // Position: ... [UXV] [vXXXX] [מי מחובר]
+        var fixEl = bar.querySelector('#crmo-index-last-fix-badge');
+        if(!fixEl){
+          fixEl = document.createElement('span');
+          fixEl.id = 'crmo-index-last-fix-badge';
+          fixEl.className = 'crmo-role-tab crmo-index-last-fix-badge';
+          fixEl.setAttribute('data-static','1');
+        }
+
+        function setIndexLastFixText(){
+          var iso = '2026-02-23T14:56:25Z';
+          var label = iso;
+          try{
+            label = new Date(iso).toLocaleString('he-IL', {
+              year:'numeric', month:'2-digit', day:'2-digit',
+              hour:'2-digit', minute:'2-digit', second:'2-digit',
+              hour12:false
+            });
+          }catch(e){}
+          fixEl.textContent = 'תיקון אחרון index.html: ' + label;
+          fixEl.setAttribute('title', 'עודכן מתוך index.html');
+        }
+        setIndexLastFixText();
+
+        // Position: ... [UXV] [vXXXX] [מי מחובר] [תיקון אחרון index.html]
         if(uxBtn){
           // ensure they are in bar
           if(vEl.parentNode !== bar) bar.appendChild(vEl);
           if(whoEl.parentNode !== bar) bar.appendChild(whoEl);
+          if(fixEl.parentNode !== bar) bar.appendChild(fixEl);
 
           // insert version after UXV
           if(uxBtn.nextSibling !== vEl){
@@ -9112,10 +9136,15 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
           if(vEl.nextSibling !== whoEl){
             bar.insertBefore(whoEl, vEl.nextSibling);
           }
+          // insert fix badge after who (so visually "left of who" in RTL)
+          if(whoEl.nextSibling !== fixEl){
+            bar.insertBefore(fixEl, whoEl.nextSibling);
+          }
         } else {
           // fallback: append at end
           if(vEl.parentNode !== bar) bar.appendChild(vEl);
           if(whoEl.parentNode !== bar) bar.appendChild(whoEl);
+          if(fixEl.parentNode !== bar) bar.appendChild(fixEl);
         }
       }
     }catch(e){}
