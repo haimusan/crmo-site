@@ -340,7 +340,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
   // Default admin list (safe, not a secret). You can still override via the settings UI later.
   try{
     if(!Array.isArray(window.CRMO_SUPABASE_ADMIN_EMAILS) || window.CRMO_SUPABASE_ADMIN_EMAILS.length === 0){
-      window.CRMO_SUPABASE_ADMIN_EMAILS = ['boochin@gmail.com','boochin@walla.co.il'];
+      window.CRMO_SUPABASE_ADMIN_EMAILS = ['boochin@gmail.com','boochin@walla.co.il','boochun@walla.co.il'];
     }
   }catch(e){}
 
@@ -8668,7 +8668,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 </script>
 <script id="crmo-auth-ui-state-v1667">
 (function(){
-  const OWNER_EMAILS = ["boochin@walla.co.il","boochin@gmail.com"];
+  const OWNER_EMAILS = ["boochin@walla.co.il","boochun@walla.co.il","boochin@gmail.com"];
 
   function isOwnerEmail(email){
     if(!email) return false;
@@ -8734,6 +8734,15 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     setDisplay(roleBar, owner);
     setDisplay(adminBar, owner);
     setDisplay(subbar, owner);
+
+    try{
+      if(roleBar){
+        var roleButtons = roleBar.querySelectorAll('button[data-role]');
+        roleButtons.forEach(function(btn){
+          btn.classList.toggle('active', owner && btn.getAttribute('data-role') === 'master');
+        });
+      }
+    }catch(e){}
 
     try{
       window.dispatchEvent(new Event("resize"));
@@ -9124,7 +9133,7 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
   // Apply visibility based on signed-in state (single source of truth = CRMO_SB_SESSION presence)
   function applyBars(){
     try{
-      var owners = ['boochin@gmail.com','boochin@walla.co.il'];
+      var owners = ['boochin@gmail.com','boochin@walla.co.il','boochun@walla.co.il'];
       var roleBar = document.getElementById('crmo-role-toggle');
       var adminBar = document.getElementById('crmo-admin-bar');
       var subbar = document.getElementById('crmo-admin-subbar') || document.getElementById('crmo-admin-sub') || document.getElementById('crmo-admin-subbar-v2');
