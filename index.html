@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1686 single -->
+<!-- CRMO_v1685 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -79,14 +79,11 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1686";
+window.CRMO_BUILD_VERSION = "1685";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 1686;
-window.CRMO_VERSION_NUMBER = 1686;
-window.CRMO_VERSION_TAG = "CRMO_v1686";
-
-// v1686: hard sync footer version id
-try{document.addEventListener("DOMContentLoaded",function(){document.getElementById("footer-version").innerText = window.CRMO_VERSION;});}catch(e){}
+window.CRMO_VERSION = 1685;
+window.CRMO_VERSION_NUMBER = 1685;
+window.CRMO_VERSION_TAG = "CRMO_v1685";
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION_TAG || window.CRMO_VERSION_NUMBER || window.CRMO_VERSION || ""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -258,9 +255,9 @@ window.CRMO_STUDIO_TITLE = "CRMO";
         if(ab){ ab.textContent = vOnly; if(tag) ab.setAttribute('title', tag); }
         if(tag) top.setAttribute('title', tag);
       }
-      var foot = document.getElementById("footer-version");
+      var foot = document.getElementById("crmo-footer-version");
       if (foot){
-        foot.textContent = String(window.CRMO_VERSION || n || '');
+        foot.textContent = ('CRMO System Version ' + n + (type ? (' | ' + type) : ''));
         if(tag) foot.setAttribute('title', tag);
       }
       var internal = document.getElementById("crmo-internal-version");
@@ -436,7 +433,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
     return window.CRMO_IS_OWNER === true;
   }
 
-  /* ===== CRMO RBAC (v1686) ===== */
+  /* ===== CRMO RBAC (v1685) ===== */
   (function(){
     // Hide admin UI by default; we only show it for owners after a role check.
     // IMPORTANT: We never remove/recreate admin DOM to avoid flicker.
@@ -605,7 +602,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
   /* ===== /CRMO RBAC ===== */
 
       
-  /* v1686: legacy admin-email fallback removed (RBAC owners only). */
+  /* v1685: legacy admin-email fallback removed (RBAC owners only). */
 
   async function ensureAuthed(){
     var sb = await getSbOrThrow();
@@ -5493,7 +5490,7 @@ editor.addEventListener('click', function(ev){
   padding: 0.5rem 0;
   padding-inline: 0.75rem;
   direction: rtl;
-  justify-content: flex-end !important;
+  justify-content: flex-start !important;
 
   overflow: visible !important;
 
@@ -6657,7 +6654,7 @@ body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
 .crmo-admin-subtab:hover{ background: rgba(255,255,255,.92); }
 
 
-/* v1686 adminbar alignment */
+/* v1685 adminbar alignment */
 body.is-admin #crmo-admin-bar .crmo-admin-tabs{
   justify-content: flex-start !important; /* in RTL this is right aligned */
   width: 100% !important;
@@ -8717,7 +8714,6 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     try{
       document.body.classList.toggle("role-guest", !owner);
       document.body.classList.toggle("role-admin", owner);
-      document.body.classList.toggle("is-admin", owner);
       document.body.classList.toggle("role-master", owner);
     }catch(e){}
     try{
@@ -8750,8 +8746,11 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     setDisplay(logoutBtn, owner);
     setDisplay(userMenu, owner);
 
-    // v1686: admin bars are shown/hidden only via CSS (body.is-admin); no inline display toggles
-try{
+    setDisplay(roleBar, owner);
+    setDisplay(adminBar, owner);
+    setDisplay(subbar, owner);
+
+    try{
       window.dispatchEvent(new Event("resize"));
       window.dispatchEvent(new Event("scroll"));
     }catch(e){}
@@ -8799,10 +8798,6 @@ try{
       applyUI(owner);
       try{
         document.documentElement.setAttribute("data-crmo-auth-email", r.email || "");
-      try{
-        var uel = document.getElementById("crmo-admin-user-email");
-        if(uel){ uel.textContent = (r.email ? (r.email + " · v" + window.CRMO_VERSION) : ("v" + window.CRMO_VERSION)); }
-      }catch(e){}
       }catch(e){}
       try{
         if(owner){
@@ -8811,8 +8806,11 @@ try{
           localStorage.removeItem("crmo:admin:email");
         }
       }catch(e){}
+    }else{
+      // still re-apply when needed (layout)
+      applyUI(lastOwner);
     }
-}
+  }
 
   function hookAuthState(){
     if(inited) return;
@@ -8855,6 +8853,8 @@ try{
     if(tries < 200 && (!window.supabase || !window.supabase.createClient)){
       setTimeout(poll, 50);
     }else{
+      // keep a light refresh in case of storage-only updates
+      setInterval(function(){ try{ refresh(); hookLogout(); }catch(e){} }, 1200);
     }
   })();
 
@@ -9012,42 +9012,6 @@ body:is(.role-admin,.is-admin) #crmo-admin-subbar .crmo-admin-subtabs{
 })();
 </script>
 
-
-
-<style id="crmo_admin_zero_flicker_v1686">
-/* v1686: Zero Flicker admin bars - built once, toggled only via body.is-admin */
-#crmo-role-toggle,
-#crmo-admin-bar,
-#crmo-admin-subbar{
-  display:none !important;
-}
-body.is-admin #crmo-role-toggle{ display:flex !important; }
-body.is-admin #crmo-admin-bar{ display:block !important; }
-body.is-admin #crmo-admin-subbar{ display:block !important; }
-
-/* v1686: align tabs/buttons to Container Right */
-body.is-admin #crmo-role-toggle{
-  justify-content:flex-end !important;
-}
-body.is-admin #crmo-admin-bar .wrap,
-body.is-admin #crmo-admin-bar .crmo-admin-tabs,
-body.is-admin #crmo-admin-subbar .wrap{
-  justify-content:flex-end !important;
-}
-body.is-admin #crmo-admin-bar .wrap{
-  position:relative !important;
-}
-body.is-admin #crmo-admin-bar .crmo-admin-tabs{
-  right:0 !important;
-}
-
-/* v1686: user+version pill near the top bar */
-#crmo-admin-user-email{
-  opacity:.85;
-  font-weight:600;
-  white-space:nowrap;
-}
-</style>
 
 <style id="crmo_hide_header_version_v1679">
   #crmo-header-version, .crmo-header-version{ display:none !important; }
@@ -9308,14 +9272,14 @@ body.is-admin #crmo-admin-bar .crmo-admin-tabs{
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1686</span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1685</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
         <div class="crmo-admin-bar-row crmo-admin-tabs" dir="rtl">
-      <span id="crmo-admin-version-badge" class="crmo-admin-bar-btn crmo-admin-version-badge" data-static="1" aria-label="גרסה">v1686</span>
-      <span id="crmo-admin-user-email" class="crmo-admin-bar-btn crmo-admin-user-email" data-static="1" aria-label="משתמש וגרסה"></span>
+      <span id="crmo-admin-version-badge" class="crmo-admin-bar-btn crmo-admin-version-badge" data-static="1" aria-label="גרסה">v1685</span>
 
+      
       <button type="button" class="crmo-admin-bar-btn crmo-hard-reset-btn" id="crmo-adminbar-hardreset" title="ניקוי קשיח (בדיקות שמישות)" onclick="CRMO_clearLocalDataAndReload()">ניקוי קשיח</button>
 <div class="crmo-admin-tabs-group" dir="rtl">
 <button type="button" class="crmo-admin-bar-btn" id="crmo-adminbar-content" aria-controls="crmo-content-selector" aria-expanded="false">
@@ -14544,7 +14508,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 <div class="crmo-footer-bottom" dir="ltr">
     <img class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg" alt="Creative Monster favicon"/>
     <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span>
-    <span id="footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;"></span>
+    <span id="crmo-footer-version" style="display:block;font-size:11px;opacity:.65;margin-top:4px;"></span>
   </div>
 </div>
 </footer>
