@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1682 single -->
+<!-- CRMO_v1683 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -79,10 +79,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1682";
+window.CRMO_BUILD_VERSION = "1683";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1682';
-window.CRMO_VERSION_NUMBER = 1682;
+window.CRMO_VERSION = 'CRMO_v1683';
+window.CRMO_VERSION_NUMBER = 1683;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -1394,7 +1394,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1682</title>
+<title>CRMO_v1683</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -9286,7 +9286,7 @@ html.crmo-owner #crmo-admin-subbar{ display:block !important; }
 <button class="crmo-role-tab" data-role="social" type="button">משתמש סושיאל</button>
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
-<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1682</span>
+<span id="crmo-version-badge" class="crmo-role-tab crmo-version-badge" data-static="1">v1683</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
@@ -22619,7 +22619,7 @@ if (key === currentGalleryKey){
   var teClientInput, teTitleInput, teDescInput, teTagInput, teImageInput, teImageNameEl, teMultiInput, teExtraInput, teExtraList;
   var currentEditIndex = null;
   var currentEditGalleryKey = null;
-  function openTileEditor(key, idx){ return; /* disabled */
+  function openTileEditor(key, idx){
     ensureGalleryState(key);
     var arr = galleryState[key];
     if (!arr || !arr[idx]) return;
@@ -22683,6 +22683,10 @@ if (key === currentGalleryKey){
   }
   function handleTileEditorImageChange(ev){
     if (currentEditGalleryKey === null || currentEditIndex === null) return;
+    ensureGalleryState(currentEditGalleryKey);
+    var arr = galleryState[currentEditGalleryKey];
+    if (!arr || !arr[currentEditIndex]) return;
+    var data = arr[currentEditIndex];
     var input = ev.target;
     var file = input.files && input.files[0];
     if (!file) return;
