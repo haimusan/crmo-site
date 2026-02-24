@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1706 -->
+<!-- CRMO_v1707 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,68 @@
 
 
 <script id="crmo_cloud_defaults">window.CRMO_ALLOW_CLOUD = true; window.CRMO_OFFLINE_MODE = false;</script>
-<script id="crmo_supabase_credentials">window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co"; window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";</script>
+<script id="crmo_supabase_credentials">window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co"; window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";<script id="crmo-assets-base-v1707">
+/*
+  Ensure assets/icons load both locally and online:
+  - Local dev can still use relative ./assets/... if present.
+  - Online (and also local) can transparently map relative "assets/..." to Supabase Storage public bucket.
+*/
+(function(){
+  try{
+    var ASSET_BASE = "https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/";
+    window.CRMO_ASSET_BASE = ASSET_BASE;
+
+    function rewriteCssUrls(cssText){
+      if(!cssText || cssText.indexOf("assets/") === -1) return cssText;
+      // Replace url('assets/...') / url("assets/...") / url(assets/...) with absolute Supabase Storage URL.
+      return cssText
+        .replace(/url\((['"]?)assets\//g, "url($1" + ASSET_BASE)
+        .replace(/url\((['"]?)\.\/assets\//g, "url($1" + ASSET_BASE);
+    }
+
+    function rewriteDomAssets(){
+      try{
+        // IMG / source / link / script using relative assets/
+        document.querySelectorAll('[src^="assets/"],[src^="./assets/"]').forEach(function(el){
+          var s = el.getAttribute('src') || '';
+          if(!s) return;
+          s = s.replace(/^\.\//,'');
+          if(s.indexOf('assets/')===0) el.setAttribute('src', ASSET_BASE + s.slice('assets/'.length));
+        });
+        document.querySelectorAll('[href^="assets/"],[href^="./assets/"]').forEach(function(el){
+          var h = el.getAttribute('href') || '';
+          if(!h) return;
+          h = h.replace(/^\.\//,'');
+          if(h.indexOf('assets/')===0) el.setAttribute('href', ASSET_BASE + h.slice('assets/'.length));
+        });
+
+        // Patch inline <style> blocks once.
+        document.querySelectorAll('style').forEach(function(st){
+          var t = st.textContent || '';
+          var nt = rewriteCssUrls(t);
+          if(nt !== t) st.textContent = nt;
+        });
+
+        // Patch inline background-image styles that contain assets/
+        document.querySelectorAll('[style*="assets/"]').forEach(function(el){
+          var bg = (el.style && el.style.backgroundImage) ? el.style.backgroundImage : '';
+          if(bg && bg.indexOf('assets/') !== -1){
+            el.style.backgroundImage = bg.replace(/assets\//g, ASSET_BASE);
+          }
+        });
+      }catch(e){}
+    }
+
+    // Run after DOM is ready (safe for local+online)
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', rewriteDomAssets, {once:true});
+    } else {
+      rewriteDomAssets();
+    }
+  }catch(e){}
+})();
+</script>
+</script>
 <script id="crmo_ghpages_redirect_fix">
 (function(){
   try{
@@ -837,7 +898,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1706</title>
+<title>CRMO_v1707</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>@media (max-width: 1200px){
@@ -7951,20 +8012,6 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     // Do not block render; update when ready.
     setEmailText('');
     refresh();
-    // Auto cloud pull on load (non-blocking) to show works from Supabase both local and online.
-    try{
-      if(!window.__CRMO_AUTO_PULL_DONE){
-        window.__CRMO_AUTO_PULL_DONE = true;
-        setTimeout(function(){
-          try{
-            if(navigator.onLine && typeof window.CRMO_sbPullNow === 'function'){
-              var p = window.CRMO_sbPullNow();
-              if(p && typeof p.catch === 'function') p.catch(function(e){ console.warn('[CRMO] auto pull failed:', e); });
-            }
-          }catch(e){ console.warn('[CRMO] auto pull exception:', e); }
-        }, 120);
-      }
-    }catch(e){}
     // Also refresh after auth state changes (if available)
     (async function(){
       try{
@@ -32559,8 +32606,8 @@ function CRMO_clearLocalDataAndReload(){
       if(el) el.textContent = txt;
     }
     function apply(){
-      setText('crmo-top-version', 'v1706');
-      setText('crmo-footer-version', 'v1706');
+      setText('crmo-top-version', 'v1705');
+      setText('crmo-footer-version', 'v1705');
 }
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
     else apply();
