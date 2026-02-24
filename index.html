@@ -1,8 +1,22 @@
 <!DOCTYPE html>
-<!-- CRMO_v1698 single -->
+<!-- CRMO_v1699 single -->
 
 <html dir="rtl" lang="he">
 <head>
+  <script id="crmo-force-owner-head-v1699">
+/* Force Owner/UI visibility ASAP when ?admin=1 is present (no waiting for Supabase). */
+(function(){
+  try{
+    var sp = new URLSearchParams(location.search || "");
+    if(sp.get("admin") === "1"){
+      window.CRMO_FORCE_OWNER = 1;
+      try{ localStorage.setItem("crmo-role","master"); }catch(e){}
+      document.documentElement.classList.add("crmo-owner","is-admin","crmo-auth-optimistic");
+      document.documentElement.setAttribute("data-crmo-admin-flag","1");
+    }
+  }catch(e){}
+})();
+  </script>
   <script id="crmo-safe-session-v1681">
 (function(){
   window.CRMO_safeGetSession = async function(client){
@@ -64,10 +78,10 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1698";
+window.CRMO_BUILD_VERSION = "1699";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1698';
-window.CRMO_VERSION_NUMBER = 1698;
+window.CRMO_VERSION = 'CRMO_v1699';
+window.CRMO_VERSION_NUMBER = 1699;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
@@ -112,6 +126,10 @@ html.is-admin #crmo-admin-subbar{
   opacity:1 !important;
   pointer-events:auto !important;
 }
+
+/* v1699 zero-flicker: let CSS show bars instantly when owner/admin flags exist */
+.crmo-owner .admin-bar, .is-admin .admin-bar { display: flex !important; opacity: 1 !important; visibility: visible !important; }
+html.crmo-owner #crmo-admin-bar, html.is-admin #crmo-admin-bar, html.crmo-owner #crmo-role-toggle, html.is-admin #crmo-role-toggle, html.crmo-owner #crmo-admin-subbar, html.is-admin #crmo-admin-subbar { display:flex !important; opacity:1 !important; visibility:visible !important; }
 </style>
 
 
@@ -1497,7 +1515,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1698</title>
+<title>CRMO_v1699</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8842,7 +8860,9 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
       if(owner){
         localStorage.setItem("crmo-role","master");
       }else{
-        localStorage.removeItem("crmo-role");
+        if(!window.CRMO_FORCE_OWNER && document.documentElement.getAttribute("data-crmo-admin-flag")!=="1"){
+          localStorage.removeItem("crmo-role");
+        }
       }
     }catch(e){}
   }
@@ -8912,7 +8932,8 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 
   async function refresh(){
     const r = await readOwnerFromSupabase();
-    const owner = !!r.owner;
+    const forced = !!window.CRMO_FORCE_OWNER || (document.documentElement.getAttribute('data-crmo-admin-flag')==='1');
+    const owner = forced ? true : !!r.owner;
     const key = (r.email || "") + "|" + (owner ? "1":"0");
     if(key !== lastKey){
       lastKey = key;
@@ -9183,12 +9204,12 @@ html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
 </style>
 
 
-<style id="crmo-v1698-hide-legacy-tm-editor">
-/* v1698: Keep ONLY the custom project editor (#tile-editor). Hide legacy "Edit Tile" modal (tm-tile-editor-modal). */
+<style id="crmo-v1699-hide-legacy-tm-editor">
+/* v1699: Keep ONLY the custom project editor (#tile-editor). Hide legacy "Edit Tile" modal (tm-tile-editor-modal). */
 #tm-tile-editor-modal{ display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
 </style>
 
-<script id="crmo-v1698-perf-and-double-editor-fix">
+<script id="crmo-v1699-perf-and-double-editor-fix">
 (function(){
   // ---- Perf: simple bar lock without MutationObserver ----
   function hasSbToken(){
@@ -9250,7 +9271,7 @@ html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
     try{
       if(typeof window.openTileEditor === 'function'){
         window.openTileEditor = function(){
-          // legacy disabled in v1698
+          // legacy disabled in v1699
           return;
         };
       }
@@ -9294,10 +9315,10 @@ html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
           panel.style.display = 'block';
           return;
         }
-        console.error('[CRMO v1698] Editor failed to launch (no custom editor hook)');
+        console.error('[CRMO v1699] Editor failed to launch (no custom editor hook)');
         alert('Editor failed to launch');
       }catch(e){
-        console.error('[CRMO v1698] Editor failed to launch', e);
+        console.error('[CRMO v1699] Editor failed to launch', e);
         try{ alert('Editor failed to launch'); }catch(_){}
       }
     }, true);
@@ -9316,7 +9337,7 @@ html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
           if(typeof window.CRMO_saveMainNow === 'function'){
             // Let the original save handler update local state first, then push to DB
             setTimeout(function(){
-              try{ window.CRMO_saveMainNow(); }catch(e){ console.warn('[CRMO v1698] CRMO_saveMainNow failed', e); }
+              try{ window.CRMO_saveMainNow(); }catch(e){ console.warn('[CRMO v1699] CRMO_saveMainNow failed', e); }
             }, 0);
           }
         }catch(e){}
@@ -34271,68 +34292,37 @@ Timeout(function(){ try{ el.style.display='none'; }catch(e){} }, 2400);
     }catch(e){}
     return false;
   }
-
-  function barsEls(){
-    return {
-      role: document.getElementById('crmo-role-toggle'),
-      admin: document.getElementById('crmo-admin-bar'),
-      sub: document.getElementById('crmo-admin-subbar')
-    };
+  function shouldLock(){
+    var de = document.documentElement;
+    return hasSbToken() || de.classList.contains('crmo-owner') || de.classList.contains('is-admin') || de.classList.contains('crmo-auth-optimistic') || de.getAttribute('data-crmo-admin-flag')==='1';
   }
-
-  function forceShow(){
-    var els = barsEls();
-    ['role','admin','sub'].forEach(function(key){
-      var el = els[key];
+  function forceShowOnce(){
+    if(!shouldLock()) return;
+    var role = document.getElementById('crmo-role-toggle');
+    var admin = document.getElementById('crmo-admin-bar');
+    var sub = document.getElementById('crmo-admin-subbar');
+    [role,admin,sub].forEach(function(el){
       if(!el) return;
-      // Do not mutate layout beyond making it visible; respect existing positioning.
-      el.style.display = 'flex';
-      el.style.visibility = 'visible';
-      el.style.opacity = '1';
-      el.style.pointerEvents = 'auto';
+      el.style.display='flex';
+      el.style.visibility='visible';
+      el.style.opacity='1';
+      el.style.pointerEvents='auto';
       el.setAttribute('data-crmo-locked','1');
     });
   }
-
-  function shouldLock(){
-    // Lock if we have a stored session token or a verified owner/admin class already applied.
-    var de = document.documentElement;
-    return hasSbToken() || de.classList.contains('crmo-owner') || de.classList.contains('is-admin') || de.classList.contains('crmo-auth-optimistic');
-  }
-
-  function applyLock(){
-    if(!shouldLock()) return;
-    forceShow();
-  }
-
-  // Apply immediately (and repeatedly for a short window to defeat async hide/show)
-  try{
-    applyLock();
-    var t0 = Date.now();
-    var rafLoop = function(){
-      applyLock();
-      if(Date.now() - t0 < 3500) requestAnimationFrame(rafLoop);
-    };
-    requestAnimationFrame(rafLoop);
-
-    // Also re-apply on common events that previously caused flicker
-    window.addEventListener('pageshow', applyLock, true);
-    window.addEventListener('focus', applyLock, true);
-    document.addEventListener('visibilitychange', applyLock, true);
-
-    // Watch for scripts trying to hide the bars
-    var els = barsEls();
-    Object.keys(els).forEach(function(k){
-      var el = els[k];
-      if(!el) return;
-      try{
-        var mo = new MutationObserver(function(){
-          applyLock();
-        });
-        mo.observe(el, { attributes:true, attributeFilter:['style','class','hidden','aria-hidden'] });
-      }catch(e){}
-    });
-  }catch(e){}
+  try{ forceShowOnce(); }catch(e){}
+  document.addEventListener('DOMContentLoaded', function(){ try{ forceShowOnce(); }catch(e){} }, {once:true});
+  try{ setInterval(function(){ try{ forceShowOnce(); }catch(e){} }, 2000); }catch(e){}
+  document.addEventListener('keyup', function(ev){
+    if(ev && ev.key === 'Escape'){ try{ setTimeout(forceShowOnce, 0); }catch(e){} }
+  }, true);
+  document.addEventListener('click', function(ev){
+    var t = ev && ev.target;
+    if(!t) return;
+    if(t.classList && (t.classList.contains('modal-backdrop') || t.classList.contains('close') || t.getAttribute('data-action')==='close')){
+      try{ setTimeout(forceShowOnce, 0); }catch(e){}
+    }
+  }, true);
 })();
 </script>
 </body>
