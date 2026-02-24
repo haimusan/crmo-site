@@ -1,8 +1,23 @@
 <!DOCTYPE html>
-<!-- CRMO_v1704 -->
+<!-- CRMO_v1705 -->
 
 <html dir="rtl" lang="he">
 <head>
+<script id="crmo-force-owner-head-v1699">
+/* Force Owner/UI visibility ASAP when ?admin=1 is present (no waiting for Supabase). */
+(function(){
+  try{
+    var sp = new URLSearchParams(location.search || "");
+    if(sp.get("admin") === "1"){
+      window.CRMO_FORCE_OWNER = 1;
+      try{ localStorage.setItem("crmo-role","master"); }catch(e){}
+      document.documentElement.classList.add("crmo-owner","is-admin","crmo-auth-optimistic");
+      document.documentElement.setAttribute("data-crmo-admin-flag","1");
+    }
+  }catch(e){}
+})();
+  </script>
+
 
 
 <script id="crmo_cloud_defaults">window.CRMO_ALLOW_CLOUD = true; window.CRMO_OFFLINE_MODE = false;</script>
@@ -822,7 +837,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1704</title>
+<title>CRMO_v1705</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>@media (max-width: 1200px){
@@ -32530,8 +32545,8 @@ function CRMO_clearLocalDataAndReload(){
       if(el) el.textContent = txt;
     }
     function apply(){
-      setText('crmo-top-version', 'v1704');
-      setText('crmo-footer-version', 'v1704');
+      setText('crmo-top-version', 'v1705');
+      setText('crmo-footer-version', 'v1705');
 }
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
     else apply();
@@ -32545,5 +32560,50 @@ function CRMO_clearLocalDataAndReload(){
 })();
 </script>
 
+
+<script id="crmo-bars-lock-runtime-v1695">
+(function(){
+  function hasSbToken(){
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(k && /^sb-.*-auth-token$/i.test(k)) return true;
+      }
+    }catch(e){}
+    return false;
+  }
+  function shouldLock(){
+    var de = document.documentElement;
+    return hasSbToken() || de.classList.contains('crmo-owner') || de.classList.contains('is-admin') || de.classList.contains('crmo-auth-optimistic') || de.getAttribute('data-crmo-admin-flag')==='1';
+  }
+  function forceShowOnce(){
+    if(!shouldLock()) return;
+    var role = document.getElementById('crmo-role-toggle');
+    var admin = document.getElementById('crmo-admin-bar');
+    var sub = document.getElementById('crmo-admin-subbar');
+    [role,admin,sub].forEach(function(el){
+      if(!el) return;
+      el.style.display='flex';
+      el.style.visibility='visible';
+      el.style.opacity='1';
+      el.style.pointerEvents='auto';
+      el.setAttribute('data-crmo-locked','1');
+    });
+  }
+  try{ forceShowOnce(); }catch(e){}
+  document.addEventListener('DOMContentLoaded', function(){ try{ forceShowOnce(); }catch(e){} }, {once:true});
+  try{ setInterval(function(){ try{ forceShowOnce(); }catch(e){} }, 2000); }catch(e){}
+  document.addEventListener('keyup', function(ev){
+    if(ev && ev.key === 'Escape'){ try{ setTimeout(forceShowOnce, 0); }catch(e){} }
+  }, true);
+  document.addEventListener('click', function(ev){
+    var t = ev && ev.target;
+    if(!t) return;
+    if(t.classList && (t.classList.contains('modal-backdrop') || t.classList.contains('close') || t.getAttribute('data-action')==='close')){
+      try{ setTimeout(forceShowOnce, 0); }catch(e){}
+    }
+  }, true);
+})();
+</script>
 </body>
 </html>
