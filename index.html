@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1695 single -->
+<!-- CRMO_v1696 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -64,16 +64,16 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1695";
+window.CRMO_BUILD_VERSION = "1696";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1695';
-window.CRMO_VERSION_NUMBER = 1695;
+window.CRMO_VERSION = 'CRMO_v1696';
+window.CRMO_VERSION_NUMBER = 1696;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
-<script id="crmo-preauth-bars-v1695">
+<script id="crmo-preauth-bars-v1696">
 /* Prevent admin/view bars flicker on refresh:
    If a Supabase session token exists in localStorage, show bars immediately
    while async RBAC/session verification runs. */
@@ -95,8 +95,30 @@ window.CRMO_STUDIO_TITLE = "CRMO";
   }catch(e){}
 })();
 </script>
+<style id="crmo-bars-lock-css-v1696">
+/* Hard lock: if we detect a session token, bars must not flicker during async auth checks */
+html.crmo-auth-optimistic #crmo-role-toggle,
+html.crmo-auth-optimistic #crmo-admin-bar,
+html.crmo-auth-optimistic #crmo-admin-subbar,
+html.crmo-bars-locked #crmo-role-toggle,
+html.crmo-bars-locked #crmo-admin-bar,
+html.crmo-bars-locked #crmo-admin-subbar{
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
 
-<style id="crmo-bars-lock-css-v1695">
+/* Prevent transient hide by inline styles */
+html.crmo-auth-optimistic body.role-guest #crmo-role-toggle,
+html.crmo-auth-optimistic body.role-guest #crmo-admin-bar,
+html.crmo-auth-optimistic body.role-guest #crmo-admin-subbar{
+  display: block !important;
+}
+</style>
+
+
+<style id="crmo-bars-lock-css-v1696">
 /* Hard rule: if there's an authenticated user (optimistic or verified), bars must stay visible. */
 html.crmo-auth-optimistic #crmo-role-toggle,
 html.crmo-auth-optimistic #crmo-admin-bar,
@@ -8813,6 +8835,24 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     return OWNER_EMAILS.indexOf(e) >= 0;
   }
 
+  function hasSupabaseToken(){
+    try{
+      for(let i=0;i<localStorage.length;i++){
+        const k = localStorage.key(i);
+        if(k && /^sb-.*-auth-token$/i.test(k)) return true;
+      }
+    }catch(e){}
+    return false;
+  }
+
+  // Sticky auth state:
+  // If we have a Supabase token, we KEEP the last known role/bars visible and do not downgrade on transient null sessions.
+  const STICKY = window.__CRMO_AUTH_STICKY || (window.__CRMO_AUTH_STICKY = {
+    lastEmail: "",
+    lastOwner: false,
+    lastGoodAt: 0
+  });
+
   function setDisplay(el, show){
     if(!el) return;
     el.style.display = show ? "" : "none";
@@ -8822,17 +8862,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     try{
       document.documentElement.classList.toggle("crmo-owner", owner);
       document.documentElement.classList.toggle("crmo-signed-in", owner);
-    
-    try{
-      if(owner){
-        localStorage.setItem("CRMO_SB_SESSION","1");
-      }else{
-        localStorage.removeItem("CRMO_SB_SESSION");
-        sessionStorage.removeItem("CRMO_SB_SESSION");
-      }
     }catch(e){}
-
-  }catch(e){}
     try{
       document.body.classList.toggle("role-guest", !owner);
       document.body.classList.toggle("role-admin", owner);
@@ -8842,12 +8872,26 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
       if(owner){
         localStorage.setItem("crmo-role","master");
       }else{
-        localStorage.removeItem("crmo-role");
+        // do NOT clear role here; keep sticky while token exists
       }
     }catch(e){}
   }
 
-  function applyUI(owner){
+  function applyUI(owner, email){
+    // Rule: if we have a token, bars must be visible immediately and never flicker while checks run.
+    const token = hasSupabaseToken();
+
+    // Visual bars on "authenticated" (token) OR owner.
+    const showBars = token || owner;
+
+    // If we have a token but owner is false due to transient check, do NOT drop owner classes if we recently had a good owner.
+    if(token && !owner){
+      const age = Date.now() - (STICKY.lastGoodAt || 0);
+      if(STICKY.lastOwner && age < 60000){ // 60s grace
+        owner = true;
+      }
+    }
+
     setOwnerClasses(owner);
 
     const icon = document.getElementById("crmo-user-indicator");
@@ -8858,19 +8902,35 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     const subbar = document.getElementById("crmo-admin-subbar");
 
     if(icon){
-      icon.classList.toggle("is-authed", owner);
-      icon.setAttribute("data-auth", owner ? "in" : "out");
-      icon.setAttribute("aria-label", owner ? "פרופיל / התנתקות" : "התחבר / הירשם");
-      icon.setAttribute("title", owner ? "פרופיל / התנתקות" : "התחבר / הירשם");
+      icon.classList.toggle("is-authed", showBars);
+      icon.setAttribute("data-auth", showBars ? "in" : "out");
+      icon.setAttribute("aria-label", showBars ? "פרופיל / התנתקות" : "התחבר / הירשם");
+      icon.setAttribute("title", showBars ? "פרופיל / התנתקות" : "התחבר / הירשם");
     }
 
-    if(logoutBtn) logoutBtn.disabled = !owner;
-    setDisplay(logoutBtn, owner);
-    setDisplay(userMenu, owner);
+    if(logoutBtn) logoutBtn.disabled = !showBars;
+    setDisplay(logoutBtn, showBars);
+    setDisplay(userMenu, showBars);
 
-    setDisplay(roleBar, owner);
-    setDisplay(adminBar, owner);
-    setDisplay(subbar, owner);
+    setDisplay(roleBar, showBars);
+    setDisplay(adminBar, showBars);
+    setDisplay(subbar, showBars);
+
+    // Keep the UI from collapsing during async checks
+    try{
+      if(showBars){
+        document.documentElement.classList.add("crmo-bars-locked");
+      }else{
+        document.documentElement.classList.remove("crmo-bars-locked");
+      }
+    }catch(e){}
+
+    // Default selection in role bar: always OWNER when authenticated
+    try{
+      if(showBars){
+        localStorage.setItem("crmo-role","master");
+      }
+    }catch(e){}
 
     try{
       window.dispatchEvent(new Event("resize"));
@@ -8887,11 +8947,10 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     }catch(e){ return null; }
   }
 
-  async function readOwnerFromSupabase(){
+  async function readSessionEmail(){
     try{
       const client = await getSupabaseClient();
-      if(!client || !client.auth) return { owner:false, email:"" };
-
+      if(!client || !client.auth) return "";
       let sess = null;
       if(window.CRMO_safeGetSession){
         sess = await window.CRMO_safeGetSession(client);
@@ -8900,37 +8959,59 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
         sess = (r && r.data && r.data.session) ? r.data.session : null;
       }
       const email = (sess && sess.user && sess.user.email) ? String(sess.user.email).toLowerCase() : "";
-      return { owner:isOwnerEmail(email), email };
+      return email || "";
     }catch(e){
-      return { owner:false, email:"" };
+      return "";
     }
   }
 
   let inited = false;
   let lastKey = "";
-  let lastOwner = false;
 
   async function refresh(){
-    const r = await readOwnerFromSupabase();
-    const owner = !!r.owner;
-    const key = (r.email || "") + "|" + (owner ? "1":"0");
+    const token = hasSupabaseToken();
+
+    // Optimistic lock: if token exists, show bars immediately using last known role.
+    if(token){
+      applyUI(STICKY.lastOwner, STICKY.lastEmail);
+    }else{
+      applyUI(false, "");
+    }
+
+    const email = await readSessionEmail();
+    const owner = isOwnerEmail(email);
+
+    // If token exists but email came back empty, treat it as transient and KEEP sticky state.
+    if(token && !email){
+      // keep bars/role, and retry later
+      return;
+    }
+
+    // Update sticky on good result
+    if(email){
+      STICKY.lastEmail = email;
+      STICKY.lastOwner = !!owner;
+      STICKY.lastGoodAt = Date.now();
+    }else if(!token){
+      STICKY.lastEmail = "";
+      STICKY.lastOwner = false;
+      STICKY.lastGoodAt = 0;
+    }
+
+    const key = (email || "") + "|" + (owner ? "1":"0") + "|" + (token ? "t":"n");
     if(key !== lastKey){
       lastKey = key;
-      lastOwner = owner;
-      applyUI(owner);
+      applyUI(owner, email);
       try{
-        document.documentElement.setAttribute("data-crmo-auth-email", r.email || "");
+        document.documentElement.setAttribute("data-crmo-auth-email", email || "");
       }catch(e){}
       try{
-        if(owner){
-          localStorage.setItem("crmo:admin:email", r.email || "");
-        }else{
+        if(email){
+          localStorage.setItem("crmo:admin:email", email || "");
+        }else if(!token){
           localStorage.removeItem("crmo:admin:email");
         }
       }catch(e){}
-    }else{
-      // still re-apply when needed (layout)
-      applyUI(lastOwner);
     }
   }
 
@@ -8949,7 +9030,6 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     })();
   }
 
-  // Attach logout to supabase signOut (no reload)
   function hookLogout(){
     const btn = document.getElementById("crmo-user-menu-logout");
     if(!btn || btn.__crmo_hooked) return;
@@ -8962,11 +9042,16 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
           await client.auth.signOut();
         }
       }catch(e){}
+      // Clear sticky immediately on explicit logout
+      try{
+        STICKY.lastEmail = "";
+        STICKY.lastOwner = false;
+        STICKY.lastGoodAt = 0;
+      }catch(e){}
       try{ refresh(); }catch(e){}
     });
   }
 
-  // Poll until supabase library is available
   let tries = 0;
   (function poll(){
     tries++;
@@ -8975,16 +9060,19 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     if(tries < 200 && (!window.supabase || !window.supabase.createClient)){
       setTimeout(poll, 50);
     }else{
-      // keep a light refresh in case of storage-only updates
-      setInterval(function(){ try{ refresh(); hookLogout(); }catch(e){} }, 1200);
+      // lighter refresh to avoid flicker loops
+      setInterval(function(){
+        if(document.hidden) return;
+        try{ refresh(); hookLogout(); }catch(e){}
+      }, 5000);
     }
   })();
 
   window.addEventListener("pageshow", function(){ try{ refresh(); hookLogout(); }catch(e){} });
-  window.addEventListener("focus", function(){ try{ refresh(); hookLogout(); }catch(e){} });
+  // Do NOT refresh on focus to avoid flicker loops; rely on onAuthStateChange + interval
+  // window.addEventListener("focus", function(){ try{ refresh(); hookLogout(); }catch(e){} });
 
-})();
-</script>
+})();</script>
 
 
 <style <style id="CRMO_v1667_fixed_stack">
@@ -9166,7 +9254,7 @@ html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
 
 
 <style id="crmo-hide-legacy-tile-editor">
-/* v1695: hide legacy/duplicate tile editor modal (keep the modern one #tm-tile-editor-modal) */
+/* v1696: hide legacy/duplicate tile editor modal (keep the modern one #tm-tile-editor-modal) */
 #tileEditorModal,
 #tileEditorBackdrop,
 #tileEditorOverlay,
@@ -34001,7 +34089,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
       clearTimeout(el.__t);
       el.__t=set
 <script id="crmo-hide-legacy-tile-editor-js">
-/* v1695: actively suppress any legacy/duplicate tile editor modal that may be opened by old listeners */
+/* v1696: actively suppress any legacy/duplicate tile editor modal that may be opened by old listeners */
 (function(){
   function hideLegacy(){
     try{
@@ -34060,7 +34148,7 @@ Timeout(function(){ try{ el.style.display='none'; }catch(e){} }, 2400);
 </script>
 
 
-<script id="crmo-bars-lock-runtime-v1695">
+<script id="crmo-bars-lock-runtime-v1696">
 (function(){
   function hasSbToken(){
     try{
