@@ -1,8 +1,24 @@
 <!DOCTYPE html>
-<!-- CRMO_v1709 -->
+<!-- CRMO_v1712 -->
 
 <html dir="rtl" lang="he">
 <head>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script id="crmo-supabase-fallback-loader">
+(function(){
+  var t0=Date.now();
+  function ensure(){
+    if(window.supabase) return;
+    if(Date.now()-t0<1500) return setTimeout(ensure,50);
+    var s=document.createElement('script');
+    s.src="https://unpkg.com/@supabase/supabase-js@2";
+    s.defer=true;
+    document.head.appendChild(s);
+  }
+  ensure();
+})();
+</script>
+
 <script id="crmo-force-owner-head-v1699">
 /* Force Owner/UI visibility ASAP when ?admin=1 is present (no waiting for Supabase). */
 (function(){
@@ -21,7 +37,8 @@
 
 
 <script id="crmo_cloud_defaults">window.CRMO_ALLOW_CLOUD = true; window.CRMO_OFFLINE_MODE = false;</script>
-<script id="crmo_supabase_credentials">window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co"; window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";<script id="crmo-assets-base-v1709">
+<script id="crmo_supabase_credentials">window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co"; window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";</script>
+<script id="crmo-assets-base-v1709">
 /*
   Ensure assets/icons load both locally and online:
   - Local dev can still use relative ./assets/... if present.
@@ -898,7 +915,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1709</title>
+<title>CRMO_v1712</title>
 <link href="https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>@media (max-width: 1200px){
@@ -32598,7 +32615,7 @@ function CRMO_clearLocalDataAndReload(){
 <script id="crmo_v1709_bootstrap">
 (function(){
   try{
-    window.CRMO_BUILD_VERSION = "1709";
+    window.CRMO_BUILD_VERSION = "1712";
     window.CRMO_VERSION = "1709";
     
     // v1709: keep UI labels in sync with build version
