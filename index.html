@@ -8800,8 +8800,14 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     try{
       if(owner){
         localStorage.setItem("crmo-role","master");
+        localStorage.setItem("CRMO_AUTH_SESSION_v1", JSON.stringify({
+          role: "master",
+          issuedAt: Date.now(),
+          expiresAt: Date.now() + (12*60*60*1000)
+        }));
       }else{
         localStorage.removeItem("crmo-role");
+        localStorage.removeItem("CRMO_AUTH_SESSION_v1");
       }
     }catch(e){}
   }
