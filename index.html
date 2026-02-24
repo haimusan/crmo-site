@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1689 single -->
+<!-- CRMO_v1690 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -64,45 +64,92 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1689";
+window.CRMO_BUILD_VERSION = "1690";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1689';
-window.CRMO_VERSION_NUMBER = 1689;
+window.CRMO_VERSION = 'CRMO_v1690';
+window.CRMO_VERSION_NUMBER = 1690;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
-<script id="crmo-factory-reset-v1689">
+
+<script id="crmo_factory_reset_v1690">
 (function(){
+  var FLAG = 'crmo_factory_reset_done__v1690';
   try{
-    var FLAG = 'crmo_factory_reset_done__v1689';
     if(localStorage.getItem(FLAG)==='1') return;
-
-    // Remove CRMO local state (but DO NOT touch Supabase auth tokens: keys starting with "sb-")
-    var keys=[];
-    for(var i=0;i<localStorage.length;i++){
-      var k=localStorage.key(i);
+    // Clear CRMO local content/state keys (keep Supabase auth tokens sb-*-auth-token)
+    var kill = [];
+    for(var i=0;i<localStorage.length;i++) {
+      var k = localStorage.key(i);
       if(!k) continue;
-      keys.push(k);
+      if(k === 'main' || k === 'crmo_content_data' || k === 'crmo_gallery_state_v1' || k === 'crmo_gallery_meta') { kill.push(k); continue; }
+      if(k.indexOf('crmo:')===0 || k.indexOf('crmo_')===0 || k.indexOf('CRMO_')===0) kill.push(k);
     }
-    keys.forEach(function(k){
-      try{
-        if(k.indexOf('sb-')===0) return;              // keep supabase session
-        if(k.indexOf('supabase.')===0) return;        // keep supabase session (some builds)
-        if(k.indexOf('crmo_')===0) localStorage.removeItem(k);
-        if(k==='main') localStorage.removeItem(k);
-        if(k==='crmo_gallery_state_v1') localStorage.removeItem(k);
-        if(k==='crmo_content_data') localStorage.removeItem(k);
-      }catch(e){}
-    });
-
-    // Mark done
+    kill.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+    try{ sessionStorage.removeItem('CRMO_SKIP_CLOUD_RESTORE'); }catch(e){}
     localStorage.setItem(FLAG,'1');
+    // Reload once so the UI re-hydrates from file defaults
+    setTimeout(function(){ try{ location.reload(); }catch(e){} }, 50);
   }catch(e){}
 })();
 </script>
 
+<script id="crmo_preowner_boot_v1690">
+(function(){
+  // Show admin + view-mode bars immediately if a Supabase session token exists (prevents "bars disappear for seconds" on refresh)
+  try{
+    var hasToken = false;
+    for(var i=0;i<localStorage.length;i++) {
+      var k = localStorage.key(i);
+      if(!k) continue;
+      if(k.indexOf('sb-')===0 && k.indexOf('-auth-token')>0) {
+        var v = localStorage.getItem(k) || '';
+        if(String(v).length > 20) { hasToken = true; break; }
+      }
+    }
+    if(hasToken) {
+      document.documentElement.classList.add('crmo-preowner','crmo-owner');
+      // Default role selection: Owner
+      try{
+        if(document.body) document.body.classList.add('role-admin');
+        document.addEventListener('DOMContentLoaded', function(){ document.body.classList.add('role-admin'); });
+      }catch(e){}
+    }
+  }catch(e){}
+})();
+</script>
+
+<style id="crmo_preowner_force_visible_v1690">
+/* Force the bars to stay visible whenever a session exists (prevents refresh flicker). */
+html.crmo-preowner #crmo-role-toggle,
+html.crmo-preowner #crmo-admin-bar {
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+</style>
+
+<script id="crmo_prevent_double_tile_editor_v1690">
+(function(){
+  // Safety: if a legacy tile editor opener exists, neutralize it so we don't break drag by opening the wrong editor.
+  try{
+    if(window.openTileEditor && !window.__CRMO_LEGACY_TILE_EDITOR_BLOCKED__){
+      window.__CRMO_LEGACY_TILE_EDITOR_BLOCKED__ = true;
+      var _orig = window.openTileEditor;
+      window.openTileEditor = function(){
+        // Prefer the modern editor (#tile-editor) if present; otherwise fallback
+        try{
+          var te = document.getElementById('tile-editor');
+          if(te && te.style) { te.style.display = 'block'; }
+        }catch(e){}
+        try{ return _orig.apply(this, arguments); }catch(e){ return; }
+      };
+    }
+  }catch(e){}
+})();
+</script>
 
 <script id="crmo_asset_paths_v1557">
 /* v1556: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
@@ -455,7 +502,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
         st.textContent = `
           /* Default: hide admin UI until RBAC confirms owner */
           #crmo-admin-bar, #crmo-admin-editor, #crmo-admin-subbar,
-          #CRMO_v1689_brands_admin_panel,
+          #CRMO_v1646_brands_admin_panel,
           #crmo-header-admin, #crmo-mode-admin,
           #crmo-settings-admin, #crmo-media-admin, #crmo-galleries-admin,
           #crmo-tracking-admin, #crmo-permissions-admin, #crmo-audience-admin,
@@ -467,7 +514,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
           html.crmo-owner #crmo-admin-bar,
           html.crmo-owner #crmo-admin-editor,
           html.crmo-owner #crmo-admin-subbar,
-          html.crmo-owner #CRMO_v1689_brands_admin_panel,
+          html.crmo-owner #CRMO_v1646_brands_admin_panel,
           html.crmo-owner #crmo-header-admin,
           html.crmo-owner #crmo-mode-admin,
           html.crmo-owner #crmo-settings-admin,
@@ -1409,7 +1456,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1689</title>
+<title>CRMO_v1690</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -2980,7 +3027,7 @@ a.ph, .ph { position: relative; }
 }
 </style>
 
-<style id="CRMO_v1689_overrides">
+<style id="CRMO_v1646_overrides">
 header, .site-header, .main-header, #header, .hdr, .global-header{
   position: sticky;
   top: var(--crmo-sticky-top, 0px);
@@ -3000,7 +3047,7 @@ header, .site-header, .main-header, #header, .hdr, .global-header{
   z-index: 100000 !important;
 }
 </style>
-<style id="CRMO_v1689_overrides">
+<style id="CRMO_v1646_overrides">
 header{ position: sticky; top: var(--crmo-sticky-top, 0px); z-index: 999 !important; }
 .gallery-hover-ready .grid .ph .hover-desc,
 .grid .ph .hover-desc,
@@ -3024,7 +3071,7 @@ section .grid > a.ph::after,
 section .grid > .ph::after{ content: none !important; }
 #stands .stands-overlay{ display:block !important; }
 </style>
-<style id="CRMO_v1689_overrides">
+<style id="CRMO_v1646_overrides">
 #stands .grid .ph > :not(img):not(picture):not(.crmo-ov),
 section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
   display: none !important;
@@ -3059,7 +3106,7 @@ section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
 .grid .ph:hover .crmo-ov, .grid .ph:focus-within .crmo-ov{ transform: translateY(0); }
 .grid .ph .crmo-ov *{ color:#000 !important; }
 </style>
-<style id="CRMO_v1689_mobile_1x4">
+<style id="CRMO_v1646_mobile_1x4">
 @media (max-width: 767.98px){
   section .grid{ display:block !important; }
   section .grid .ph{ width:100% !important; display:block !important; }
@@ -3229,11 +3276,11 @@ section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
 #crmo-auth .footnotes .small{font-size:12px;opacity:.85;text-align:center}
 #crmo-auth .footnotes .links{display:flex;gap:8px;justify-content:center}
 #crmo-auth .footnotes .sep{opacity:.5}
-</style><style id="CRMO_v1689_exhibitions_spacing_fix">
+</style><style id="CRMO_v1646_exhibitions_spacing_fix">
 #exhibitions.hair{
   margin-top: var(--vpad);
 }
-</style><style id="CRMO_v1689_center_first_galleries">
+</style><style id="CRMO_v1646_center_first_galleries">
 #intro .wrap > h1, #intro .wrap > h2, #intro .wrap > h3,
 #brands .wrap > h1, #brands .wrap > h2, #brands .wrap > h3,
 #secondary-gallery .wrap > h1, #secondary-gallery .wrap > h2, #secondary-gallery .wrap > h3{
@@ -3245,7 +3292,7 @@ section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
   text-align: center;
   margin-left: auto; margin-right: auto;
 }
-</style><style id="CRMO_v1689_galleries_text_std">
+</style><style id="CRMO_v1646_galleries_text_std">
 #intro .wrap > h1, #intro .wrap > h2, #intro .wrap > h3,
 #brands .wrap > h1, #brands .wrap > h2, #brands .wrap > h3,
 #secondary-gallery .wrap > h1, #secondary-gallery .wrap > h2, #secondary-gallery .wrap > h3,
@@ -3263,23 +3310,23 @@ section[id^="stands-"] .grid .ph > :not(img):not(picture):not(.crmo-ov){
   text-align: center;
   margin-left: auto; margin-right: auto;
 }
-</style><style id="CRMO_v1689_secondary_std">
+</style><style id="CRMO_v1646_secondary_std">
 #secondary-gallery .wrap > h2{ text-align:center; }
 #secondary-gallery .wrap > p{ text-align:center; margin-left:auto; margin-right:auto; }
-</style><style id="CRMO_v1689_brands_divider_fix">
+</style><style id="CRMO_v1646_brands_divider_fix">
 #brands.hair{
   border-top: 1px solid var(--line);
   padding-top: var(--vpad);
   margin-top: var(--vpad);
 }
-</style><style id="CRMO_v1689_rubik_light">
+</style><style id="CRMO_v1646_rubik_light">
 :root{
   --ff-body: "Rubik", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   --ff-head: "Rubik", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 body{ font-family: var(--ff-body); font-weight: 300; }
 h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
-</style><style id="CRMO_v1689_gallery_typo_spacing">
+</style><style id="CRMO_v1646_gallery_typo_spacing">
 :root{ --gap-ht: 0.75rem; }
 #intro .wrap > h1.keyline, #intro .wrap > h2.keyline, #intro .wrap > h3.keyline,
 #brands .wrap > h1.keyline, #brands .wrap > h2.keyline, #brands .wrap > h3.keyline,
@@ -3300,7 +3347,7 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
   margin-top: 0;
   margin-left: auto; margin-right: auto;
 }
-</style><style id="CRMO_v1689_secondary_gap_fix">
+</style><style id="CRMO_v1646_secondary_gap_fix">
 #secondary-gallery .wrap > h1.keyline,
 #secondary-gallery .wrap > h2.keyline,
 #secondary-gallery .wrap > h3.keyline{
@@ -3309,7 +3356,7 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
 #secondary-gallery .wrap > p.desc{
   margin-top: 0 !important;
 }
-</style><style id="CRMO_v1689_secondary_divider_and_gap">
+</style><style id="CRMO_v1646_secondary_divider_and_gap">
 #secondary-gallery.hair{
   border-top: 1px solid var(--line);
   padding-top: var(--vpad);
@@ -3324,7 +3371,7 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
 #secondary-gallery .wrap > p.desc{
   margin-top: 0 !important;
 }
-</style><style id="CRMO_v1689_inter_section_gap_fix">
+</style><style id="CRMO_v1646_inter_section_gap_fix">
 :root{ --sec-gap: var(--vpad); }
 #brands .wrap > *:last-child,
 #secondary-gallery .wrap > *:last-child{
@@ -3336,7 +3383,7 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
 }
 #brands.hair{ border-top: 1px solid var(--line); padding-top: var(--vpad); margin-top: var(--vpad); }
 #secondary-gallery.hair{ border-top: 1px solid var(--line); padding-top: var(--vpad); margin-top: var(--vpad); }
-</style><style id="CRMO_v1689_brands_gap_fix">
+</style><style id="CRMO_v1646_brands_gap_fix">
 #brands .wrap > h1.keyline,
 #brands .wrap > h2.keyline,
 #brands .wrap > h3.keyline{
@@ -3346,23 +3393,23 @@ h1,h2,h3,h4,h5,h6{ font-family: var(--ff-head); }
   margin-top: 0 !important;
   margin-left: auto; margin-right: auto;
 }
-</style><style id="CRMO_v1689_small_hair_rule">
+</style><style id="CRMO_v1646_small_hair_rule">
 #small.hair{
   border-top: 1px solid var(--line);
   padding-top: var(--vpad);
   margin-top: var(--vpad);
 }
-</style><style id="CRMO_v1689_small_divider_contrast">
+</style><style id="CRMO_v1646_small_divider_contrast">
 #small.hair{
   border-top: 1px solid var(--line, rgba(0,0,0,.08)) !important;
   padding-top: var(--vpad) !important;
   margin-top: var(--vpad) !important;
 }
-</style><style id="CRMO_v1689_packages_gallery_styles">
+</style><style id="CRMO_v1646_packages_gallery_styles">
 #packages .wrap > h1, #packages .wrap > h2, #packages .wrap > h3{ text-align: center; }
 #packages .wrap > p{ text-align: center; margin-left:auto; margin-right:auto; }
 #packages.hair{ border-top: 1px solid var(--line); padding-top: var(--vpad); margin-top: var(--vpad); }
-</style><style id="CRMO_v1689_galleries_uniformity">
+</style><style id="CRMO_v1646_galleries_uniformity">
 :root{ --gap-ht: 0.75rem; }
 section .wrap > h1.keyline, section .wrap > h2.keyline, section .wrap > h3.keyline{
   text-align: center;
@@ -3379,13 +3426,13 @@ section.hair{
   margin-top: var(--vpad);
 }
 section .wrap > *:last-child{ margin-bottom: 0; }
-</style><style id="CRMO_v1689_stands_uniformity">
+</style><style id="CRMO_v1646_stands_uniformity">
 #stands .wrap > h1.keyline, #stands .wrap > h2.keyline, #stands .wrap > h3.keyline{
   text-align:center; margin-bottom: var(--gap-ht, 0.75rem);
 }
 #stands .wrap > p.desc{ text-align:center; margin-top:0; margin-left:auto; margin-right:auto; }
 #stands .gallery-grid{  }
-</style><style id="CRMO_v1689_contactbar_bump">
+</style><style id="CRMO_v1646_contactbar_bump">
 .contact-bar .icons a img{ width: clamp(36px, 3.3vw, 51px) !important; height:auto !important; }
 .contact-bar .contact-text,
 .contact-bar .coords{ font-size: clamp(21px, 1.65vw, 27px) !important; }
@@ -3395,7 +3442,7 @@ section .wrap > *:last-child{ margin-bottom: 0; }
 @media (max-width:700px){
   .contact-bar{ gap: 16px !important; }
 }
-</style><style id="CRMO_v1689_contactbar_bump2">
+</style><style id="CRMO_v1646_contactbar_bump2">
 .contact-bar .icons a img{ width: clamp(47px, 4.29vw, 66px) !important; height:auto !important; }
 .contact-bar .contact-text,
 .contact-bar .coords{ font-size: clamp(27px, 2.2vw, 35px) !important; }
@@ -3405,7 +3452,7 @@ section .wrap > *:last-child{ margin-bottom: 0; }
 @media (max-width:700px){
   .contact-bar{ gap: 18px !important; }
 }
-</style><style id="CRMO_v1689_login_overrides">
+</style><style id="CRMO_v1646_login_overrides">
 #login-section h2, #crmo-auth header h3, #crmo-auth .title, .login-title{
   display:none !important;
 }
@@ -3445,7 +3492,7 @@ section .wrap > *:last-child{ margin-bottom: 0; }
   opacity:1 !important; pointer-events:auto !important;
 }
 #login-section, #crmo-auth{ text-align:center !important; }
-</style><style id="CRMO_v1689_login_polish">
+</style><style id="CRMO_v1646_login_polish">
 #login-section .header .head-grid{
   display:flex !important;
   flex-direction: row-reverse !important;
@@ -3741,7 +3788,7 @@ section .wrap > *:last-child{ margin-bottom: 0; }
   margin-bottom: 8px;
   text-align: center;
 }
-</style><style id="CRMO_v1689_stands_subcopy">
+</style><style id="CRMO_v1646_stands_subcopy">
 #stands .stands-copy-shell{
   max-width: 100%;
   margin: 1.5rem auto 0;
@@ -4276,7 +4323,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
     transform: translateY(0);
   }
 </style>
-<style id="CRMO_v1689_hover_fonts_unify">
+<style id="CRMO_v1646_hover_fonts_unify">
 .grid .ph .crmo-ov{
   font-family:'Rubik',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif !important;
   font-weight:400 !important;
@@ -4298,7 +4345,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
   line-height:1.1;
 }
 </style>
-<style id="CRMO_v1689_hover_desc_5_lines">
+<style id="CRMO_v1646_hover_desc_5_lines">
 .grid .ph .crmo-ov .desc{
   white-space: pre-line;
   display: -webkit-box;
@@ -4307,7 +4354,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
   overflow: hidden;
 }
 </style>
-<style id="CRMO_v1689_multi_project_ui">
+<style id="CRMO_v1646_multi_project_ui">
 #tile-editor .field-multi-project{
   margin-top:10px;
   padding:8px 10px;
@@ -4387,7 +4434,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
   left:12px;
 }
 </style>
-<style id="CRMO_v1689_cosmetic_css">
+<style id="CRMO_v1646_cosmetic_css">
 #tile-editor .te-header{ position:relative; padding-left:44px; }
 #tile-editor .te-close-x{
   position:absolute;
@@ -4503,12 +4550,12 @@ section:not(#brands):not(#logos) .grid .ph:hover{
   opacity:1 !important;
 }
 </style>
-<style id="CRMO_v1689_multi_upload_ui">
+<style id="CRMO_v1646_multi_upload_ui">
 #tile-editor #te-multi-upload{
   margin-top:4px;
 }
 </style>
-<style id="CRMO_v1689_multi_project_ui_css">
+<style id="CRMO_v1646_multi_project_ui_css">
 #tile-editor .mp-block{
   margin-top: 12px;
   padding: 10px 12px;
@@ -4757,7 +4804,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
 }
 #tile-editor .mp-add:hover{ background:rgba(0,0,0,0.03); }
 </style>
-<script id="CRMO_v1689_multi_project_ui">
+<script id="CRMO_v1646_multi_project_ui">
 (function(){
   var mpThumbs = {};
   window.CRMO_mpThumbs = mpThumbs;
@@ -5141,11 +5188,13 @@ mpAdd.addEventListener('click', function(){
       if(!wrapper) return;
       var anchor = wrapper.querySelector('a.ph');
       if(!anchor) return;
-      // v1686: open Tile Editor modal on pencil click (and stop tile click navigation)
+      // v1685: open Tile Editor modal on pencil click (and stop tile click navigation)
       try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
       try{
-        // v1686: legacy TileEditorModal path disabled (keep unified tile editor only)
-      }catch(e){}
+        if(window.CRMO_openTileEditor){
+          var grid = wrapper.closest('.gallery-grid, .grid, #stands, #exhibitions, #brands, #stores, #retail-interiors') || wrapper.parentElement;
+          var wrappers = [];
+          try{ wrappers = Array.prototype.slice.call((grid && grid.querySelectorAll) ? grid.querySelectorAll('.tile-edit-wrapper') : []); }catch(e){}
           var idx = wrappers.length ? wrappers.indexOf(wrapper) : -1;
           if(idx < 0){
             try{
@@ -5861,7 +5910,7 @@ body.role-admin .tile-edit-btn{
   right:auto;
 }
 </style>
-<style id="CRMO_v1689_stands_align">
+<style id="CRMO_v1646_stands_align">
 #stands .stands-main-copy .keyline,
 #stands .subcats-copy .keyline{
   margin-top: 0;
@@ -5873,7 +5922,7 @@ body.role-admin .tile-edit-btn{
   margin-inline: auto;
 }
 </style>
-<style id="CRMO_v1689_layers_hint">
+<style id="CRMO_v1646_layers_hint">
 .tile-admin-right::before{
   content:'';
 }
@@ -5912,7 +5961,7 @@ body.role-admin .tile-edit-wrapper.tile-single .tile-admin-right::before{
   content:'';
 }
 </style>
-<style id="CRMO_v1689_layer_icon_fix">
+<style id="CRMO_v1646_layer_icon_fix">
 body.role-admin .tile-edit-wrapper .tile-layer-btn{
   display:inline-flex !important;
 }
@@ -5946,7 +5995,7 @@ body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
   opacity:1;
 }
 </style>
-<style id="CRMO_v1689_brand_dropdown_css">
+<style id="CRMO_v1646_brand_dropdown_css">
 .te-brand-field,
 .tm-brand-field{
   position:relative;
@@ -6092,7 +6141,7 @@ body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
 }
 </style>
 
-<style id="CRMO_v1689_cosmetics">
+<style id="CRMO_v1646_cosmetics">
 #tile-editor .te-close-x{
   background:transparent !important;
   border:none !important;
@@ -6397,7 +6446,7 @@ section[id^="stands-"] nav.subcats{
 }
 </style>
 
-<style id="CRMO_v1689_overrides">
+<style id="CRMO_v1646_overrides">
 #tile-editor .te-close-x{ color:#d00; }
 #tile-editor .mp-row{ cursor:default; }
 #tile-editor .mp-remove{
@@ -6462,7 +6511,7 @@ section[id^="stands-"] nav.subcats{
 #tile-editor .mp-drag-handle:active{ cursor:grabbing; }
 </style>
 
-<style id="CRMO_v1689_header_buttons_admin_css">
+<style id="CRMO_v1646_header_buttons_admin_css">
 body:not(.role-admin) #crmo-header-admin{ display:none !important; }
 #crmo-header-admin{
   border-top: 1px solid var(--line, rgba(0,0,0,.08));
@@ -6717,7 +6766,7 @@ body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
 </style>
 
 
-<style id="CRMO_v1689_future_admin_tabs_css">
+<style id="CRMO_v1646_future_admin_tabs_css">
 body:not(.role-admin) .crmo-future-panel{ display:none !important; }
 body.role-admin .crmo-future-panel{
   position: fixed;
@@ -6745,7 +6794,7 @@ body.role-admin .crmo-future-panel{
   font-size: 13px;
 }
 </style>
-<style id="CRMO_v1689_report_css">
+<style id="CRMO_v1646_report_css">
 #crmo-report-admin .crmo-report-wrap{
   display:grid;
   gap:12px;
@@ -6869,7 +6918,7 @@ body.role-admin .crmo-future-panel{
   font-size:13px;
 }
 </style>
-<style id="CRMO_v1689_ui_polish">
+<style id="CRMO_v1646_ui_polish">
 #crmo-role-toggle .crmo-role-tab{
   background:#ededed;
   color:rgba(0,0,0,.78);
@@ -6917,7 +6966,7 @@ body.role-admin .crmo-future-panel{
 }
 </style>
 
-<style id="CRMO_v1689_ui_polish">
+<style id="CRMO_v1646_ui_polish">
 #crmo-role-toggle .crmo-role-tab{
   background:#f2f2f2;
   color:rgba(0,0,0,.76);
@@ -6958,7 +7007,7 @@ body.role-ux #crmo-settings-admin{
 </style>
 
 
-<style id="CRMO_v1689_permissions_css">
+<style id="CRMO_v1646_permissions_css">
 #crmo-permissions-admin .crmo-perms-grid{
   display:grid;
   gap:12px;
@@ -7590,7 +7639,7 @@ html.crmo-usability-public #crmo-role-toggle{
 </style>
 
 
-<style id="CRMO_v1689_admin_dedupe_css">
+<style id="CRMO_v1646_admin_dedupe_css">
 #crmo-header-admin .crmo-header-admin-head-top,
 #crmo-galleries-admin .crmo-galleries-admin-head-top{
   display:none !important;
@@ -7598,7 +7647,7 @@ html.crmo-usability-public #crmo-role-toggle{
 </style>
 
 
-<style id="CRMO_v1689_galleries_admin_gap_fix_css">
+<style id="CRMO_v1646_galleries_admin_gap_fix_css">
 body.role-admin #crmo-galleries-admin{
   padding-top: 0 !important;
   background: #f7f7f7 !important;
@@ -7610,7 +7659,7 @@ body.role-admin #crmo-galleries-admin .wrap{
 }
 </style>
 
-<style id="CRMO_v1689_internal_editor_layers">
+<style id="CRMO_v1646_internal_editor_layers">
 #crmo-stands-tags-editor,
 #crmo-master-tags-editor,
 #tiles-manager-overlay.tm-overlay,
@@ -7626,7 +7675,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
   pointer-events: none !important;
 }
 </style>
-<style id="CRMO_v1689_footer_and_accessibility_edit">
+<style id="CRMO_v1646_footer_and_accessibility_edit">
 #crmo-footer{
   border-top: 1px solid var(--line);
   padding: 52px 0 56px 0;
@@ -8037,7 +8086,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 }
 </style>
 
-<style id="CRMO_v1689_login_modal_position">
+<style id="CRMO_v1646_login_modal_position">
 #crmo-auth{
   top: clamp(12px, 6vh, 56px) !important;
   transform: translate(-50%, 0) !important;
@@ -8065,7 +8114,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 }
 </style>
 
-<style id="CRMO_v1689_login_modal_position_fix">
+<style id="CRMO_v1646_login_modal_position_fix">
 #login-modal .crmo-login-card{
   top: clamp(10px, 4vh, 44px) !important;
   transform: translate(-50%, 0) !important;
@@ -8094,7 +8143,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 </style>
 
 
-<style id="CRMO_v1689_login_modal_pin_top">
+<style id="CRMO_v1646_login_modal_pin_top">
 #login-backdrop{ z-index: 300000 !important; }
 #login-modal{ z-index: 300001 !important; }
 #login-modal .crmo-login-card{
@@ -8137,7 +8186,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 }
 </style>
 
-<style id="CRMO_v1689_dev_visibility_css">
+<style id="CRMO_v1646_dev_visibility_css">
   #crmo-adminbar-dev{ display:none; }
   #crmo-dev-admin{ display:none; }
   body.role-master #crmo-adminbar-dev{ display:flex; }
@@ -8168,7 +8217,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 </style>
 
 
-<style id="CRMO_v1689_role_bar_swap_css">
+<style id="CRMO_v1646_role_bar_swap_css">
   #crmo-role-toggle{
     position: sticky;
     top: 0;
@@ -8188,7 +8237,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 </style>
 
 
-<style id="CRMO_v1689_ui_standardization">
+<style id="CRMO_v1646_ui_standardization">
 #crmo-role-toggle{
   background:#f7f7f7;
   border-bottom:1px solid rgba(0,0,0,.08);
@@ -8388,7 +8437,7 @@ body:not(.role-admin) .brands-manager-bar{ display:none; }
 </style>
 
 
-<style id="CRMO_v1689_brands_tiles_limit">
+<style id="CRMO_v1646_brands_tiles_limit">
 #brands .gallery-grid.brands > .brandcell:nth-child(n+19){
   display: none !important;
 }
@@ -8402,7 +8451,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
 </style>
 
 
-<style id="CRMO_v1689_brands_admin_panel">
+<style id="CRMO_v1646_brands_admin_panel">
 #brands .brands-manager-bar{ position: relative; }
 #brands .crmo-brands-admin-panel{
   margin-top: 10px;
@@ -8440,7 +8489,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
 </style>
 
 
-<style id="CRMO_v1689_brands_gallery_modal_match">
+<style id="CRMO_v1646_brands_gallery_modal_match">
 #crmo-brands-gallery-editor{
   position:fixed;
   inset:0;
@@ -8472,7 +8521,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
   cursor:pointer;
 }
 </style>
-<style id="CRMO_v1689_brands_modal_tuning">
+<style id="CRMO_v1646_brands_modal_tuning">
 #crmo-brands-gallery-editor .tm-subbar{justify-content:flex-end;}
 #crmo-brands-gallery-editor #crmo-brands-counter{margin-right:auto;}
 #crmo-brands-gallery-editor .tm-tiles-wrapper{
@@ -8502,7 +8551,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
 </style>
 
 
-<style id="CRMO_v1689_admin_fixed_stack">
+<style id="CRMO_v1646_admin_fixed_stack">
 #crmo-role-toggle{ padding-bottom: 10px !important; }
 body.role-admin #crmo-admin-bar{
   position: fixed !important;
@@ -8539,7 +8588,7 @@ body.role-admin header{
 }
 </style>
 
-<style id="CRMO_v1689_subbar_css">
+<style id="CRMO_v1646_subbar_css">
 #crmo-admin-bar .crmo-admin-subbar{
   display:flex;
   align-items:flex-end;
@@ -8573,7 +8622,7 @@ body.role-admin header{
 #crmo-admin-bar .crmo-admin-subtab-btn:focus{ outline: 2px solid rgba(0,0,0,.18); outline-offset: 2px; }
 </style>
 
-<style id="CRMO_v1689_admin_tabs_ralign_css">
+<style id="CRMO_v1681_admin_tabs_ralign_css">
 /* v1681: align admin tabs + sub-tabs to start at the right edge of the content (RTL) */
 #crmo-admin-bar .crmo-admin-tabs,
 #crmo-admin-bar .crmo-admin-subbar{
@@ -8618,7 +8667,7 @@ html[dir="rtl"] .crmo-mobile-panel{right:0; left:auto;}
 }
 </style>
 
-<style id="CRMO_v1689_admin_visibility_fix">
+<style id="CRMO_v1646_admin_visibility_fix">
 /* v1451: show admin UI only when authenticated role is owner/admin/etc */
 body.role-admin #crmo-admin-bar{ display:block !important; }
 body.role-admin #crmo-header-admin .crmo-header-admin-toggle,
@@ -8662,7 +8711,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 }
 </style>
 
-<style id="CRMO_v1689_auth_modal_ui_fix">
+<style id="CRMO_v1646_auth_modal_ui_fix">
 /* Ensure auth modals are always clickable and centered above any overlays */
 .crmo-auth-modal{ z-index: 2000005 !important; }
 .crmo-auth-modal .crmo-auth-backdrop{ z-index: 2000005 !important; }
@@ -8757,10 +8806,8 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     }catch(e){}
   }
 
-  function applyUI(owner, email){
-    const signedIn = !!(email && String(email).trim());
+  function applyUI(owner){
     setOwnerClasses(owner);
-    try{ document.documentElement.setAttribute("data-crmo-signedin", signedIn ? "1":"0"); }catch(e){}
 
     const icon = document.getElementById("crmo-user-indicator");
     const logoutBtn = document.getElementById("crmo-user-menu-logout");
@@ -8770,19 +8817,19 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     const subbar = document.getElementById("crmo-admin-subbar");
 
     if(icon){
-      icon.classList.toggle("is-authed", signedIn);
+      icon.classList.toggle("is-authed", owner);
       icon.setAttribute("data-auth", owner ? "in" : "out");
       icon.setAttribute("aria-label", owner ? "פרופיל / התנתקות" : "התחבר / הירשם");
       icon.setAttribute("title", owner ? "פרופיל / התנתקות" : "התחבר / הירשם");
     }
 
-    if(logoutBtn) logoutBtn.disabled = !signedIn;
-    setDisplay(logoutBtn, signedIn);
-    setDisplay(userMenu, signedIn);
+    if(logoutBtn) logoutBtn.disabled = !owner;
+    setDisplay(logoutBtn, owner);
+    setDisplay(userMenu, owner);
 
-    setDisplay(roleBar, signedIn);
-    setDisplay(adminBar, signedIn);
-    setDisplay(subbar, signedIn);
+    setDisplay(roleBar, owner);
+    setDisplay(adminBar, owner);
+    setDisplay(subbar, owner);
 
     try{
       window.dispatchEvent(new Event("resize"));
@@ -8821,7 +8868,6 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   let inited = false;
   let lastKey = "";
   let lastOwner = false;
-  let lastEmail = "";
 
   async function refresh(){
     const r = await readOwnerFromSupabase();
@@ -8830,8 +8876,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     if(key !== lastKey){
       lastKey = key;
       lastOwner = owner;
-      lastEmail = (r.email || "");
-      applyUI(owner, (r.email || ""));
+      applyUI(owner);
       try{
         document.documentElement.setAttribute("data-crmo-auth-email", r.email || "");
       }catch(e){}
@@ -8844,30 +8889,13 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
       }catch(e){}
     }else{
       // still re-apply when needed (layout)
-      applyUI(lastOwner, lastEmail);
+      applyUI(lastOwner);
     }
   }
 
   function hookAuthState(){
     if(inited) return;
     inited = true;
-
-    // Prevent bars from disappearing during refresh: if we have a cached Supabase session token, show UI immediately.
-    (function(){
-      try{
-        var hasCached = false;
-        for(var i=0;i<localStorage.length;i++){
-          var k = localStorage.key(i) || "";
-          if(k.indexOf("sb-") === 0 && k.indexOf("-auth-token") !== -1){
-            var v = localStorage.getItem(k) || "";
-            if(v && v.indexOf("access_token") !== -1) { hasCached = true; break; }
-          }
-        }
-        if(hasCached){
-          applyUI(false, "__cached__");
-        }
-      }catch(e){}
-    })();
 
     (async function(){
       const client = await getSupabaseClient();
@@ -8918,7 +8946,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 </script>
 
 
-<style <style id="CRMO_v1689_fixed_stack">
+<style <style id="CRMO_v1667_fixed_stack">
 :root{
   --crmo-rolebar-h: 0px;
   --crmo-adminbar-h: 0px;
@@ -8967,7 +8995,7 @@ main{
 }
 </style>
 
-<style id="CRMO_v1689_admin_container_align">
+<style id="CRMO_v1681_admin_container_align">
 :root{
   --crmo-adminbars-maxw: 1200px;
   --crmo-adminbars-pr: 18px;
@@ -9010,7 +9038,7 @@ body.role-admin #crmo-admin-subbar .crmo-admin-subtabs{
 }
 </style>
 
-<script id="CRMO_v1689_sticky_measure">
+<script id="CRMO_v1667_sticky_measure">
 (function(){
   function px(n){ return (Math.max(0, Math.round(n||0))) + "px"; }
 
@@ -9088,34 +9116,11 @@ html.crmo-owner #crmo-admin-subbar{ display:block !important; }
 </style>
 
 
-<style id="crmo-owner-tile-edit-visible-v1686">
-/* v1686: ensure tile edit UI is visible for owner (some legacy rules hide it with !important) */
+<style id="crmo-owner-tile-edit-visible-v1685">
+/* v1685: ensure tile edit UI is visible for owner (some legacy rules hide it with !important) */
 html.crmo-owner .tile-edit-btn,
 html.crmo-owner .tile-admin-icons{ display:flex !important; }
 html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
-</style>
-
-
-<style id="crmo-bars-always-visible-v1689">
-  /* Force user role bar + admin bar always visible (no flicker) */
-  #crmo-rolebar, #crmo-adminbar{
-    display:flex !important;
-    visibility:visible !important;
-    opacity:1 !important;
-    pointer-events:auto !important;
-  }
-</style>
-
-
-<style id="crmo-v1689-bars">
-/* v1689: keep bars visible whenever a user is signed in (prevents refresh flicker) */
-html[data-crmo-signedin="1"] #crmo-role-toggle,
-html[data-crmo-signedin="1"] #crmo-admin-bar,
-html[data-crmo-signedin="1"] #crmo-admin-subbar{
-  display:flex !important;
-  opacity:1 !important;
-  visibility:visible !important;
-}
 </style>
 
 </head>
@@ -9267,18 +9272,7 @@ html[data-crmo-signedin="1"] #crmo-admin-subbar{
         try{
           adminLike = document.body.classList.contains('role-admin') || document.body.classList.contains('role-master') || document.documentElement.classList.contains('crmo-owner');
         }catch(e){}
-        if(roleBar) roleBar.style.display = signedIn ? 'flex' : 'none';
-        if(adminBar) adminBar.style.display = signedIn ? '' : 'none';
-        try{
-          if(signedIn && roleBar){
-            var btns = roleBar.querySelectorAll('button[data-role]');
-            for(var b=0;b<btns.length;b++){ btns[b].classList.remove('active','is-active'); }
-            var masterBtn = roleBar.querySelector('button[data-role="master"]');
-            if(masterBtn){ masterBtn.classList.add('active','is-active'); }
-            localStorage.setItem('crmo-role','master');
-          }
-        }catch(e){}
-        if(subbar) subbar.style.display = signedIn ? '' : 'none';
+        if(roleBar) roleBar.style.display = (isOwner || adminLike) ? 'flex' : 'none';
         // Admin UI visibility is controlled by RBAC (html.crmo-owner) to prevent flicker.
         // This script is responsible only for badges/indicators.
 }
@@ -9393,7 +9387,7 @@ html[data-crmo-signedin="1"] #crmo-admin-subbar{
 
 </div>
 
-<script id="CRMO_v1689_admin_bar_js">
+<script id="CRMO_v1646_admin_bar_js">
 document.addEventListener('DOMContentLoaded', function(){
   var items = [
     { btnId: 'crmo-adminbar-content',    panelId: 'crmo-content-selector' },
@@ -9561,7 +9555,7 @@ var bar = document.getElementById('crmo-admin-bar');
 });
 </script>
 
-<script id="CRMO_v1689_persistent_subbar_js">
+<script id="CRMO_v1646_persistent_subbar_js">
 (function(){
   function byId(id){ return document.getElementById(id); }
   function isAdmin(){ return document.body && document.body.classList && document.body.classList.contains('role-admin'); }
@@ -9901,7 +9895,7 @@ var bar = document.getElementById('crmo-admin-bar');
     <div id="crmo-header-admin-list" class="crmo-header-admin-list" role="list"></div>
   </div>
 </div>
-<script id="CRMO_v1689_header_buttons_admin_js">
+<script id="CRMO_v1646_header_buttons_admin_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var nav = document.querySelector('header nav.nav') || document.querySelector('header nav');
@@ -10407,7 +10401,7 @@ function render(){
     </div>
   </div>
 </div>
-<script id="CRMO_v1689_permissions_js">
+<script id="CRMO_v1646_permissions_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var ADMINS_KEY = "CRMO_ADMINS_v1";
@@ -16381,7 +16375,7 @@ const items = ensureDataset(tempGrid);
   try{ window.CRMO_openUserAuth = open; }catch(e){}
 })();
 </script>
-<style id="CRMO_v1689_inline_login">
+<style id="CRMO_v1646_inline_login">
 #login-section .header{padding:18px 0;border-bottom:1px solid #eee}
 #login-section .head-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
 #login-section .title-wrap{max-width:max(560px,48vw);margin-inline:auto 0}
@@ -16437,812 +16431,1487 @@ const items = ensureDataset(tempGrid);
   "projects": [
     {
       "id": "intro-1",
-      "title": "",
-      "shortDescription": "",
+      "title": "חנויות וחללי מסחר",
+      "shortDescription": "חנות דגל לרשת אופנה – תכנון מסע לקוח, ויטרינה חכמה וקופה שמייצרת סגירת מכירה. טקסט דמה נוסף לשתי שורות נוספות, כדי לבדוק שהאוברליי מתנהג נכון גם כשיש תיאור ארוך יותר מהרגיל.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "intro"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": true,
+      "assets": [
+        {
+          "index": 1,
+          "file": "intro-1",
+          "caption": "חנות דגל לרשת אופנה – תכנון מסע לקוח, ויטרינה חכמה וקופה שמייצרת סגירת מכירה. טקסט דמה נוסף לשתי שורות נוספות, כדי לבדוק שהאוברליי מתנהג נכון גם כשיש תיאור ארוך יותר מהרגיל."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "intro",
+          "position": 1
+        }
       ]
     },
     {
       "id": "intro-2",
-      "title": "",
-      "shortDescription": "",
+      "title": "תערוכות וביתנים",
+      "shortDescription": "ביתן פתוח שמושך תנועה מהמעבר, עם מסר חד ותצוגת מוצר שמספרת סיפור.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "intro"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": true,
+      "assets": [
+        {
+          "index": 1,
+          "file": "intro-2",
+          "caption": "ביתן פתוח שמושך תנועה מהמעבר, עם מסר חד ותצוגת מוצר שמספרת סיפור."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "intro",
+          "position": 2
+        }
       ]
     },
     {
       "id": "intro-3",
-      "title": "",
-      "shortDescription": "",
+      "title": "סטנדים ותצוגות מדף",
+      "shortDescription": "סטנדים רצפתיים ודלפקיים שמבליטים את המוצר בנקודת המכירה ומגדילים שטח מדף אפקטיבי.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "intro"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": true,
+      "assets": [
+        {
+          "index": 1,
+          "file": "intro-3",
+          "caption": "סטנדים רצפתיים ודלפקיים שמבליטים את המוצר בנקודת המכירה ומגדילים שטח מדף אפקטיבי."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "intro",
+          "position": 3
+        }
       ]
     },
     {
       "id": "intro-4",
-      "title": "",
-      "shortDescription": "",
+      "title": "מיתוג וזהות חזותית",
+      "shortDescription": "שפה גרפית אחידה – לוגו, צבעים, טיפוגרפיה ושילוט שמחברים את כל נקודות המגע.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "intro"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": true,
+      "assets": [
+        {
+          "index": 1,
+          "file": "intro-4",
+          "caption": "שפה גרפית אחידה – לוגו, צבעים, טיפוגרפיה ושילוט שמחברים את כל נקודות המגע."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "intro",
+          "position": 4
+        }
       ]
     },
     {
       "id": "intro-5",
-      "title": "",
-      "shortDescription": "",
+      "title": "אריזות ומוצרים",
+      "shortDescription": "אריזות מדף, קיטים ופתרונות מבניים שמתרגמים יתרון מוצר לבחירה מיידית.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "intro"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": true,
+      "assets": [
+        {
+          "index": 1,
+          "file": "intro-5",
+          "caption": "אריזות מדף, קיטים ופתרונות מבניים שמתרגמים יתרון מוצר לבחירה מיידית."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "intro",
+          "position": 5
+        }
       ]
     },
     {
       "id": "intro-6",
-      "title": "",
-      "shortDescription": "",
+      "title": "עסקים קטנים",
+      "shortDescription": "חנות רחוב, קליניקה או בית קפה – פתרונות ממוקדים שעובדים גם בתקציב חכם.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "intro"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": true,
+      "assets": [
+        {
+          "index": 1,
+          "file": "intro-6",
+          "caption": "חנות רחוב, קליניקה או בית קפה – פתרונות ממוקדים שעובדים גם בתקציב חכם."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "intro",
+          "position": 6
+        }
       ]
     },
     {
       "id": "secondary-gallery-1",
-      "title": "",
-      "shortDescription": "",
+      "title": "dream",
+      "shortDescription": "הקשבה, מחקר ודיוק חלום המותג. מגדירים מה הלקוח צריך להרגיש כשהוא פוגש את המותג.",
       "brand": null,
-      "tags": [],
-      "type": "multi",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "secondary-gallery"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "secondary-gallery-1",
+          "caption": "הקשבה, מחקר ודיוק חלום המותג. מגדירים מה הלקוח צריך להרגיש כשהוא פוגש את המותג."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "secondary-gallery",
+          "position": 1
+        }
       ]
     },
     {
       "id": "secondary-gallery-2",
-      "title": "",
-      "shortDescription": "",
+      "title": "define",
+      "shortDescription": "ממפים משימה, קהלים ומטרות מכירה. מגדירים מדדי הצלחה ברורים ויעדים מדידים.",
       "brand": null,
-      "tags": [],
-      "type": "multi",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "secondary-gallery"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "secondary-gallery-2",
+          "caption": "ממפים משימה, קהלים ומטרות מכירה. מגדירים מדדי הצלחה ברורים ויעדים מדידים."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "secondary-gallery",
+          "position": 2
+        }
       ]
     },
     {
       "id": "secondary-gallery-3",
-      "title": "",
-      "shortDescription": "",
+      "title": "design",
+      "shortDescription": "מתרגמים אסטרטגיה לשפה חזותית, חלל ומוצר. בוחנים חלופות עד לפתרון חד וברור.",
       "brand": null,
-      "tags": [],
-      "type": "multi",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "secondary-gallery"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "secondary-gallery-3",
+          "caption": "מתרגמים אסטרטגיה לשפה חזותית, חלל ומוצר. בוחנים חלופות עד לפתרון חד וברור."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "secondary-gallery",
+          "position": 3
+        }
       ]
     },
     {
       "id": "secondary-gallery-4",
-      "title": "",
-      "shortDescription": "",
+      "title": "deliver",
+      "shortDescription": "מכינים קבצי ביצוע, מפקחים על הייצור ומלווים עד התקנה בשטח.",
       "brand": null,
-      "tags": [],
-      "type": "multi",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "secondary-gallery"
-      ]
-    },
-    {
-      "id": "secondary-gallery-5",
-      "title": "",
-      "shortDescription": "",
-      "brand": null,
-      "tags": [],
-      "type": "multi",
-      "status": "draft",
+      ],
+      "type": "image",
+      "status": "active",
       "featured": false,
-      "assets": [],
-      "captionMode": "off",
+      "assets": [
+        {
+          "index": 1,
+          "file": "secondary-gallery-4",
+          "caption": "מכינים קבצי ביצוע, מפקחים על הייצור ומלווים עד התקנה בשטח."
+        }
+      ],
+      "captionMode": "shared",
       "galleries": [
-        "secondary-gallery"
-      ]
-    },
-    {
-      "id": "secondary-gallery-6",
-      "title": "",
-      "shortDescription": "",
-      "brand": null,
-      "tags": [],
-      "type": "multi",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
-        "secondary-gallery"
+        {
+          "galleryId": "secondary-gallery",
+          "position": 4
+        }
       ]
     },
     {
       "id": "stores-1",
-      "title": "",
-      "shortDescription": "",
+      "title": "חנות דגל",
+      "shortDescription": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stores"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "img1",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 2,
+          "file": "img2",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 3,
+          "file": "img3",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 4,
+          "file": "img4",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 5,
+          "file": "img5",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 6,
+          "file": "img6",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 7,
+          "file": "img7",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 8,
+          "file": "img8",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 9,
+          "file": "img9",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 10,
+          "file": "img10",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 11,
+          "file": "img11",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        },
+        {
+          "index": 12,
+          "file": "img12",
+          "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stores",
+          "position": 1
+        }
       ]
     },
     {
       "id": "stores-2",
-      "title": "",
-      "shortDescription": "",
+      "title": "אזור מותג ברשת",
+      "shortDescription": "אי מותג בתוך רשת פארם – קיר מדף, דלפק הדגמה ונקודת ריסוט חזקה.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stores"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stores-2",
+          "caption": "אי מותג בתוך רשת פארם – קיר מדף, דלפק הדגמה ונקודת ריסוט חזקה."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stores",
+          "position": 2
+        }
       ]
     },
     {
       "id": "stores-3",
-      "title": "",
-      "shortDescription": "",
+      "title": "פופ-אפ עונתי",
+      "shortDescription": "פופ-אפ בקניון לתקופת השקה – פתרון מודולרי לפירוק והרכבה מהירה.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stores"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stores-3",
+          "caption": "פופ-אפ בקניון לתקופת השקה – פתרון מודולרי לפירוק והרכבה מהירה."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stores",
+          "position": 3
+        }
       ]
     },
     {
       "id": "stores-4",
-      "title": "",
-      "shortDescription": "",
+      "title": "חלון ראווה",
+      "shortDescription": "תצוגת חלון מתחלפת לעונות השנה, עם מסר קצר וברור מרחוק.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stores"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stores-4",
+          "caption": "תצוגת חלון מתחלפת לעונות השנה, עם מסר קצר וברור מרחוק."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stores",
+          "position": 4
+        }
       ]
     },
     {
       "id": "stores-5",
-      "title": "",
-      "shortDescription": "",
+      "title": "חנות עודפים",
+      "shortDescription": "סידור חלל עודפים בצורה נקייה שמדגישה מציאות במקום בלגן.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stores"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stores-5",
+          "caption": "סידור חלל עודפים בצורה נקייה שמדגישה מציאות במקום בלגן."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stores",
+          "position": 5
+        }
       ]
     },
     {
       "id": "stores-6",
-      "title": "",
-      "shortDescription": "",
+      "title": "קיוסק במעבר",
+      "shortDescription": "קיוסק אי במעבר ראשי – שילוב של אחסון סגור ותצוגת מדף פתוחה.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stores"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stores-6",
+          "caption": "קיוסק אי במעבר ראשי – שילוב של אחסון סגור ותצוגת מדף פתוחה."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stores",
+          "position": 6
+        }
+      ]
+    },
+    {
+      "id": "stores-7",
+      "title": "אזור קופה",
+      "shortDescription": "אזור קופה משודרג עם סטנד קו אחרון ושילוט מבצע נקודתי.",
+      "brand": null,
+      "tags": [
+        "stores"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stores-7",
+          "caption": "אזור קופה משודרג עם סטנד קו אחרון ושילוט מבצע נקודתי."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stores",
+          "position": 7
+        }
+      ]
+    },
+    {
+      "id": "stores-8",
+      "title": "אי פעילות",
+      "shortDescription": "אי הפעלה פתוח באמצע החלל – מקום להדגמות ולנוכחות מותג.",
+      "brand": null,
+      "tags": [
+        "stores"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stores-8",
+          "caption": "אי הפעלה פתוח באמצע החלל – מקום להדגמות ולנוכחות מותג."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stores",
+          "position": 8
+        }
+      ]
+    },
+    {
+      "id": "stores-9",
+      "title": "פינת מדידה",
+      "shortDescription": "אזור מדידה מתוכנן לנוחות הלקוח, כולל מראה, תלייה ותאורה מאירת פנים.",
+      "brand": null,
+      "tags": [
+        "stores"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stores-9",
+          "caption": "אזור מדידה מתוכנן לנוחות הלקוח, כולל מראה, תלייה ותאורה מאירת פנים."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stores",
+          "position": 9
+        }
       ]
     },
     {
       "id": "exhibitions-1",
-      "title": "",
-      "shortDescription": "",
+      "title": "ביתן שורה",
+      "shortDescription": "ביתן שורה קומפקטי עם חזית בולטת, מקום לדלפק ורקע גרפי ברור מרחוק.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "exhibitions"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "exhibitions-1",
+          "caption": "ביתן שורה קומפקטי עם חזית בולטת, מקום לדלפק ורקע גרפי ברור מרחוק."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "exhibitions",
+          "position": 1
+        }
       ]
     },
     {
       "id": "exhibitions-2",
-      "title": "",
-      "shortDescription": "",
+      "title": "ביתן אי",
+      "shortDescription": "ביתן אי פתוח מכל הכיוונים – מסלול כניסה טבעי ותצוגת מוצר מרכזית.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "exhibitions"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "exhibitions-2",
+          "caption": "ביתן אי פתוח מכל הכיוונים – מסלול כניסה טבעי ותצוגת מוצר מרכזית."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "exhibitions",
+          "position": 2
+        }
       ]
     },
     {
       "id": "exhibitions-3",
-      "title": "",
-      "shortDescription": "",
+      "title": "אזור הדגמה",
+      "shortDescription": "עמדת הדגמה חיה עם מסך, משטח עבודה ואחסון לדגימות.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "exhibitions"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "exhibitions-3",
+          "caption": "עמדת הדגמה חיה עם מסך, משטח עבודה ואחסון לדגימות."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "exhibitions",
+          "position": 3
+        }
       ]
     },
     {
       "id": "exhibitions-4",
-      "title": "",
-      "shortDescription": "",
+      "title": "פינת ישיבות",
+      "shortDescription": "פינת ישיבה פתוחה לשיחות מכירה, עם בידול עדין מהמעבר.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "exhibitions"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "exhibitions-4",
+          "caption": "פינת ישיבה פתוחה לשיחות מכירה, עם בידול עדין מהמעבר."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "exhibitions",
+          "position": 4
+        }
       ]
     },
     {
       "id": "exhibitions-5",
-      "title": "",
-      "shortDescription": "",
+      "title": "שפת תערוכה",
+      "shortDescription": "סט גרפיקות חוזרות לכל הנראות בתערוכה, לשמירה על זיהוי מותג מיידי.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "exhibitions"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "exhibitions-5",
+          "caption": "סט גרפיקות חוזרות לכל הנראות בתערוכה, לשמירה על זיהוי מותג מיידי."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "exhibitions",
+          "position": 5
+        }
       ]
     },
     {
       "id": "exhibitions-6",
-      "title": "",
-      "shortDescription": "",
+      "title": "ביתן מודולרי",
+      "shortDescription": "מבנה מודולרי לשימוש חוזר בכמה תערוכות, עם חלקים שניתן להרכיב לפי הצורך.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "exhibitions"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "exhibitions-6",
+          "caption": "מבנה מודולרי לשימוש חוזר בכמה תערוכות, עם חלקים שניתן להרכיב לפי הצורך."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "exhibitions",
+          "position": 6
+        }
       ]
     },
     {
       "id": "stands-1",
-      "title": "",
-      "shortDescription": "",
+      "title": "מתחם מכירה",
+      "shortDescription": "מתחם מכירה פתוח עם שילוב של סטנדים רצפתיים, מדף וקופה.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stands"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stands-1",
+          "caption": "מתחם מכירה פתוח עם שילוב של סטנדים רצפתיים, מדף וקופה."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stands",
+          "position": 1
+        }
       ]
     },
     {
       "id": "stands-2",
-      "title": "",
-      "shortDescription": "",
+      "title": "סטנד רצפתי",
+      "shortDescription": "סטנד רצפתי עצמאי שמייצר נוכחות במסדרון ומספר סיפור שלם.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stands"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stands-2",
+          "caption": "סטנד רצפתי עצמאי שמייצר נוכחות במסדרון ומספר סיפור שלם."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stands",
+          "position": 2
+        }
       ]
     },
     {
       "id": "stands-3",
-      "title": "",
-      "shortDescription": "",
+      "title": "סטנד דלפקי",
+      "shortDescription": "פתרון קומפקטי ליד הקופה לקניית אימפולס.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stands"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stands-3",
+          "caption": "פתרון קומפקטי ליד הקופה לקניית אימפולס."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stands",
+          "position": 3
+        }
       ]
     },
     {
       "id": "stands-4",
-      "title": "",
-      "shortDescription": "",
+      "title": "כובש מדף",
+      "shortDescription": "אלמנט מדף שמושך את העין ומפנה מקום לפנייה ברורה למותג.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stands"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stands-4",
+          "caption": "אלמנט מדף שמושך את העין ומפנה מקום לפנייה ברורה למותג."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stands",
+          "position": 4
+        }
       ]
     },
     {
       "id": "stands-5",
-      "title": "",
-      "shortDescription": "",
+      "title": "עמדת טעימה",
+      "shortDescription": "עמדה ניידת לדגימות ופעילויות קד\"מ.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stands"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stands-5",
+          "caption": "עמדה ניידת לדגימות ופעילויות קד\"מ."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stands",
+          "position": 5
+        }
       ]
     },
     {
       "id": "stands-6",
-      "title": "",
-      "shortDescription": "",
+      "title": "פתרון מיוחד",
+      "shortDescription": "מבנה תצוגה לא שגרתי לבעיה לא שגרתית – תפירה אישית לצורך שיווקי.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "stands"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "stands-6",
+          "caption": "מבנה תצוגה לא שגרתי לבעיה לא שגרתית – תפירה אישית לצורך שיווקי."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "stands",
+          "position": 6
+        }
       ]
     },
     {
       "id": "identity-1",
-      "title": "",
-      "shortDescription": "",
+      "title": "לוגו וחתימת מותג",
+      "shortDescription": "לוגו, סמל וסלוגן בגירסאות מותאמות למדיה, לחנות ולדיגיטל.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "identity"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "identity-1",
+          "caption": "לוגו, סמל וסלוגן בגירסאות מותאמות למדיה, לחנות ולדיגיטל."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "identity",
+          "position": 1
+        }
       ]
     },
     {
       "id": "identity-2",
-      "title": "",
-      "shortDescription": "",
+      "title": "שפת צבעים וטיפוגרפיה",
+      "shortDescription": "הגדרת פלטת צבעים, פונטים והיררכיית כותרות ליישום בכל חומר.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "identity"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "identity-2",
+          "caption": "הגדרת פלטת צבעים, פונטים והיררכיית כותרות ליישום בכל חומר."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "identity",
+          "position": 2
+        }
       ]
     },
     {
       "id": "identity-3",
-      "title": "",
-      "shortDescription": "",
+      "title": "ערכת אריזות",
+      "shortDescription": "משפחה של אריזות בגבהים ורוחבים שונים תחת שפה אחת אחידה.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "identity"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "identity-3",
+          "caption": "משפחה של אריזות בגבהים ורוחבים שונים תחת שפה אחת אחידה."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "identity",
+          "position": 3
+        }
       ]
     },
     {
       "id": "identity-4",
-      "title": "",
-      "shortDescription": "",
+      "title": "אייקונים ופיקטוגרמות",
+      "shortDescription": "מערכת אייקונים לזיהוי מהיר של קטגוריות, טעמים או יתרונות.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "identity"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "identity-4",
+          "caption": "מערכת אייקונים לזיהוי מהיר של קטגוריות, טעמים או יתרונות."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "identity",
+          "position": 4
+        }
       ]
     },
     {
       "id": "identity-5",
-      "title": "",
-      "shortDescription": "",
+      "title": "ספר מותג",
+      "shortDescription": "מסמך מסודר שמרכז חוקים, דוגמאות ומקרי מבחן ליישום נכון.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "identity"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "identity-5",
+          "caption": "מסמך מסודר שמרכז חוקים, דוגמאות ומקרי מבחן ליישום נכון."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "identity",
+          "position": 5
+        }
       ]
     },
     {
       "id": "identity-6",
-      "title": "",
-      "shortDescription": "",
+      "title": "POS וחומרי מדף",
+      "shortDescription": "רול-אפים, מדבקות מדף, מוביילים ותלי מדף – כל מה שמשרת מכירה.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "identity"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "identity-6",
+          "caption": "רול-אפים, מדבקות מדף, מוביילים ותלי מדף – כל מה שמשרת מכירה."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "identity",
+          "position": 6
+        }
       ]
     },
     {
       "id": "product-1",
-      "title": "",
-      "shortDescription": "",
+      "title": "מוצר מדף",
+      "shortDescription": "עיצוב מוצר שנראה טוב גם מרחוק וגם כשהלקוח מחזיק אותו ביד.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "product"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "product-1",
+          "caption": "עיצוב מוצר שנראה טוב גם מרחוק וגם כשהלקוח מחזיק אותו ביד."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "product",
+          "position": 1
+        }
       ]
     },
     {
       "id": "product-2",
-      "title": "",
-      "shortDescription": "",
+      "title": "ערכת השקה",
+      "shortDescription": "קיט מוצר להשקה – מארז, אינסרט והסבר שימוש.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "product"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "product-2",
+          "caption": "קיט מוצר להשקה – מארז, אינסרט והסבר שימוש."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "product",
+          "position": 2
+        }
       ]
     },
     {
       "id": "product-3",
-      "title": "",
-      "shortDescription": "",
+      "title": "משפחת מוצרים",
+      "shortDescription": "קבוצה של מוצרים תחת שפה אחת, עם הבדלה ברורה בין וריאנטים.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "product"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "product-3",
+          "caption": "קבוצה של מוצרים תחת שפה אחת, עם הבדלה ברורה בין וריאנטים."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "product",
+          "position": 3
+        }
       ]
     },
     {
       "id": "product-4",
-      "title": "",
-      "shortDescription": "",
+      "title": "פתרון מבני",
+      "shortDescription": "שינוי צורה או פתיחה של המוצר כדי לשפר שימוש וחוויית פתיחה.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "product"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "product-4",
+          "caption": "שינוי צורה או פתיחה של המוצר כדי לשפר שימוש וחוויית פתיחה."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "product",
+          "position": 4
+        }
       ]
     },
     {
       "id": "product-5",
-      "title": "",
-      "shortDescription": "",
+      "title": "מוצר דיגיטלי פיזי",
+      "shortDescription": "מוצרים שמשלבים מסך, חיווי או ותאורה – תכנון חוויית שימוש.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "product"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "product-5",
+          "caption": "מוצרים שמשלבים מסך, חיווי או ותאורה – תכנון חוויית שימוש."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "product",
+          "position": 5
+        }
       ]
     },
     {
       "id": "product-6",
-      "title": "",
-      "shortDescription": "",
+      "title": "צילום מוצר",
+      "shortDescription": "פתרונות צילום ונראות למדיה דיגיטלית ואיקומרס.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "product"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "product-6",
+          "caption": "פתרונות צילום ונראות למדיה דיגיטלית ואיקומרס."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "product",
+          "position": 6
+        }
       ]
     },
     {
       "id": "packages-1",
-      "title": "",
-      "shortDescription": "",
+      "title": "אריזת פרימיום",
+      "shortDescription": "קופסה מרובדת עם אינסרט פנימי, לחוויה של 'פתיחת מתנה'.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "packages"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "packages-1",
+          "caption": "קופסה מרובדת עם אינסרט פנימי, לחוויה של 'פתיחת מתנה'."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "packages",
+          "position": 1
+        }
       ]
     },
     {
       "id": "packages-2",
-      "title": "",
-      "shortDescription": "",
+      "title": "אריזת מדף חכמה",
+      "shortDescription": "אריזה שנבנית מהמוצר החוצה – מסר ברור באזור הכי נראה.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "packages"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "packages-2",
+          "caption": "אריזה שנבנית מהמוצר החוצה – מסר ברור באזור הכי נראה."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "packages",
+          "position": 2
+        }
       ]
     },
     {
       "id": "packages-3",
-      "title": "",
-      "shortDescription": "",
+      "title": "סט אריזות",
+      "shortDescription": "שלוש רמות מחיר באותה משפחת מוצרים, עם הבדלה ברורה על המדף.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "packages"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "packages-3",
+          "caption": "שלוש רמות מחיר באותה משפחת מוצרים, עם הבדלה ברורה על המדף."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "packages",
+          "position": 3
+        }
       ]
     },
     {
       "id": "packages-4",
-      "title": "",
-      "shortDescription": "",
+      "title": "שרוול ומדבקות",
+      "shortDescription": "פתרון מהיר לעדכון אריזה קיימת באמצעות שרוול או מדבקה חכמה.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "packages"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "packages-4",
+          "caption": "פתרון מהיר לעדכון אריזה קיימת באמצעות שרוול או מדבקה חכמה."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "packages",
+          "position": 4
+        }
       ]
     },
     {
       "id": "packages-5",
-      "title": "",
-      "shortDescription": "",
+      "title": "קיט מתנה",
+      "shortDescription": "מארז מהודר למכירה עונתית או כמתנה ממותגת.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "packages"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "packages-5",
+          "caption": "מארז מהודר למכירה עונתית או כמתנה ממותגת."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "packages",
+          "position": 5
+        }
       ]
     },
     {
       "id": "packages-6",
-      "title": "",
-      "shortDescription": "",
+      "title": "מארז תצוגה",
+      "shortDescription": "אריזה שמתפקדת גם כסטנד מדף קטן בחנות.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "packages"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "packages-6",
+          "caption": "אריזה שמתפקדת גם כסטנד מדף קטן בחנות."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "packages",
+          "position": 6
+        }
       ]
     },
     {
       "id": "small-1",
-      "title": "",
-      "shortDescription": "",
+      "title": "קפה שכונתי",
+      "shortDescription": "מיתוג, שילוט חוץ ופנים ותפריטים לקפה קטן עם אופי מקומי.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "small"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "small-1",
+          "caption": "מיתוג, שילוט חוץ ופנים ותפריטים לקפה קטן עם אופי מקומי."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "small",
+          "position": 1
+        }
       ]
     },
     {
       "id": "small-2",
-      "title": "",
-      "shortDescription": "",
+      "title": "קליניקת בוטיק",
+      "shortDescription": "עיצוב שקט ובטוח – שילוט, דלת כניסה וחומרי מידע.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "small"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "small-2",
+          "caption": "עיצוב שקט ובטוח – שילוט, דלת כניסה וחומרי מידע."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "small",
+          "position": 2
+        }
       ]
     },
     {
       "id": "small-3",
-      "title": "",
-      "shortDescription": "",
+      "title": "חנות רחוב",
+      "shortDescription": "חנות קטנה במרכז העיר – חזית, מדפים ותצוגה לחלון.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "small"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "small-3",
+          "caption": "חנות קטנה במרכז העיר – חזית, מדפים ותצוגה לחלון."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "small",
+          "position": 3
+        }
       ]
     },
     {
       "id": "small-4",
-      "title": "",
-      "shortDescription": "",
+      "title": "רכב ממותג",
+      "shortDescription": "גרפיקה לרכב עבודה שממשיכה את סיפור המותג לרחוב.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "small"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "small-4",
+          "caption": "גרפיקה לרכב עבודה שממשיכה את סיפור המותג לרחוב."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "small",
+          "position": 4
+        }
       ]
     },
     {
       "id": "small-5",
-      "title": "",
-      "shortDescription": "",
+      "title": "עסק מהבית",
+      "shortDescription": "פתרונות דיגיטליים וחומרי הדפסה לעסק שפועל מהבית.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "small"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "small-5",
+          "caption": "פתרונות דיגיטליים וחומרי הדפסה לעסק שפועל מהבית."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "small",
+          "position": 5
+        }
       ]
     },
     {
       "id": "small-6",
-      "title": "",
-      "shortDescription": "",
+      "title": "נקודת מכירה ראשונה",
+      "shortDescription": "סט פתיחה – לוגו, כרטיס ביקור, שלט וחומרי מדף בסיסיים.",
       "brand": null,
-      "tags": [],
-      "type": "standard",
-      "status": "draft",
-      "featured": false,
-      "assets": [],
-      "captionMode": "off",
-      "galleries": [
+      "tags": [
         "small"
+      ],
+      "type": "image",
+      "status": "active",
+      "featured": false,
+      "assets": [
+        {
+          "index": 1,
+          "file": "small-6",
+          "caption": "סט פתיחה – לוגו, כרטיס ביקור, שלט וחומרי מדף בסיסיים."
+        }
+      ],
+      "captionMode": "shared",
+      "galleries": [
+        {
+          "galleryId": "small",
+          "position": 6
+        }
       ]
     }
   ],
@@ -17298,9 +17967,7 @@ const items = ensureDataset(tempGrid);
         "secondary-gallery-1",
         "secondary-gallery-2",
         "secondary-gallery-3",
-        "secondary-gallery-4",
-        "secondary-gallery-5",
-        "secondary-gallery-6"
+        "secondary-gallery-4"
       ]
     },
     {
@@ -17308,14 +17975,14 @@ const items = ensureDataset(tempGrid);
       "slug": "stores",
       "type": "standard",
       "title": {
-        "desktop": null,
-        "tablet": null,
-        "mobile": null
+        "desktop": "עיצוב ותכנון חווית לקוח, הופכים חלל מסחרי למנוע מכירות.",
+        "tablet": "עיצוב ותכנון חווית לקוח, הופכים חלל מסחרי למנוע מכירות.",
+        "mobile": "עיצוב ותכנון חווית לקוח, הופכים חלל מסחרי למנוע מכירות."
       },
       "subtitle": {
-        "desktop": null,
-        "tablet": null,
-        "mobile": null
+        "desktop": "ממתחמים קמעונאיים וחנויות דגל ועד דוכני מכירה ממוקדים בקניונים, אנו מתכננים מסע לקוח המוביל לבחירה ולקנייה, ממקסם כל מטר ומחבר את סיפור המותג לחלל.",
+        "tablet": "ממתחמים קמעונאיים וחנויות דגל ועד דוכני מכירה ממוקדים בקניונים, אנו מתכננים מסע לקוח המוביל לבחירה ולקנייה, ממקסם כל מטר ומחבר את סיפור המותג לחלל.",
+        "mobile": "ממתחמים קמעונאיים וחנויות דגל ועד דוכני מכירה ממוקדים בקניונים, אנו מתכננים מסע לקוח המוביל לבחירה ולקנייה, ממקסם כל מטר ומחבר את סיפור המותג לחלל."
       },
       "layout": {
         "desktopTiles": 6,
@@ -17328,7 +17995,10 @@ const items = ensureDataset(tempGrid);
         "stores-3",
         "stores-4",
         "stores-5",
-        "stores-6"
+        "stores-6",
+        "stores-7",
+        "stores-8",
+        "stores-9"
       ]
     },
     {
@@ -17336,14 +18006,14 @@ const items = ensureDataset(tempGrid);
       "slug": "exhibitions",
       "type": "standard",
       "title": {
-        "desktop": null,
-        "tablet": null,
-        "mobile": null
+        "desktop": "ביתן שמספר מהר ומשאיר רושם.",
+        "tablet": "ביתן שמספר מהר ומשאיר רושם.",
+        "mobile": "ביתן שמספר מהר ומשאיר רושם."
       },
       "subtitle": {
-        "desktop": null,
-        "tablet": null,
-        "mobile": null
+        "desktop": "בעולם של תערוכות, יש לכם שניות בודדות ללכוד תשומת לב. אנחנו מעצבים ביתנים ודוכנים עם מסר ברור, זרימה נכונה וחוויה שמייצרת עניין ולידים בשטח. מתכנון ועד הרכבה ופירוק.",
+        "tablet": "בעולם של תערוכות, יש לכם שניות בודדות ללכוד תשומת לב. אנחנו מעצבים ביתנים ודוכנים עם מסר ברור, זרימה נכונה וחוויה שמייצרת עניין ולידים בשטח. מתכנון ועד הרכבה ופירוק.",
+        "mobile": "בעולם של תערוכות, יש לכם שניות בודדות ללכוד תשומת לב. אנחנו מעצבים ביתנים ודוכנים עם מסר ברור, זרימה נכונה וחוויה שמייצרת עניין ולידים בשטח. מתכנון ועד הרכבה ופירוק."
       },
       "layout": {
         "desktopTiles": 6,
@@ -17364,14 +18034,14 @@ const items = ensureDataset(tempGrid);
       "slug": "stands",
       "type": "standard",
       "title": {
-        "desktop": null,
-        "tablet": null,
-        "mobile": null
+        "desktop": "פתרונות מדף, רצפה וחלל שממקסמים מכירה.",
+        "tablet": "פתרונות מדף, רצפה וחלל שממקסמים מכירה.",
+        "mobile": "פתרונות מדף, רצפה וחלל שממקסמים מכירה."
       },
       "subtitle": {
-        "desktop": null,
-        "tablet": null,
-        "mobile": null
+        "desktop": "אנחנו מעצבים סטנדים ומתקני תצוגה שמייצרים נוכחות בולטת, מספרים את סיפור המותג ומניעים לקנייה מדויקת, בכל נקודת מגע.",
+        "tablet": "אנחנו מעצבים סטנדים ומתקני תצוגה שמייצרים נוכחות בולטת, מספרים את סיפור המותג ומניעים לקנייה מדויקת, בכל נקודת מגע.",
+        "mobile": "אנחנו מעצבים סטנדים ומתקני תצוגה שמייצרים נוכחות בולטת, מספרים את סיפור המותג ומניעים לקנייה מדויקת, בכל נקודת מגע."
       },
       "layout": {
         "desktopTiles": 6,
@@ -17392,14 +18062,14 @@ const items = ensureDataset(tempGrid);
       "slug": "identity",
       "type": "standard",
       "title": {
-        "desktop": null,
-        "tablet": null,
-        "mobile": null
+        "desktop": "שפה חזותית אחידה שמתחברת לכל נקודת מגע.",
+        "tablet": "שפה חזותית אחידה שמתחברת לכל נקודת מגע.",
+        "mobile": "שפה חזותית אחידה שמתחברת לכל נקודת מגע."
       },
       "subtitle": {
-        "desktop": null,
-        "tablet": null,
-        "mobile": null
+        "desktop": "אנחנו מגדירים אסטרטגיית מותג ומתרגמים אותה לשפה חזותית. זהות שמחזיקה את כל נקודות המגע של הלקוח, במדיה, נקודת המכירה ובכנס המקצועי.",
+        "tablet": "אנחנו מגדירים אסטרטגיית מותג ומתרגמים אותה לשפה חזותית. זהות שמחזיקה את כל נקודות המגע של הלקוח, במדיה, נקודת המכירה ובכנס המקצועי.",
+        "mobile": "אנחנו מגדירים אסטרטגיית מותג ומתרגמים אותה לשפה חזותית. זהות שמחזיקה את כל נקודות המגע של הלקוח, במדיה, נקודת המכירה ובכנס המקצועי."
       },
       "layout": {
         "desktopTiles": 6,
@@ -17420,14 +18090,14 @@ const items = ensureDataset(tempGrid);
       "slug": "product",
       "type": "standard",
       "title": {
-        "desktop": null,
-        "tablet": null,
-        "mobile": null
+        "desktop": "איפיון, פיתוח ועיצוב מוצרים שמוכרים יותר.",
+        "tablet": "איפיון, פיתוח ועיצוב מוצרים שמוכרים יותר.",
+        "mobile": "איפיון, פיתוח ועיצוב מוצרים שמוכרים יותר."
       },
       "subtitle": {
-        "desktop": null,
-        "tablet": null,
-        "mobile": null
+        "desktop": "פתרונות פרקטיים, יעילים ומוכרים. עיצוב המשלב פסיכולוגיה והנדסת אנוש, טכנולוגיה ויצירתיות.",
+        "tablet": "פתרונות פרקטיים, יעילים ומוכרים. עיצוב המשלב פסיכולוגיה והנדסת אנוש, טכנולוגיה ויצירתיות.",
+        "mobile": "פתרונות פרקטיים, יעילים ומוכרים. עיצוב המשלב פסיכולוגיה והנדסת אנוש, טכנולוגיה ויצירתיות."
       },
       "layout": {
         "desktopTiles": 6,
@@ -17500,7 +18170,202 @@ const items = ensureDataset(tempGrid);
       ]
     }
   ],
-  "brands": []
+  "brands": [
+    {
+      "id": "brand-01",
+      "name": "מותג 1",
+      "description": "5 עבודות לדוגמה למותג 1",
+      "logo": null,
+      "hasLightbox": true,
+      "linkedProjects": [],
+      "assets": [
+        {
+          "index": 1,
+          "file": "b1-1",
+          "caption": "5 עבודות לדוגמה למותג 1"
+        },
+        {
+          "index": 2,
+          "file": "b1-2",
+          "caption": "5 עבודות לדוגמה למותג 1"
+        },
+        {
+          "index": 3,
+          "file": "b1-3",
+          "caption": "5 עבודות לדוגמה למותג 1"
+        },
+        {
+          "index": 4,
+          "file": "b1-4",
+          "caption": "5 עבודות לדוגמה למותג 1"
+        },
+        {
+          "index": 5,
+          "file": "b1-5",
+          "caption": "5 עבודות לדוגמה למותג 1"
+        }
+      ]
+    },
+    {
+      "id": "brand-02",
+      "name": "מותג 2",
+      "description": "עבודה אחת לדוגמה למותג 2",
+      "logo": null,
+      "hasLightbox": true,
+      "linkedProjects": [],
+      "assets": [
+        {
+          "index": 1,
+          "file": "b2-1",
+          "caption": "עבודה אחת לדוגמה למותג 2"
+        }
+      ]
+    },
+    {
+      "id": "brand-03",
+      "name": "brand-03",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-04",
+      "name": "brand-04",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-05",
+      "name": "brand-05",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-06",
+      "name": "brand-06",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-07",
+      "name": "brand-07",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-08",
+      "name": "brand-08",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-09",
+      "name": "brand-09",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-10",
+      "name": "brand-10",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-11",
+      "name": "brand-11",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-12",
+      "name": "brand-12",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-13",
+      "name": "brand-13",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-14",
+      "name": "brand-14",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-15",
+      "name": "brand-15",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-16",
+      "name": "brand-16",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-17",
+      "name": "brand-17",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    },
+    {
+      "id": "brand-18",
+      "name": "brand-18",
+      "description": "",
+      "logo": null,
+      "hasLightbox": false,
+      "linkedProjects": [],
+      "assets": []
+    }
+  ]
 }
 </script>
 <script id="crmo-gallery-meta-store" type="application/json">
@@ -17531,7 +18396,7 @@ document.addEventListener('DOMContentLoaded', function () {
     content = {};
   }
   window.CREAMO_CONTENT = content;
-  // --- CRMO_v1689: lightbox thumbs filtering + contain fit ---
+  // --- CRMO_v1646: lightbox thumbs filtering + contain fit ---
   (function(){
     try{
       window.CRMO_getTileUploadFolder = function(){
@@ -18293,7 +19158,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }catch(e){}
 });
 </script>
-<script id="CRMO_v1689_multi_layers_state">
+<script id="CRMO_v1646_multi_layers_state">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var wrappers = document.querySelectorAll('.tile-edit-wrapper');
@@ -19184,7 +20049,7 @@ if(sess0 && (sess0.role === 'admin' || sess0.role === 'master' || sess0.role ===
   }
 })();
 </script>
-<script id="CRMO_v1689_capabilities_js">
+<script id="CRMO_v1646_capabilities_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     function getRole(){
@@ -19426,7 +20291,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }catch(e){}
 });
 </script>
-<script id="CRMO_v1689_history_ui_js">
+<script id="CRMO_v1646_history_ui_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     function getRole(){
@@ -21013,7 +21878,7 @@ window.CRMO_MasterGalleries = {
 })();
 </script>
 
-<!-- CRMO_v1689: inline multi-gallery tiles manager -->
+<!-- CRMO_v1646: inline multi-gallery tiles manager -->
 <style id="CRMO_tiles_manager_css">
   .tiles-manager-bar{
     margin: 10px 0 8px;
@@ -21821,8 +22686,6 @@ if (key === currentGalleryKey){
   var currentEditIndex = null;
   var currentEditGalleryKey = null;
   function openTileEditor(key, idx){
-    // v1686: legacy TileEditorModal disabled (use unified editor #tile-editor only)
-    return;
     ensureGalleryState(key);
     var arr = galleryState[key];
     if (!arr || !arr[idx]) return;
@@ -21883,7 +22746,7 @@ if (key === currentGalleryKey){
     }
     closeTileEditor();
     try{ persistGalleryState(currentEditGalleryKey); }catch(e){}
-    // v1686: push to DB (Supabase) immediately
+    // v1685: push to DB (Supabase) immediately
     if (window.CRMO_saveMainNow){
       window.CRMO_saveMainNow().then(function(r){
         try{ if(window.CRMO_showSaveNotice) window.CRMO_showSaveNotice(r && r.ok ? ('נשמר לשרת ✓ (' + (r.result && r.result.data && r.result.data.updated_at ? r.result.data.updated_at : 'ok') + ')') : 'שמירה לשרת נכשלה'); }catch(e){}
@@ -25928,7 +26791,7 @@ if (document.readyState === 'loading'){
 </script>
 
 
-<script id="CRMO_v1689_stands_subcats_autowidth">
+<script id="CRMO_v1646_stands_subcats_autowidth">
 (function(){
   function onReady(fn){
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
@@ -26321,7 +27184,7 @@ document.addEventListener('click', function(ev){
 </script>
 
 
-<script id="CRMO_v1689_footer_accessibility_and_section_editor">
+<script id="CRMO_v1646_footer_accessibility_and_section_editor">
 (function(){
   function qs(sel, root){ return (root||document).querySelector(sel); }
   function qsa(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
@@ -27311,7 +28174,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
   });
 })();
 </script>
-<script id="CRMO_v1689_internal_editor_lock">
+<script id="CRMO_v1646_internal_editor_lock">
 (function(){
   function isVisible(el){
     if(!el) return false;
@@ -27382,7 +28245,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
 </script>
 
 <!-- CRMO Usability Feedback (v1260) -->
-<style id="CRMO_v1689_usability_feedback_css">
+<style id="CRMO_v1646_usability_feedback_css">
   .crmo-usability-fab{
     position:fixed; bottom:18px; left:18px;
     z-index:999999;
@@ -27549,7 +28412,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
   </div>
 </div>
 
-<script id="CRMO_v1689_usability_feedback_js">
+<script id="CRMO_v1646_usability_feedback_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     if(!window.CRMO_USABILITY_MODE) return;
@@ -27776,7 +28639,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 
-<script id="CRMO_v1689_report_js">
+<script id="CRMO_v1646_report_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var panel = document.getElementById('crmo-report-admin');
@@ -28003,7 +28866,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 
-<script id="CRMO_v1689_hash_subgallery">
+<script id="CRMO_v1646_hash_subgallery">
 (function(){
   function applyHash(retry){
     try{
@@ -28852,7 +29715,7 @@ try{
 })();
 </script>
 
-<script id="CRMO_v1689_brands_admin_panel_js">
+<script id="CRMO_v1646_brands_admin_panel_js">
 (function(){
   try{
     var btn = document.querySelector('#brands .brands-manager-bar .tiles-manager-open');
@@ -31027,7 +31890,7 @@ function boot(){
 </script>
 
 
-<script id="CRMO_v1689_role_bootstrap">
+<script id="CRMO_v1646_role_bootstrap">
 (function(){
   function byId(id){ return document.getElementById(id); }
   function setRoleClasses(role){
@@ -32376,7 +33239,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 
 
 <script id="crmo_auth_global_fallback_v1584">
-/* CRMO_v1689: global auth modal fallback
+/* CRMO_v1646: global auth modal fallback
    Ensures login/register modals can open even if earlier setup didn't run. */
 (function(){
   function show(el){ if(!el) return false; el.hidden = false; el.style.display = 'block'; el.setAttribute('aria-hidden','false'); return true; }
@@ -32450,7 +33313,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 </script>
 
 
-<script id="CRMO_v1689_auth_modal_behavior_fix">
+<script id="CRMO_v1646_auth_modal_behavior_fix">
 (function(){
   function isOpen(modal){
     try{ return !!modal && modal.hidden === false && modal.getAttribute('aria-hidden') === 'false'; }catch(e){ return false; }
@@ -33036,7 +33899,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 </script>
 
 
-<script id="crmo-save-notice-v1686">
+<script id="crmo-save-notice-v1685">
 (function(){
   if(window.CRMO_showSaveNotice) return;
   function ensure(){
@@ -33076,7 +33939,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 </script>
 
 
-<script id="crmo-gallerykey-sync-v1686">
+<script id="crmo-gallerykey-sync-v1685">
 (function(){
   try{
     setInterval(function(){
@@ -33087,86 +33950,6 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
       }catch(e){}
     }, 800);
   }catch(e){}
-})();
-</script>
-
-
-<script id="crmo_v1686_force_owner_default">
-(function(){
-  function forceOwnerTab(){
-    try{
-      var isOwner = false;
-      try{ isOwner = document.documentElement.classList.contains('crmo-owner') || document.body.classList.contains('role-master') || window.CRMO_IS_OWNER === true; }catch(e){}
-      if(!isOwner) return;
-      var bar = document.getElementById('crmo-role-toggle');
-      if(!bar) return;
-      var btns = bar.querySelectorAll('button[data-role]');
-      btns.forEach(function(b){
-        var role = b.getAttribute('data-role');
-        var on = (role === 'master');
-        b.classList.toggle('active', on);
-        b.setAttribute('aria-pressed', on ? 'true' : 'false');
-      });
-      document.body.classList.add('role-master');
-      document.body.classList.remove('role-guest','role-user','role-social','role-client','role-admin','role-ux');
-    }catch(e){}
-  }
-  document.addEventListener('DOMContentLoaded', forceOwnerTab);
-  window.addEventListener('pageshow', forceOwnerTab);
-  window.addEventListener('crmo-auth-changed', forceOwnerTab);
-})();
-</script>
-
-
-<script id="crmo-ui-force-bars-v1689">
-(function(){
-  function forceVisible(){
-    try{
-      var rolebar=document.getElementById('crmo-rolebar');
-      var adminbar=document.getElementById('crmo-adminbar');
-      if(rolebar){ rolebar.style.display='flex'; rolebar.style.visibility='visible'; rolebar.style.opacity='1'; }
-      if(adminbar){ adminbar.style.display='flex'; adminbar.style.visibility='visible'; adminbar.style.opacity='1'; }
-    }catch(e){}
-  }
-
-  function forceOwnerSelected(){
-    try{
-      // prefer explicit data-role if exists
-      var ownerBtn = document.querySelector('#crmo-rolebar [data-role="owner"], #crmo-rolebar [data-role="OWNER"]');
-      if(!ownerBtn){
-        // fallback: find tab containing the word "בעלים"
-        var btns=[].slice.call(document.querySelectorAll('#crmo-rolebar button, #crmo-rolebar .crmo-role-tab'));
-        ownerBtn = btns.find(function(b){ return (b && (b.textContent||'').indexOf('בעלים')>-1); }) || null;
-      }
-      if(!ownerBtn) return;
-      // clear active from siblings
-      var all=[].slice.call(document.querySelectorAll('#crmo-rolebar .active, #crmo-rolebar .is-active, #crmo-rolebar [aria-selected="true"]'));
-      all.forEach(function(el){
-        try{
-          el.classList.remove('active','is-active');
-          el.setAttribute('aria-selected','false');
-        }catch(e){}
-      });
-      try{
-        ownerBtn.classList.add('active','is-active');
-        ownerBtn.setAttribute('aria-selected','true');
-      }catch(e){}
-    }catch(e){}
-  }
-
-  function boot(){
-    forceVisible();
-    forceOwnerSelected();
-    // re-assert on refresh-like events
-    window.addEventListener('focus', function(){ forceVisible(); forceOwnerSelected(); }, true);
-    window.addEventListener('pageshow', function(){ forceVisible(); forceOwnerSelected(); }, true);
-    document.addEventListener('visibilitychange', function(){ if(!document.hidden){ forceVisible(); forceOwnerSelected(); } }, true);
-    // periodic light re-assert (very low frequency to avoid flicker)
-    setInterval(function(){ forceVisible(); forceOwnerSelected(); }, 2000);
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
 })();
 </script>
 
