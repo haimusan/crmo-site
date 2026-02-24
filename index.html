@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1712 -->
+<!-- CRMO_v1713 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -915,7 +915,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1712</title>
+<title>CRMO_v1713</title>
 <link href="https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>@media (max-width: 1200px){
@@ -8046,6 +8046,13 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 })();
 </script>
 
+<style id="crmo-admin-zfix-v1713">
+/* v1713: ensure admin bars are always on top in dev force mode */
+#crmo-admin-bar, #crmo-admin-subbar, #crmo-role-toggle, .admin-bar, .crmo-admin-bar, .crmo-admin-subbar{
+  z-index: 99999 !important;
+  position: relative !important;
+}
+</style>
 </head>
 <body class="gallery-hover-ready role-guest">
 <div dir="rtl" id="crmo-role-toggle">
@@ -32615,7 +32622,7 @@ function CRMO_clearLocalDataAndReload(){
 <script id="crmo_v1709_bootstrap">
 (function(){
   try{
-    window.CRMO_BUILD_VERSION = "1712";
+    window.CRMO_BUILD_VERSION = "1713";
     window.CRMO_VERSION = "1709";
     
     // v1709: keep UI labels in sync with build version
@@ -32698,6 +32705,77 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
       try{ setTimeout(forceShowOnce, 0); }catch(e){}
     }
   }, true);
+})();
+</script>
+<script id="crmo-force-admin-bar-lock-v1699">
+/* v1713: force admin bars visible when ?admin=1 (dev fast access). */
+(function(){
+  function hasAdminFlag(){
+    try{ return new URLSearchParams(location.search||"").get("admin")==="1"; }catch(e){ return false; }
+  }
+  function forceShowOnce(){
+    if(!hasAdminFlag()) return;
+    try{
+      window.CRMO_FORCE_OWNER = 1;
+      document.documentElement.classList.add("crmo-owner","is-admin","crmo-auth-optimistic");
+    }catch(e){}
+    var ids=["crmo-admin-bar","crmo-admin-subbar","crmo-role-toggle"];
+    ids.forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      el.style.setProperty("display","flex","important");
+      el.style.setProperty("opacity","1","important");
+      el.style.setProperty("visibility","visible","important");
+    });
+  }
+
+  // Expose for debugging
+  window.forceShowOnce = forceShowOnce;
+
+  // Apply immediately and then every second
+  try{ forceShowOnce(); }catch(e){}
+  setInterval(function(){ try{ forceShowOnce(); }catch(e){} }, 1000);
+
+  // After any modal closes, re-apply (cheap)
+  document.addEventListener("click", function(ev){
+    var t=ev.target;
+    if(!t) return;
+    if(t.matches && (t.matches(".tm-modal-close,.modal-close,.close,button[data-close]") || t.closest(".tm-modal-close,.modal-close,.close"))){
+      setTimeout(function(){ try{ forceShowOnce(); }catch(e){} }, 50);
+    }
+  }, true);
+
+  // Override common admin checks to prioritize URL flag
+  function forceTrueIfAdminFlag(fn){
+    return function(){
+      if(hasAdminFlag()) return true;
+      try{ return fn.apply(this, arguments); }catch(e){ return false; }
+    };
+  }
+  ["isAdmin","isOwner","CRMO_isAdmin","CRMO_isOwner","crmoIsAdmin","crmoIsOwner"].forEach(function(name){
+    try{
+      if(typeof window[name]==="function"){
+        window[name]=forceTrueIfAdminFlag(window[name]);
+      }
+    }catch(e){}
+  });
+
+  // Ignore auth/login gating when admin flag present
+  ["openLoginModal","showLoginModal","CRMO_openLogin","CRMO_showLogin","CRMO_requireAuth","requireAuth"].forEach(function(name){
+    try{
+      if(typeof window[name]==="function"){
+        var orig=window[name];
+        window[name]=function(){
+          if(hasAdminFlag()){
+            // no-op; keep UI visible
+            return;
+          }
+          return orig.apply(this, arguments);
+        };
+      }
+    }catch(e){}
+  });
+
 })();
 </script>
 </body>
