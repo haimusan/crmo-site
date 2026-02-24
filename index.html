@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1696 single -->
+<!-- CRMO_v1698 single -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -64,16 +64,16 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1696";
+window.CRMO_BUILD_VERSION = "1698";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1696';
-window.CRMO_VERSION_NUMBER = 1696;
+window.CRMO_VERSION = 'CRMO_v1698';
+window.CRMO_VERSION_NUMBER = 1698;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
-<script id="crmo-preauth-bars-v1696">
+<script id="crmo-preauth-bars-v1695">
 /* Prevent admin/view bars flicker on refresh:
    If a Supabase session token exists in localStorage, show bars immediately
    while async RBAC/session verification runs. */
@@ -95,30 +95,8 @@ window.CRMO_STUDIO_TITLE = "CRMO";
   }catch(e){}
 })();
 </script>
-<style id="crmo-bars-lock-css-v1696">
-/* Hard lock: if we detect a session token, bars must not flicker during async auth checks */
-html.crmo-auth-optimistic #crmo-role-toggle,
-html.crmo-auth-optimistic #crmo-admin-bar,
-html.crmo-auth-optimistic #crmo-admin-subbar,
-html.crmo-bars-locked #crmo-role-toggle,
-html.crmo-bars-locked #crmo-admin-bar,
-html.crmo-bars-locked #crmo-admin-subbar{
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
 
-/* Prevent transient hide by inline styles */
-html.crmo-auth-optimistic body.role-guest #crmo-role-toggle,
-html.crmo-auth-optimistic body.role-guest #crmo-admin-bar,
-html.crmo-auth-optimistic body.role-guest #crmo-admin-subbar{
-  display: block !important;
-}
-</style>
-
-
-<style id="crmo-bars-lock-css-v1696">
+<style id="crmo-bars-lock-css-v1695">
 /* Hard rule: if there's an authenticated user (optimistic or verified), bars must stay visible. */
 html.crmo-auth-optimistic #crmo-role-toggle,
 html.crmo-auth-optimistic #crmo-admin-bar,
@@ -1519,7 +1497,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1693</title>
+<title>CRMO_v1698</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8835,24 +8813,6 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     return OWNER_EMAILS.indexOf(e) >= 0;
   }
 
-  function hasSupabaseToken(){
-    try{
-      for(let i=0;i<localStorage.length;i++){
-        const k = localStorage.key(i);
-        if(k && /^sb-.*-auth-token$/i.test(k)) return true;
-      }
-    }catch(e){}
-    return false;
-  }
-
-  // Sticky auth state:
-  // If we have a Supabase token, we KEEP the last known role/bars visible and do not downgrade on transient null sessions.
-  const STICKY = window.__CRMO_AUTH_STICKY || (window.__CRMO_AUTH_STICKY = {
-    lastEmail: "",
-    lastOwner: false,
-    lastGoodAt: 0
-  });
-
   function setDisplay(el, show){
     if(!el) return;
     el.style.display = show ? "" : "none";
@@ -8862,7 +8822,17 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     try{
       document.documentElement.classList.toggle("crmo-owner", owner);
       document.documentElement.classList.toggle("crmo-signed-in", owner);
+    
+    try{
+      if(owner){
+        localStorage.setItem("CRMO_SB_SESSION","1");
+      }else{
+        localStorage.removeItem("CRMO_SB_SESSION");
+        sessionStorage.removeItem("CRMO_SB_SESSION");
+      }
     }catch(e){}
+
+  }catch(e){}
     try{
       document.body.classList.toggle("role-guest", !owner);
       document.body.classList.toggle("role-admin", owner);
@@ -8872,26 +8842,12 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
       if(owner){
         localStorage.setItem("crmo-role","master");
       }else{
-        // do NOT clear role here; keep sticky while token exists
+        localStorage.removeItem("crmo-role");
       }
     }catch(e){}
   }
 
-  function applyUI(owner, email){
-    // Rule: if we have a token, bars must be visible immediately and never flicker while checks run.
-    const token = hasSupabaseToken();
-
-    // Visual bars on "authenticated" (token) OR owner.
-    const showBars = token || owner;
-
-    // If we have a token but owner is false due to transient check, do NOT drop owner classes if we recently had a good owner.
-    if(token && !owner){
-      const age = Date.now() - (STICKY.lastGoodAt || 0);
-      if(STICKY.lastOwner && age < 60000){ // 60s grace
-        owner = true;
-      }
-    }
-
+  function applyUI(owner){
     setOwnerClasses(owner);
 
     const icon = document.getElementById("crmo-user-indicator");
@@ -8902,35 +8858,19 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     const subbar = document.getElementById("crmo-admin-subbar");
 
     if(icon){
-      icon.classList.toggle("is-authed", showBars);
-      icon.setAttribute("data-auth", showBars ? "in" : "out");
-      icon.setAttribute("aria-label", showBars ? "פרופיל / התנתקות" : "התחבר / הירשם");
-      icon.setAttribute("title", showBars ? "פרופיל / התנתקות" : "התחבר / הירשם");
+      icon.classList.toggle("is-authed", owner);
+      icon.setAttribute("data-auth", owner ? "in" : "out");
+      icon.setAttribute("aria-label", owner ? "פרופיל / התנתקות" : "התחבר / הירשם");
+      icon.setAttribute("title", owner ? "פרופיל / התנתקות" : "התחבר / הירשם");
     }
 
-    if(logoutBtn) logoutBtn.disabled = !showBars;
-    setDisplay(logoutBtn, showBars);
-    setDisplay(userMenu, showBars);
+    if(logoutBtn) logoutBtn.disabled = !owner;
+    setDisplay(logoutBtn, owner);
+    setDisplay(userMenu, owner);
 
-    setDisplay(roleBar, showBars);
-    setDisplay(adminBar, showBars);
-    setDisplay(subbar, showBars);
-
-    // Keep the UI from collapsing during async checks
-    try{
-      if(showBars){
-        document.documentElement.classList.add("crmo-bars-locked");
-      }else{
-        document.documentElement.classList.remove("crmo-bars-locked");
-      }
-    }catch(e){}
-
-    // Default selection in role bar: always OWNER when authenticated
-    try{
-      if(showBars){
-        localStorage.setItem("crmo-role","master");
-      }
-    }catch(e){}
+    setDisplay(roleBar, owner);
+    setDisplay(adminBar, owner);
+    setDisplay(subbar, owner);
 
     try{
       window.dispatchEvent(new Event("resize"));
@@ -8947,10 +8887,11 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     }catch(e){ return null; }
   }
 
-  async function readSessionEmail(){
+  async function readOwnerFromSupabase(){
     try{
       const client = await getSupabaseClient();
-      if(!client || !client.auth) return "";
+      if(!client || !client.auth) return { owner:false, email:"" };
+
       let sess = null;
       if(window.CRMO_safeGetSession){
         sess = await window.CRMO_safeGetSession(client);
@@ -8959,59 +8900,37 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
         sess = (r && r.data && r.data.session) ? r.data.session : null;
       }
       const email = (sess && sess.user && sess.user.email) ? String(sess.user.email).toLowerCase() : "";
-      return email || "";
+      return { owner:isOwnerEmail(email), email };
     }catch(e){
-      return "";
+      return { owner:false, email:"" };
     }
   }
 
   let inited = false;
   let lastKey = "";
+  let lastOwner = false;
 
   async function refresh(){
-    const token = hasSupabaseToken();
-
-    // Optimistic lock: if token exists, show bars immediately using last known role.
-    if(token){
-      applyUI(STICKY.lastOwner, STICKY.lastEmail);
-    }else{
-      applyUI(false, "");
-    }
-
-    const email = await readSessionEmail();
-    const owner = isOwnerEmail(email);
-
-    // If token exists but email came back empty, treat it as transient and KEEP sticky state.
-    if(token && !email){
-      // keep bars/role, and retry later
-      return;
-    }
-
-    // Update sticky on good result
-    if(email){
-      STICKY.lastEmail = email;
-      STICKY.lastOwner = !!owner;
-      STICKY.lastGoodAt = Date.now();
-    }else if(!token){
-      STICKY.lastEmail = "";
-      STICKY.lastOwner = false;
-      STICKY.lastGoodAt = 0;
-    }
-
-    const key = (email || "") + "|" + (owner ? "1":"0") + "|" + (token ? "t":"n");
+    const r = await readOwnerFromSupabase();
+    const owner = !!r.owner;
+    const key = (r.email || "") + "|" + (owner ? "1":"0");
     if(key !== lastKey){
       lastKey = key;
-      applyUI(owner, email);
+      lastOwner = owner;
+      applyUI(owner);
       try{
-        document.documentElement.setAttribute("data-crmo-auth-email", email || "");
+        document.documentElement.setAttribute("data-crmo-auth-email", r.email || "");
       }catch(e){}
       try{
-        if(email){
-          localStorage.setItem("crmo:admin:email", email || "");
-        }else if(!token){
+        if(owner){
+          localStorage.setItem("crmo:admin:email", r.email || "");
+        }else{
           localStorage.removeItem("crmo:admin:email");
         }
       }catch(e){}
+    }else{
+      // still re-apply when needed (layout)
+      applyUI(lastOwner);
     }
   }
 
@@ -9030,6 +8949,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     })();
   }
 
+  // Attach logout to supabase signOut (no reload)
   function hookLogout(){
     const btn = document.getElementById("crmo-user-menu-logout");
     if(!btn || btn.__crmo_hooked) return;
@@ -9042,16 +8962,11 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
           await client.auth.signOut();
         }
       }catch(e){}
-      // Clear sticky immediately on explicit logout
-      try{
-        STICKY.lastEmail = "";
-        STICKY.lastOwner = false;
-        STICKY.lastGoodAt = 0;
-      }catch(e){}
       try{ refresh(); }catch(e){}
     });
   }
 
+  // Poll until supabase library is available
   let tries = 0;
   (function poll(){
     tries++;
@@ -9060,19 +8975,16 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     if(tries < 200 && (!window.supabase || !window.supabase.createClient)){
       setTimeout(poll, 50);
     }else{
-      // lighter refresh to avoid flicker loops
-      setInterval(function(){
-        if(document.hidden) return;
-        try{ refresh(); hookLogout(); }catch(e){}
-      }, 5000);
+      // keep a light refresh in case of storage-only updates
+      setInterval(function(){ try{ refresh(); hookLogout(); }catch(e){} }, 1200);
     }
   })();
 
   window.addEventListener("pageshow", function(){ try{ refresh(); hookLogout(); }catch(e){} });
-  // Do NOT refresh on focus to avoid flicker loops; rely on onAuthStateChange + interval
-  // window.addEventListener("focus", function(){ try{ refresh(); hookLogout(); }catch(e){} });
+  window.addEventListener("focus", function(){ try{ refresh(); hookLogout(); }catch(e){} });
 
-})();</script>
+})();
+</script>
 
 
 <style <style id="CRMO_v1667_fixed_stack">
@@ -9254,7 +9166,7 @@ html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
 
 
 <style id="crmo-hide-legacy-tile-editor">
-/* v1696: hide legacy/duplicate tile editor modal (keep the modern one #tm-tile-editor-modal) */
+/* v1695: hide legacy/duplicate tile editor modal (keep the modern one #tm-tile-editor-modal) */
 #tileEditorModal,
 #tileEditorBackdrop,
 #tileEditorOverlay,
@@ -9270,6 +9182,206 @@ html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
 }
 </style>
 
+
+<style id="crmo-v1698-hide-legacy-tm-editor">
+/* v1698: Keep ONLY the custom project editor (#tile-editor). Hide legacy "Edit Tile" modal (tm-tile-editor-modal). */
+#tm-tile-editor-modal{ display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
+</style>
+
+<script id="crmo-v1698-perf-and-double-editor-fix">
+(function(){
+  // ---- Perf: simple bar lock without MutationObserver ----
+  function hasSbToken(){
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        if(/^sb-.*-auth-token$/i.test(k)){
+          var v = localStorage.getItem(k) || '';
+          if(String(v).length > 20) return true;
+        }
+      }
+    }catch(e){}
+    return false;
+  }
+
+  function lockBarsOnce(){
+    try{
+      if(!hasSbToken()) return;
+      document.documentElement.classList.add('crmo-auth-optimistic');
+      document.documentElement.setAttribute('data-crmo-bars','locked');
+      var ids = ['crmo-role-toggle','crmo-admin-bar','crmo-admin-subbar'];
+      for(var i=0;i<ids.length;i++){
+        var el = document.getElementById(ids[i]);
+        if(!el) continue;
+        el.style.display = 'flex';
+        el.style.visibility = 'visible';
+        el.style.opacity = '1';
+        el.style.pointerEvents = 'auto';
+      }
+    }catch(e){}
+  }
+
+  // apply early (as soon as possible)
+  try{ lockBarsOnce(); }catch(e){}
+
+  // re-apply every 2s (cheap) as a safety net
+  var __crmoBarsTimer = null;
+  try{
+    __crmoBarsTimer = setInterval(lockBarsOnce, 2000);
+  }catch(e){}
+
+  // also re-apply after any editor closes (no observers)
+  function hookCloseReapply(){
+    document.addEventListener('click', function(ev){
+      try{
+        var t = ev.target;
+        if(!t || !t.closest) return;
+        if(t.closest('#te-close-x') || t.closest('#te-cancel') || t.closest('.tm-te-close') || t.closest('#tm-te-close')){
+          setTimeout(lockBarsOnce, 30);
+          setTimeout(lockBarsOnce, 250);
+        }
+      }catch(e){}
+    }, true);
+  }
+
+  // ---- Double editor fix: keep ONLY custom editor (#tile-editor) ----
+  function disableLegacyOpenTileEditor(){
+    try{
+      if(typeof window.openTileEditor === 'function'){
+        window.openTileEditor = function(){
+          // legacy disabled in v1698
+          return;
+        };
+      }
+    }catch(e){}
+  }
+
+  function cleanupPencilListeners(){
+    // Remove existing listeners by cloning the pencil buttons (clean slate)
+    try{
+      var btns = document.querySelectorAll('.tile-edit-btn');
+      (btns.forEach || Array.prototype.forEach).call(btns, function(btn){
+        if(!btn || !btn.parentNode) return;
+        var clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+      });
+    }catch(e){}
+  }
+
+  function bindPencilsToCustomEditor(){
+    // Capture phase: stop any legacy scripts from firing
+    document.addEventListener('click', function(ev){
+      try{
+        var t = ev.target;
+        if(!t || !t.closest) return;
+        var btn = t.closest('.tile-edit-btn');
+        if(!btn) return;
+        ev.preventDefault();
+        if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+        else ev.stopPropagation();
+
+        // Open the custom editor (the one with "עריכת פרויקט")
+        var wrapper = btn.closest('.tile-edit-wrapper');
+        if(wrapper && typeof window.CRMO_openLegacyTileEditor === 'function'){
+          window.CRMO_openLegacyTileEditor(wrapper);
+          return;
+        }
+        // Fallback: try showing the panel if it exists
+        var panel = document.getElementById('tile-editor');
+        if(panel){
+          panel.classList.add('open');
+          panel.style.display = 'block';
+          return;
+        }
+        console.error('[CRMO v1698] Editor failed to launch (no custom editor hook)');
+        alert('Editor failed to launch');
+      }catch(e){
+        console.error('[CRMO v1698] Editor failed to launch', e);
+        try{ alert('Editor failed to launch'); }catch(_){}
+      }
+    }, true);
+  }
+
+  function bindSaveToSupabase(){
+    // Ensure the custom editor's Save button pushes to Supabase via CRMO_saveMainNow
+    function attach(){
+      var b = document.getElementById('te-save');
+      if(!b) return false;
+      if(b.__crmo_save_hooked__) return true;
+      b.__crmo_save_hooked__ = true;
+
+      b.addEventListener('click', function(){
+        try{
+          if(typeof window.CRMO_saveMainNow === 'function'){
+            // Let the original save handler update local state first, then push to DB
+            setTimeout(function(){
+              try{ window.CRMO_saveMainNow(); }catch(e){ console.warn('[CRMO v1698] CRMO_saveMainNow failed', e); }
+            }, 0);
+          }
+        }catch(e){}
+      }, true);
+      return true;
+    }
+    // Try now and after DOM ready
+    if(!attach()){
+      document.addEventListener('DOMContentLoaded', function(){
+        attach();
+        setTimeout(attach, 300);
+        setTimeout(attach, 1200);
+      });
+    }
+  }
+
+  function asyncSessionCheckNonBlocking(){
+    // Do not block render: if getSession takes >1s, continue UI anyway.
+    // We simply call CRMO_refreshRoleAndAdminUI, but we won't wait for it to finish before showing UI.
+    try{
+      if(typeof window.CRMO_refreshRoleAndAdminUI === 'function'){
+        var done = false;
+        var t = setTimeout(function(){
+          if(done) return;
+          done = true;
+          // keep UI as-is; bars already locked optimistically
+          try{ lockBarsOnce(); }catch(e){}
+        }, 1000);
+
+        Promise.resolve().then(function(){
+          return window.CRMO_refreshRoleAndAdminUI();
+        }).then(function(){
+          if(done) return;
+          done = true;
+          clearTimeout(t);
+          try{ lockBarsOnce(); }catch(e){}
+        }).catch(function(){
+          if(done) return;
+          done = true;
+          clearTimeout(t);
+          try{ lockBarsOnce(); }catch(e){}
+        });
+      }
+    }catch(e){}
+  }
+
+  // Boot: disable legacy, clean listeners, bind custom, hook save
+  function boot(){
+    disableLegacyOpenTileEditor();
+    cleanupPencilListeners();
+    bindPencilsToCustomEditor();
+    bindSaveToSupabase();
+    hookCloseReapply();
+    asyncSessionCheckNonBlocking();
+    // Final safety: lock bars now
+    lockBarsOnce();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot);
+  }else{
+    boot();
+  }
+})();
+</script>
 </head>
 <body class="gallery-hover-ready role-guest">
 
@@ -34089,7 +34201,7 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
       clearTimeout(el.__t);
       el.__t=set
 <script id="crmo-hide-legacy-tile-editor-js">
-/* v1696: actively suppress any legacy/duplicate tile editor modal that may be opened by old listeners */
+/* v1695: actively suppress any legacy/duplicate tile editor modal that may be opened by old listeners */
 (function(){
   function hideLegacy(){
     try{
@@ -34148,7 +34260,7 @@ Timeout(function(){ try{ el.style.display='none'; }catch(e){} }, 2400);
 </script>
 
 
-<script id="crmo-bars-lock-runtime-v1696">
+<script id="crmo-bars-lock-runtime-v1695">
 (function(){
   function hasSbToken(){
     try{
