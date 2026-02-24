@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1713 -->
+<!-- CRMO_v1714 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -911,11 +911,26 @@ body.crmo-route-gallery .gallery-grid.grid > .tile-edit-wrapper{ display:block !
 }
 .crmo-expand-link:hover{ background:rgba(255,255,255,.9); }
 body.crmo-route-gallery .whatsapp-float{ display:none !important; }
+
+/* v1714: hard-pin admin bars when ?admin=1 so they never flicker or hide */
+html.crmo-owner #crmo-admin-bar,
+html.is-admin #crmo-admin-bar,
+html.crmo-owner #crmo-admin-subbar,
+html.is-admin #crmo-admin-subbar{
+  position:fixed !important;
+  left:0 !important;
+  right:0 !important;
+  z-index:99999 !important;
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
 </style>
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1713</title>
+<title>CRMO_v1714</title>
 <link href="https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>@media (max-width: 1200px){
@@ -8046,8 +8061,8 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 })();
 </script>
 
-<style id="crmo-admin-zfix-v1713">
-/* v1713: ensure admin bars are always on top in dev force mode */
+<style id="crmo-admin-zfix-v1714">
+/* v1714: ensure admin bars are always on top in dev force mode */
 #crmo-admin-bar, #crmo-admin-subbar, #crmo-role-toggle, .admin-bar, .crmo-admin-bar, .crmo-admin-subbar{
   z-index: 99999 !important;
   position: relative !important;
@@ -32622,7 +32637,7 @@ function CRMO_clearLocalDataAndReload(){
 <script id="crmo_v1709_bootstrap">
 (function(){
   try{
-    window.CRMO_BUILD_VERSION = "1713";
+    window.CRMO_BUILD_VERSION="1714";
     window.CRMO_VERSION = "1709";
     
     // v1709: keep UI labels in sync with build version
@@ -32680,17 +32695,28 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
   }
   function forceShowOnce(){
     if(!shouldLock()) return;
-    var role = document.getElementById('crmo-role-toggle');
     var admin = document.getElementById('crmo-admin-bar');
     var sub = document.getElementById('crmo-admin-subbar');
-    [role,admin,sub].forEach(function(el){
+    function hardShow(el, topPx){
       if(!el) return;
-      el.style.display='flex';
-      el.style.visibility='visible';
-      el.style.opacity='1';
-      el.style.pointerEvents='auto';
-      el.setAttribute('data-crmo-locked','1');
-    });
+      try{
+        el.style.setProperty('display','flex','important');
+        el.style.setProperty('visibility','visible','important');
+        el.style.setProperty('opacity','1','important');
+        el.style.setProperty('pointer-events','auto','important');
+        el.style.setProperty('z-index','99999','important');
+        // Pin to viewport so nothing can scroll it away or hide behind overlays
+        el.style.setProperty('position','fixed','important');
+        el.style.setProperty('left','0','important');
+        el.style.setProperty('right','0','important');
+        el.style.setProperty('top', (topPx||0) + 'px','important');
+      }catch(e){}
+    }
+    hardShow(admin, 0);
+    var h = 0;
+    try{ h = admin ? Math.max(0, admin.getBoundingClientRect().height|0) : 0; }catch(e){ h = 0; }
+    hardShow(sub, h);
+  });
   }
   try{ forceShowOnce(); }catch(e){}
   document.addEventListener('DOMContentLoaded', function(){ try{ forceShowOnce(); }catch(e){} }, {once:true});
@@ -32708,7 +32734,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 })();
 </script>
 <script id="crmo-force-admin-bar-lock-v1699">
-/* v1713: force admin bars visible when ?admin=1 (dev fast access). */
+/* v1714: force admin bars visible when ?admin=1 (dev fast access). */
 (function(){
   function hasAdminFlag(){
     try{ return new URLSearchParams(location.search||"").get("admin")==="1"; }catch(e){ return false; }
