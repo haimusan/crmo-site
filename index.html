@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1714 -->
+<!-- CRMO_v1715 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -912,7 +912,7 @@ body.crmo-route-gallery .gallery-grid.grid > .tile-edit-wrapper{ display:block !
 .crmo-expand-link:hover{ background:rgba(255,255,255,.9); }
 body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
-/* v1714: hard-pin admin bars when ?admin=1 so they never flicker or hide */
+/* v1715: hard-pin admin bars when ?admin=1 so they never flicker or hide */
 html.crmo-owner #crmo-admin-bar,
 html.is-admin #crmo-admin-bar,
 html.crmo-owner #crmo-admin-subbar,
@@ -930,7 +930,7 @@ html.is-admin #crmo-admin-subbar{
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1714</title>
+<title>CRMO_v1715</title>
 <link href="https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>@media (max-width: 1200px){
@@ -8061,12 +8061,78 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 })();
 </script>
 
-<style id="crmo-admin-zfix-v1714">
-/* v1714: ensure admin bars are always on top in dev force mode */
+<style id="crmo-admin-zfix-v1715">
+/* v1715: ensure admin bars are always on top in dev force mode */
 #crmo-admin-bar, #crmo-admin-subbar, #crmo-role-toggle, .admin-bar, .crmo-admin-bar, .crmo-admin-subbar{
   z-index: 99999 !important;
   position: relative !important;
 }
+</style>
+<style id="crmo-sticky-stack-v1715">
+  /* === v1715 Sticky Stack: View Bar (top) -> Admin Bar -> Admin Subbar -> Site Header -> Content === */
+  :root{
+    --crmo-viewbar-h: 0px;
+    --crmo-adminbar-h: 0px;
+    --crmo-adminsubbar-h: 0px;
+    --crmo-siteheader-h: 0px;
+  }
+
+  /* Layer 1: View Mode Bar */
+  #crmo-role-toggle{
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 100002 !important;
+  }
+
+  /* Layer 2: Admin Bar */
+  #crmo-admin-bar{
+    position: fixed !important;
+    top: var(--crmo-viewbar-h) !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 100001 !important;
+  }
+
+  /* Layer 2b: Admin Subbar (if exists) */
+  #crmo-admin-subbar{
+    position: fixed !important;
+    top: calc(var(--crmo-viewbar-h) + var(--crmo-adminbar-h)) !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 100000 !important;
+  }
+
+  /* Layer 3: Site Header */
+  header#crmo-site-header{
+    position: fixed !important;
+    top: calc(var(--crmo-viewbar-h) + var(--crmo-adminbar-h) + var(--crmo-adminsubbar-h)) !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 99990 !important;
+    background: #fff !important;
+  }
+
+  /* Content starts below header */
+  body{
+    padding-top: calc(var(--crmo-viewbar-h) + var(--crmo-adminbar-h) + var(--crmo-adminsubbar-h) + var(--crmo-siteheader-h)) !important;
+  }
+
+  /* Force show admin bars when admin=1 */
+  html.crmo-owner #crmo-admin-bar,
+  html.is-admin #crmo-admin-bar,
+  html.crmo-owner #crmo-admin-subbar,
+  html.is-admin #crmo-admin-subbar{
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* User icon coloring */
+  .crmo-user-indicator{ color:#000 !important; }
+  html.crmo-user-loggedin .crmo-user-indicator{ color:#c00 !important; }
+  .crmo-user-indicator svg{ fill: currentColor !important; }
 </style>
 </head>
 <body class="gallery-hover-ready role-guest">
@@ -32637,7 +32703,7 @@ function CRMO_clearLocalDataAndReload(){
 <script id="crmo_v1709_bootstrap">
 (function(){
   try{
-    window.CRMO_BUILD_VERSION="1714";
+    window.CRMO_BUILD_VERSION="1715";
     window.CRMO_VERSION = "1709";
     
     // v1709: keep UI labels in sync with build version
@@ -32734,7 +32800,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 })();
 </script>
 <script id="crmo-force-admin-bar-lock-v1699">
-/* v1714: force admin bars visible when ?admin=1 (dev fast access). */
+/* v1715: force admin bars visible when ?admin=1 (dev fast access). */
 (function(){
   function hasAdminFlag(){
     try{ return new URLSearchParams(location.search||"").get("admin")==="1"; }catch(e){ return false; }
@@ -32802,6 +32868,109 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
     }catch(e){}
   });
 
+})();
+</script>
+<script id="crmo-sticky-stack-runtime-v1715">
+(function(){
+  function $(sel){ return document.querySelector(sel); }
+
+  function ensureHeaderId(){
+    var h = document.querySelector("header");
+    if(h && h.id !== "crmo-site-header"){ h.id = "crmo-site-header"; }
+  }
+
+  function px(n){ return (Math.max(0, Math.round(n||0))) + "px"; }
+
+  function applyStickyStack(){
+    ensureHeaderId();
+    var view = $("#crmo-role-toggle");
+    var ab = $("#crmo-admin-bar");
+    var asb = $("#crmo-admin-subbar");
+    var sh = $("#crmo-site-header");
+
+    var viewH = view ? view.getBoundingClientRect().height : 0;
+    var abH   = ab ? ab.getBoundingClientRect().height : 0;
+    var asbH  = asb ? asb.getBoundingClientRect().height : 0;
+    var shH   = sh ? sh.getBoundingClientRect().height : 0;
+
+    var r = document.documentElement;
+    r.style.setProperty("--crmo-viewbar-h", px(viewH));
+    r.style.setProperty("--crmo-adminbar-h", px(abH));
+    r.style.setProperty("--crmo-adminsubbar-h", px(asbH));
+    r.style.setProperty("--crmo-siteheader-h", px(shH));
+  }
+
+  function setLoggedInUI(email){
+    try{
+      if(email){
+        document.documentElement.classList.add("crmo-user-loggedin");
+        var emailTab = document.getElementById("crmo-top-email");
+        if(emailTab){ emailTab.textContent = "מייל: " + email; }
+      }else{
+        document.documentElement.classList.remove("crmo-user-loggedin");
+      }
+    }catch(e){}
+  }
+
+  function bootstrapAuthUI(){
+    // Fast local heuristic: if we have supabase token in localStorage, treat as logged-in until sync finishes.
+    try{
+      var keys = Object.keys(localStorage||{});
+      var hasSb = keys.some(function(k){ return k.indexOf("sb-")===0 && k.indexOf("auth-token")>-1; });
+      if(hasSb){ document.documentElement.classList.add("crmo-user-loggedin"); }
+    }catch(e){}
+
+    // Real sync (non-blocking)
+    setTimeout(async function(){
+      try{
+        if(window.supabase && window.crmoSupabase){
+          var res = await window.crmoSupabase.auth.getUser();
+          var email = res && res.data && res.data.user && res.data.user.email;
+          if(email){ setLoggedInUI(email); }
+        }
+      }catch(e){}
+      applyStickyStack();
+    }, 50);
+  }
+
+  // Force owner mode: never hide bars when admin=1
+  function adminForceTick(){
+    try{
+      var qs = new URLSearchParams(location.search);
+      if(qs.get("admin")==="1"){
+        window.CRMO_FORCE_OWNER = 1;
+        document.documentElement.classList.add("crmo-owner","is-admin");
+        var ab = document.getElementById("crmo-admin-bar");
+        var asb = document.getElementById("crmo-admin-subbar");
+        if(ab){ ab.style.setProperty("display","flex","important"); ab.style.setProperty("visibility","visible","important"); ab.style.setProperty("opacity","1","important"); }
+        if(asb){ asb.style.setProperty("display","flex","important"); asb.style.setProperty("visibility","visible","important"); asb.style.setProperty("opacity","1","important"); }
+      }
+    }catch(e){}
+  }
+
+  function init(){
+    ensureHeaderId();
+    applyStickyStack();
+    bootstrapAuthUI();
+    adminForceTick();
+
+    window.addEventListener("resize", function(){ applyStickyStack(); }, {passive:true});
+    window.addEventListener("scroll", function(){ /* nothing; fixed stack */ }, {passive:true});
+    window.addEventListener("focus", function(){ adminForceTick(); }, {passive:true});
+    window.addEventListener("pageshow", function(){ applyStickyStack(); adminForceTick(); }, {passive:true});
+
+    // Light, safe interval: keep bars visible under admin=1 (no MutationObserver)
+    setInterval(function(){
+      adminForceTick();
+      applyStickyStack();
+    }, 1000);
+  }
+
+  if(document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", init, {once:true});
+  }else{
+    init();
+  }
 })();
 </script>
 </body>
