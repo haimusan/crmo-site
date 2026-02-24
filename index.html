@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1705 -->
+<!-- CRMO_v1706 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -837,7 +837,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1705</title>
+<title>CRMO_v1706</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>@media (max-width: 1200px){
@@ -7951,6 +7951,20 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     // Do not block render; update when ready.
     setEmailText('');
     refresh();
+    // Auto cloud pull on load (non-blocking) to show works from Supabase both local and online.
+    try{
+      if(!window.__CRMO_AUTO_PULL_DONE){
+        window.__CRMO_AUTO_PULL_DONE = true;
+        setTimeout(function(){
+          try{
+            if(navigator.onLine && typeof window.CRMO_sbPullNow === 'function'){
+              var p = window.CRMO_sbPullNow();
+              if(p && typeof p.catch === 'function') p.catch(function(e){ console.warn('[CRMO] auto pull failed:', e); });
+            }
+          }catch(e){ console.warn('[CRMO] auto pull exception:', e); }
+        }, 120);
+      }
+    }catch(e){}
     // Also refresh after auth state changes (if available)
     (async function(){
       try{
@@ -32545,8 +32559,8 @@ function CRMO_clearLocalDataAndReload(){
       if(el) el.textContent = txt;
     }
     function apply(){
-      setText('crmo-top-version', 'v1705');
-      setText('crmo-footer-version', 'v1705');
+      setText('crmo-top-version', 'v1706');
+      setText('crmo-footer-version', 'v1706');
 }
     if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);
     else apply();
