@@ -1,9 +1,27 @@
 <!DOCTYPE html>
-<!-- CRMO_v1725 -->
+<!-- CRMO_v1728 -->
 
 <html dir="rtl" lang="he">
 <head>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<script id="crmo-force-owner-skip-auth-v1728">
+(function(){
+  try{
+    if(window.CRMO_FORCE_OWNER){
+      document.documentElement.classList.add('crmo-owner','is-admin');
+      window.CRMO_SKIP_AUTH = 1;
+      document.addEventListener('DOMContentLoaded', function(){
+        try{
+          document.body && document.body.classList.add('role-admin','role-master');
+        }catch(e){}
+      });
+    }
+  }catch(e){}
+})();
+</script>
+
 <script id="crmo-supabase-fallback-loader">
 (function(){
   var t0=Date.now();
@@ -927,10 +945,10 @@ html.is-admin #crmo-admin-subbar{
   pointer-events:auto !important;
 }
 
-/* v1725: keep View Mode Bar sticky (do not scroll away) */
+/* v1728: keep View Mode Bar sticky (do not scroll away) */
 #crmo-role-toggle{position:sticky !important; top:0 !important; z-index:100000 !important;}
 
-/* v1725: Force View Mode Bar fixed (no scroll) */
+/* v1728: Force View Mode Bar fixed (no scroll) */
 #crmo-role-toggle{
   position: fixed !important;
   top: 0 !important;
@@ -939,11 +957,43 @@ html.is-admin #crmo-admin-subbar{
   width: 100% !important;
   z-index: 100000 !important;
 }
+
+/* v1728: Force Admin UI visibility when html.crmo-owner */
+html.crmo-owner #crmo-admin-bar {
+  display: flex !important;
+  z-index: 9999999 !important;
+  top: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+html.crmo-owner #crmo-admin-subbar {
+  display: flex !important;
+  z-index: 9999998 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+/* Push header under admin bar (fallback 50px; JS can refine elsewhere) */
+html.crmo-owner .site-header { top: 50px !important; }
+
+/* v1728: HARD lock View Mode Bar (crmo-role-toggle) */
+#crmo-role-toggle{
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 10000000 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  transform: none !important;
+  will-change: auto !important;
+}
 </style>
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1725</title>
+<title>CRMO_v1728</title>
 <link href="https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>@media (max-width: 1200px){
@@ -8081,6 +8131,23 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
   position: relative !important;
 }
 </style>
+
+<style id="crmo-rolebar-fixed-css-v1728">
+/* v1728: Late override to beat earlier !important rules */
+html body #crmo-role-toggle{
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 10000000 !important;
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+}
+</style>
+
 </head>
 <body class="gallery-hover-ready role-guest">
 <div dir="rtl" id="crmo-role-toggle">
@@ -32650,8 +32717,8 @@ function CRMO_clearLocalDataAndReload(){
 <script id="crmo_v1709_bootstrap">
 (function(){
   try{
-    window.CRMO_BUILD_VERSION="1725";
-    window.CRMO_VERSION = "1725";
+    window.CRMO_BUILD_VERSION="1728";
+    window.CRMO_VERSION = "1728";
     
     // v1709: keep UI labels in sync with build version
     window.CRMO_applyVersionLabels = function(){
@@ -32818,7 +32885,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 })();
 </script>
 
-<script id="crmo-dev-unlock-bars-v1725">
+<script id="crmo-dev-unlock-bars-v1728">
 /*
   DEV FILE: do NOT change UI/Design.
   Goal: In online dev/testing, never let top bars disappear because of Auth/RBAC checks.
@@ -32873,7 +32940,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 </script>
 
 
-<script id="crmo-fix-viewbar-fixed-v1725">
+<script id="crmo-fix-viewbar-fixed-v1728">
 (function(){
   function applyFixedViewBar(){
     var bar = document.getElementById('crmo-role-toggle');
@@ -32920,7 +32987,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 </script>
 
 
-<script id="crmo-detach-viewbar-to-body-v1725">
+<script id="crmo-detach-viewbar-to-body-v1728">
 (function(){
   const ROLE_ID = 'crmo-role-toggle';
   const SPACER_ID = 'crmo-role-toggle-spacer';
@@ -32991,6 +33058,115 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', init);
   } else {
+    init();
+  }
+})();
+</script>
+
+
+<script id="crmo-login-trycatch-v1728">
+(function(){
+  function safeWrap(fnName){
+    try{
+      var orig = window[fnName];
+      if(typeof orig !== 'function') return;
+      if(orig.__crmoSafeWrapped) return;
+      var wrapped = function(){
+        try{
+          if(window.CRMO_FORCE_OWNER){
+            // never block UI when force owner
+            return;
+          }
+          return orig.apply(this, arguments);
+        }catch(err){
+          console.error(fnName + " error suppressed:", err);
+          try{ alert("Editor failed to launch"); }catch(e){}
+          return;
+        }
+      };
+      wrapped.__crmoSafeWrapped = true;
+      window[fnName] = wrapped;
+    }catch(e){}
+  }
+
+  // common names used across versions
+  ["openLogin","showLogin","showAuth","openAuth","CRMO_openLogin","CRMO_showLogin"].forEach(safeWrap);
+
+  // also guard any direct boot that calls supabase early
+  window.addEventListener("error", function(ev){
+    if(String(ev && ev.message || "").toLowerCase().includes("key") || String(ev && ev.message || "").toLowerCase().includes("supabase")){
+      console.error("Suppressed runtime error:", ev.message);
+    }
+  });
+})();
+</script>
+
+
+<script id="crmo-hard-lock-rolebar-v1728">
+(function(){
+  const ROLE_ID='crmo-role-toggle';
+  const SPACER_ID='crmo-role-toggle-spacer';
+  function lock(){
+    const bar=document.getElementById(ROLE_ID);
+    if(!bar) return;
+    // Detach to body to avoid transformed parents breaking fixed behavior
+    if(bar.parentElement !== document.body){
+      document.body.prepend(bar);
+    }
+    // Enforce inline styles (some scripts override CSS)
+    bar.style.position='fixed';
+    bar.style.top='0';
+    bar.style.left='0';
+    bar.style.right='0';
+    bar.style.width='100%';
+    bar.style.zIndex='10000000';
+    bar.style.display='flex';
+    bar.style.opacity='1';
+    bar.style.visibility='visible';
+    bar.style.transform='none';
+    bar.dataset.crmoLocked='1';
+
+    // Spacer to preserve layout flow
+    let spacer=document.getElementById(SPACER_ID);
+    if(!spacer){
+      spacer=document.createElement('div');
+      spacer.id=SPACER_ID;
+      spacer.style.width='100%';
+      spacer.style.pointerEvents='none';
+      // put spacer right after bar in body
+      if(bar.nextSibling) bar.parentNode.insertBefore(spacer, bar.nextSibling);
+      else bar.parentNode.appendChild(spacer);
+    }
+    const h=Math.max(0, bar.getBoundingClientRect().height || bar.offsetHeight || 0);
+    spacer.style.height=h+'px';
+
+    // Push admin bars below role bar if needed
+    const admin=document.getElementById('crmo-admin-bar');
+    if(admin){
+      const ah=Math.max(0, admin.getBoundingClientRect().height || admin.offsetHeight || 0);
+      // if admin bar is fixed and currently top 0, push it below role bar
+      if(getComputedStyle(admin).position === 'fixed'){
+        admin.style.top=h+'px';
+      }
+      const sub=document.getElementById('crmo-admin-subbar');
+      if(sub && getComputedStyle(sub).position === 'fixed'){
+        sub.style.top=(h+ah)+'px';
+      }
+    }
+  }
+
+  function init(){
+    lock();
+    setTimeout(lock, 50);
+    setTimeout(lock, 300);
+    window.addEventListener('resize', ()=>setTimeout(lock,50));
+    // Keepalive (lightweight): re-apply every 500ms to beat any override
+    setInterval(lock, 500);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  }else{
     init();
   }
 })();
