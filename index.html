@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1725 -->
+<!-- CRMO_v1714 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -926,24 +926,11 @@ html.is-admin #crmo-admin-subbar{
   opacity:1 !important;
   pointer-events:auto !important;
 }
-
-/* v1725: keep View Mode Bar sticky (do not scroll away) */
-#crmo-role-toggle{position:sticky !important; top:0 !important; z-index:100000 !important;}
-
-/* v1725: Force View Mode Bar fixed (no scroll) */
-#crmo-role-toggle{
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100% !important;
-  z-index: 100000 !important;
-}
 </style>
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1725</title>
+<title>CRMO_v1714</title>
 <link href="https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>@media (max-width: 1200px){
@@ -32650,8 +32637,8 @@ function CRMO_clearLocalDataAndReload(){
 <script id="crmo_v1709_bootstrap">
 (function(){
   try{
-    window.CRMO_BUILD_VERSION="1725";
-    window.CRMO_VERSION = "1725";
+    window.CRMO_BUILD_VERSION="1714";
+    window.CRMO_VERSION = "1709";
     
     // v1709: keep UI labels in sync with build version
     window.CRMO_applyVersionLabels = function(){
@@ -32817,184 +32804,5 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 
 })();
 </script>
-
-<script id="crmo-dev-unlock-bars-v1725">
-/*
-  DEV FILE: do NOT change UI/Design.
-  Goal: In online dev/testing, never let top bars disappear because of Auth/RBAC checks.
-  Rule: If URL has ?admin=1 OR ?dev=1, keep the management bars visible.
-*/
-(function(){
-  try{
-    var sp = new URLSearchParams(location.search || "");
-    var DEV = (sp.get("admin")==="1" || sp.get("dev")==="1");
-    if(!DEV) return;
-
-    // Force flags early and keep them sticky.
-    window.CRMO_FORCE_OWNER = 1;
-
-    var SEL = ["#crmo-role-toggle","#crmo-admin-bar","#crmo-admin-subbar"];
-    function forceShowOnce(){
-      try{
-        document.documentElement.classList.add("crmo-owner","is-admin","crmo-auth-optimistic");
-        document.documentElement.setAttribute("data-crmo-admin-flag","1");
-      }catch(e){}
-      SEL.forEach(function(s){
-        var el = document.querySelector(s);
-        if(!el) return;
-        try{ el.hidden = false; }catch(e){}
-        try{ el.removeAttribute("hidden"); }catch(e){}
-        try{ el.setAttribute("aria-hidden","false"); }catch(e){}
-        // CSS-level forcing, plus inline backup
-        try{
-          el.style.setProperty("display","flex","important");
-          el.style.setProperty("visibility","visible","important");
-          el.style.setProperty("opacity","1","important");
-          el.style.setProperty("pointer-events","auto","important");
-        }catch(e){}
-      });
-    }
-
-    // Run immediately, then keep alive lightly.
-    forceShowOnce();
-    setInterval(forceShowOnce, 1000);
-
-    // After any modal close, re-apply (cheap).
-    document.addEventListener("click", function(ev){
-      var t = ev.target;
-      if(!t) return;
-      // Close buttons often contain "סגור" / "×"
-      var tx = (t.textContent || "").trim();
-      if(tx === "×" || tx === "סגור") setTimeout(forceShowOnce, 30);
-    }, true);
-
-  }catch(e){}
-})();
-</script>
-
-
-<script id="crmo-fix-viewbar-fixed-v1725">
-(function(){
-  function applyFixedViewBar(){
-    var bar = document.getElementById('crmo-role-toggle');
-    if(!bar) return;
-    // Create/update spacer right after bar to preserve layout flow
-    var spacerId = 'crmo-role-toggle-spacer';
-    var spacer = document.getElementById(spacerId);
-    if(!spacer){
-      spacer = document.createElement('div');
-      spacer.id = spacerId;
-      spacer.style.width = '100%';
-      // insert after bar in DOM
-      if(bar.parentNode){
-        if(bar.nextSibling) bar.parentNode.insertBefore(spacer, bar.nextSibling);
-        else bar.parentNode.appendChild(spacer);
-      }
-    }
-    // set spacer height to bar height (computed after styles)
-    var h = Math.max(0, bar.getBoundingClientRect().height || bar.offsetHeight || 0);
-    spacer.style.height = h + 'px';
-    // If admin bar is fixed, push it down below view bar
-    var adminBar = document.getElementById('crmo-admin-bar');
-    if(adminBar){
-      adminBar.style.top = h + 'px';
-    }
-    var subbar = document.getElementById('crmo-admin-subbar');
-    if(subbar){
-      // push below admin bar if it is visible and fixed
-      var ah = adminBar ? Math.max(0, adminBar.getBoundingClientRect().height || adminBar.offsetHeight || 0) : 0;
-      subbar.style.top = (h + ah) + 'px';
-    }
-    // Push header below bars if header is fixed/top based
-    var header = document.querySelector('header, #site-header, #crmo-header, .site-header');
-    if(header && (getComputedStyle(header).position === 'fixed' || header.style.position === 'fixed')){
-      var ah2 = adminBar ? Math.max(0, adminBar.getBoundingClientRect().height || adminBar.offsetHeight || 0) : 0;
-      var sh2 = subbar ? Math.max(0, subbar.getBoundingClientRect().height || subbar.offsetHeight || 0) : 0;
-      header.style.top = (h + ah2 + sh2) + 'px';
-    }
-  }
-  window.addEventListener('load', function(){ setTimeout(applyFixedViewBar, 0); setTimeout(applyFixedViewBar, 300); });
-  window.addEventListener('resize', function(){ setTimeout(applyFixedViewBar, 50); });
-  document.addEventListener('DOMContentLoaded', function(){ setTimeout(applyFixedViewBar, 0); });
-})();
-</script>
-
-
-<script id="crmo-detach-viewbar-to-body-v1725">
-(function(){
-  const ROLE_ID = 'crmo-role-toggle';
-  const SPACER_ID = 'crmo-role-toggle-spacer';
-
-  function ensureFixed(bar){
-    if(!bar) return;
-    bar.style.position = 'fixed';
-    bar.style.top = '0';
-    bar.style.left = '0';
-    bar.style.right = '0';
-    bar.style.width = '100%';
-    bar.style.zIndex = '100000';
-  }
-
-  function ensureSpacer(bar){
-    if(!bar) return;
-    let spacer = document.getElementById(SPACER_ID);
-    if(!spacer){
-      spacer = document.createElement('div');
-      spacer.id = SPACER_ID;
-      spacer.style.width = '100%';
-      spacer.style.pointerEvents = 'none';
-      // spacer must be at the original location in the flow: place as first child of body after the bar
-      if(bar.nextSibling) bar.parentNode.insertBefore(spacer, bar.nextSibling);
-      else bar.parentNode.appendChild(spacer);
-    }
-    const h = Math.max(0, bar.getBoundingClientRect().height || bar.offsetHeight || 0);
-    spacer.style.height = h + 'px';
-    return h;
-  }
-
-  function pushStack(h){
-    // Push admin bars below role bar if they are fixed
-    const adminBar = document.getElementById('crmo-admin-bar');
-    if(adminBar) adminBar.style.top = h + 'px';
-    const sub = document.getElementById('crmo-admin-subbar');
-    if(sub){
-      const ah = adminBar ? Math.max(0, adminBar.getBoundingClientRect().height || adminBar.offsetHeight || 0) : 0;
-      sub.style.top = (h + ah) + 'px';
-    }
-  }
-
-  function detach(){
-    const bar = document.getElementById(ROLE_ID);
-    if(!bar) return false;
-    // If bar is inside a transformed parent, fixed will behave badly; move it under body.
-    if(bar.parentElement !== document.body){
-      document.body.prepend(bar);
-    }
-    ensureFixed(bar);
-    const h = ensureSpacer(bar) || 0;
-    pushStack(h);
-    return true;
-  }
-
-  function init(){
-    // First attempt quickly
-    detach();
-    // Re-apply after load for accurate height
-    setTimeout(detach, 50);
-    setTimeout(detach, 300);
-    // Re-apply on resize/orientation change
-    window.addEventListener('resize', () => setTimeout(detach, 50));
-    // If any script rebuilds the bar, re-detach periodically but light (every 2s)
-    setInterval(detach, 2000);
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-})();
-</script>
-
 </body>
 </html>
