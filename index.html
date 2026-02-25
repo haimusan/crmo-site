@@ -33525,6 +33525,37 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 })();
 </script>
 
+<script id="crmo_v1679_admin_tile_edit_fix">
+/* Ensure tile edit always opens in admin mode (guards against later click handlers swallowing the click). */
+(function(){
+  function isManagerRole(){
+    try{
+      var b = document.body;
+      if(!b || !b.classList) return false;
+      return b.classList.contains('role-admin') || b.classList.contains('role-master');
+    }catch(e){ return false; }
+  }
+
+  document.addEventListener('click', function(ev){
+    try{
+      var t = ev.target;
+      if(!t || typeof t.closest !== 'function') return;
+      var btn = t.closest('.tile-edit-btn');
+      if(!btn || !isManagerRole()) return;
+      var wrapper = btn.closest('.tile-edit-wrapper');
+      if(!wrapper) return;
+
+      if(typeof ev.preventDefault === 'function') ev.preventDefault();
+      if(typeof ev.stopPropagation === 'function') ev.stopPropagation();
+
+      if(typeof window.CRMO_openLegacyTileEditor === 'function'){
+        window.CRMO_openLegacyTileEditor(wrapper);
+      }
+    }catch(e){}
+  }, true);
+})();
+</script>
+
 
 <script id="crmo_auth_global_fallback_v1584">
 /* CRMO_v1646: global auth modal fallback
