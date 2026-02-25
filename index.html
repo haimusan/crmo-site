@@ -1,12 +1,58 @@
 <!DOCTYPE html>
-<!-- CRMO_v1729 -->
+<!-- CRMO_v1730 -->
 
 <html dir="rtl" lang="he">
 <head>
+
+<script id="crmo-bruteforce-admin-head-v1730">
+(function(){
+  function hasAdminFlag(){
+    try{
+      var u = new URL(location.href);
+      return u.searchParams.get('admin') === '1';
+    }catch(e){
+      return String(location.search||'').indexOf('admin=1')>=0;
+    }
+  }
+
+  if(hasAdminFlag()){
+    try{
+      window.CRMO_FORCE_OWNER = 1;
+      window.CRMO_SKIP_AUTH = 1;
+      document.documentElement.dataset.crmoAdminFlag = '1';
+      document.documentElement.classList.add('crmo-owner','is-admin');
+      // suppress runtime errors so the page doesn't "freeze" visually
+      window.onerror = function(msg, src, line, col, err){
+        try{ console.error("[CRMO v1730] suppressed error:", msg); }catch(e){}
+        return true;
+      };
+    }catch(e){}
+  }
+
+  // global role switcher (must exist even if main scripts crash)
+  window.CRMO_setRole = function(role){
+    try{
+      localStorage.setItem('crmo_dev_role', String(role||''));
+    }catch(e){}
+    try{
+      document.documentElement.setAttribute('data-crmo-role', String(role||''));
+    }catch(e){}
+    // if the original app function exists, call it (best-effort)
+    try{
+      if(typeof window.switchRole === 'function') window.switchRole(role);
+      if(typeof window.CRMO_switchRole === 'function') window.CRMO_switchRole(role);
+      if(typeof window.setRole === 'function') window.setRole(role);
+    }catch(e){}
+  };
+  window.switchRole = window.switchRole || window.CRMO_setRole;
+})();
+</script>
+
+
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 
-<script id="crmo-force-owner-skip-auth-v1729">
+<script id="crmo-force-owner-skip-auth-v1730">
 (function(){
   try{
     if(window.CRMO_FORCE_OWNER){
@@ -945,10 +991,10 @@ html.is-admin #crmo-admin-subbar{
   pointer-events:auto !important;
 }
 
-/* v1729: keep View Mode Bar sticky (do not scroll away) */
+/* v1730: keep View Mode Bar sticky (do not scroll away) */
 #crmo-role-toggle{position:sticky !important; top:0 !important; z-index:100000 !important;}
 
-/* v1729: Force View Mode Bar fixed (no scroll) */
+/* v1730: Force View Mode Bar fixed (no scroll) */
 #crmo-role-toggle{
   position: fixed !important;
   top: 0 !important;
@@ -958,7 +1004,7 @@ html.is-admin #crmo-admin-subbar{
   z-index: 100000 !important;
 }
 
-/* v1729: Force Admin UI visibility when html.crmo-owner */
+/* v1730: Force Admin UI visibility when html.crmo-owner */
 html.crmo-owner #crmo-admin-bar {
   display: flex !important;
   z-index: 9999999 !important;
@@ -975,7 +1021,7 @@ html.crmo-owner #crmo-admin-subbar {
 /* Push header under admin bar (fallback 50px; JS can refine elsewhere) */
 html.crmo-owner .site-header { top: 50px !important; }
 
-/* v1729: HARD lock View Mode Bar (crmo-role-toggle) */
+/* v1730: HARD lock View Mode Bar (crmo-role-toggle) */
 #crmo-role-toggle{
   position: fixed !important;
   top: 0 !important;
@@ -993,7 +1039,7 @@ html.crmo-owner .site-header { top: 50px !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1729</title>
+<title>CRMO_v1730</title>
 <link href="https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>@media (max-width: 1200px){
@@ -8132,8 +8178,8 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 }
 </style>
 
-<style id="crmo-rolebar-fixed-css-v1729">
-/* v1729: Late override to beat earlier !important rules */
+<style id="crmo-rolebar-fixed-css-v1730">
+/* v1730: Late override to beat earlier !important rules */
 html body #crmo-role-toggle{
   position: fixed !important;
   top: 0 !important;
@@ -8149,8 +8195,8 @@ html body #crmo-role-toggle{
 </style>
 
 
-<style id="crmo-admin-flag-css-v1729">
-/* v1729: Online-safe admin UI display (CSS-first) */
+<style id="crmo-admin-flag-css-v1730">
+/* v1730: Online-safe admin UI display (CSS-first) */
 html[data-crmo-admin-flag="1"] #crmo-admin-bar,
 html[data-crmo-admin-flag="1"] #crmo-admin-subbar,
 html[data-crmo-admin-flag="1"] #crmo-role-toggle,
@@ -8172,6 +8218,82 @@ html[data-crmo-admin-flag="1"] #crmo-header{
   z-index: 999998 !important;
   top: 90px !important;
   pointer-events: auto !important;
+}
+</style>
+
+
+<style id="crmo-admin-overdrive-css-v1730">
+/* v1730: CSS Overdrive for admin=1 — UI must render before JS/auth */
+html[data-crmo-admin-flag="1"] #crmo-role-mode-bar,
+html[data-crmo-admin-flag="1"] #crmo-role-toggle{
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 40px !important;
+  z-index: 1000000 !important;
+  transform: none !important;
+}
+html[data-crmo-admin-flag="1"] #crmo-admin-bar{
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  position: fixed !important;
+  top: 40px !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 50px !important;
+  z-index: 999999 !important;
+}
+html[data-crmo-admin-flag="1"] #crmo-admin-subbar{
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  position: fixed !important;
+  top: 90px !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 999998 !important;
+}
+html[data-crmo-admin-flag="1"] header,
+html[data-crmo-admin-flag="1"] .site-header,
+html[data-crmo-admin-flag="1"] #site-header,
+html[data-crmo-admin-flag="1"] #crmo-header{
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  top: 140px !important; /* 40 + 50 + 50 (subbar approx) */
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  z-index: 999997 !important;
+}
+/* Push page content down under the fixed stack */
+html[data-crmo-admin-flag="1"] body{
+  padding-top: 240px !important; /* safe fallback; JS refines with real heights */
+}
+/* Monster icon force red when admin flag present */
+html[data-crmo-admin-flag="1"] #crmo-user-icon,
+html[data-crmo-admin-flag="1"] .crmo-user-icon,
+html[data-crmo-admin-flag="1"] .monster-icon{
+  filter: none !important;
+  opacity: 1 !important;
+}
+html[data-crmo-admin-flag="1"] #crmo-user-icon *,
+html[data-crmo-admin-flag="1"] .crmo-user-icon *,
+html[data-crmo-admin-flag="1"] .monster-icon *{
+  fill: #d10000 !important;
+  stroke: #d10000 !important;
 }
 </style>
 
@@ -8635,6 +8757,52 @@ var bar = document.getElementById('crmo-admin-bar');
 </style>
 
 <header>
+
+<script id="crmo-bruteforce-admin-head-v1730">
+(function(){
+  function hasAdminFlag(){
+    try{
+      var u = new URL(location.href);
+      return u.searchParams.get('admin') === '1';
+    }catch(e){
+      return String(location.search||'').indexOf('admin=1')>=0;
+    }
+  }
+
+  if(hasAdminFlag()){
+    try{
+      window.CRMO_FORCE_OWNER = 1;
+      window.CRMO_SKIP_AUTH = 1;
+      document.documentElement.dataset.crmoAdminFlag = '1';
+      document.documentElement.classList.add('crmo-owner','is-admin');
+      // suppress runtime errors so the page doesn't "freeze" visually
+      window.onerror = function(msg, src, line, col, err){
+        try{ console.error("[CRMO v1730] suppressed error:", msg); }catch(e){}
+        return true;
+      };
+    }catch(e){}
+  }
+
+  // global role switcher (must exist even if main scripts crash)
+  window.CRMO_setRole = function(role){
+    try{
+      localStorage.setItem('crmo_dev_role', String(role||''));
+    }catch(e){}
+    try{
+      document.documentElement.setAttribute('data-crmo-role', String(role||''));
+    }catch(e){}
+    // if the original app function exists, call it (best-effort)
+    try{
+      if(typeof window.switchRole === 'function') window.switchRole(role);
+      if(typeof window.CRMO_switchRole === 'function') window.CRMO_switchRole(role);
+      if(typeof window.setRole === 'function') window.setRole(role);
+    }catch(e){}
+  };
+  window.switchRole = window.switchRole || window.CRMO_setRole;
+})();
+</script>
+
+
 <div class="wrap">
 <nav aria-label="ראשי" class="nav">
 <a class="logo" href="#top" title="בית"><img alt="CREAMO logo" decoding="async" loading="lazy" src="https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/branding/logo/logo.svg" style="height:40px"/></a>
@@ -32744,8 +32912,8 @@ function CRMO_clearLocalDataAndReload(){
 <script id="crmo_v1709_bootstrap">
 (function(){
   try{
-    window.CRMO_BUILD_VERSION="1729";
-    window.CRMO_VERSION = "1729";
+    window.CRMO_BUILD_VERSION="1730";
+    window.CRMO_VERSION = "1730";
     
     // v1709: keep UI labels in sync with build version
     window.CRMO_applyVersionLabels = function(){
@@ -32912,7 +33080,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 })();
 </script>
 
-<script id="crmo-dev-unlock-bars-v1729">
+<script id="crmo-dev-unlock-bars-v1730">
 /*
   DEV FILE: do NOT change UI/Design.
   Goal: In online dev/testing, never let top bars disappear because of Auth/RBAC checks.
@@ -32967,7 +33135,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 </script>
 
 
-<script id="crmo-fix-viewbar-fixed-v1729">
+<script id="crmo-fix-viewbar-fixed-v1730">
 (function(){
   function applyFixedViewBar(){
     var bar = document.getElementById('crmo-role-toggle');
@@ -33014,7 +33182,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 </script>
 
 
-<script id="crmo-detach-viewbar-to-body-v1729">
+<script id="crmo-detach-viewbar-to-body-v1730">
 (function(){
   const ROLE_ID = 'crmo-role-toggle';
   const SPACER_ID = 'crmo-role-toggle-spacer';
@@ -33091,7 +33259,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 </script>
 
 
-<script id="crmo-login-trycatch-v1729">
+<script id="crmo-login-trycatch-v1730">
 (function(){
   function safeWrap(fnName){
     try{
@@ -33129,7 +33297,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 </script>
 
 
-<script id="crmo-hard-lock-rolebar-v1729">
+<script id="crmo-hard-lock-rolebar-v1730">
 (function(){
   const ROLE_ID='crmo-role-toggle';
   const SPACER_ID='crmo-role-toggle-spacer';
@@ -33200,7 +33368,7 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
 </script>
 
 
-<script id="crmo-ui-bootstrap-v1729">
+<script id="crmo-ui-bootstrap-v1730">
 (function(){
   function hasAdminFlag(){
     try{
@@ -33298,6 +33466,97 @@ try{ localStorage.setItem('crmo:meta:build','1709'); }catch(e){}
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', init);
   } else {
+    init();
+  }
+})();
+</script>
+
+
+<script id="crmo-bruteforce-inline-tabs-v1730">
+(function(){
+  function byId(id){ return document.getElementById(id); }
+  function hasAdminFlag(){ return document.documentElement.dataset.crmoAdminFlag === '1'; }
+
+  function mapRole(text){
+    var t = (text||'').trim();
+    var map = {
+      "בעלים":"owner",
+      "מנהל":"admin",
+      "לקוח":"client",
+      "משתמש רשום":"registered",
+      "משתמש סושיאל":"social",
+      "צופה":"viewer",
+      "ביקורת UX/UI":"ux"
+    };
+    return map[t] || null;
+  }
+
+  function injectOnclicks(container){
+    if(!container) return;
+    var items = container.querySelectorAll('button, a, [role="tab"], .tab, [data-tab], [data-role]');
+    items.forEach(function(el){
+      try{
+        var role = el.getAttribute('data-role') || el.getAttribute('data-tab') || mapRole(el.textContent);
+        if(!role) return;
+        el.setAttribute('onclick', "window.CRMO_setRole('"+role+"')");
+        el.style.pointerEvents = 'auto';
+        el.style.cursor = 'pointer';
+      }catch(e){}
+    });
+  }
+
+  function refineStack(){
+    if(!hasAdminFlag()) return;
+    try{
+      var view = byId('crmo-role-mode-bar') || byId('crmo-role-toggle');
+      var admin = byId('crmo-admin-bar');
+      var sub = byId('crmo-admin-subbar');
+      var header = document.querySelector('header, .site-header, #site-header, #crmo-header');
+
+      var vh = view ? Math.max(0, Math.round(view.getBoundingClientRect().height)) : 0;
+      var ah = admin ? Math.max(0, Math.round(admin.getBoundingClientRect().height)) : 0;
+      var sh = sub ? Math.max(0, Math.round(sub.getBoundingClientRect().height)) : 0;
+
+      if(view) view.style.setProperty('top','0px','important');
+      if(admin) admin.style.setProperty('top', vh + 'px','important');
+      if(sub) sub.style.setProperty('top', (vh + ah) + 'px','important');
+      if(header){
+        header.style.setProperty('top', (vh + ah + sh) + 'px','important');
+      }
+      document.body.style.setProperty('padding-top', (vh + ah + sh + (header ? Math.max(0, Math.round(header.getBoundingClientRect().height)) : 0)) + 'px','important');
+    }catch(e){}
+  }
+
+  function init(){
+    if(!hasAdminFlag()) return;
+
+    // Ensure bars are visible immediately
+    ['crmo-role-mode-bar','crmo-role-toggle','crmo-admin-bar','crmo-admin-subbar'].forEach(function(id){
+      var el = byId(id);
+      if(el){
+        el.style.setProperty('display','flex','important');
+        el.style.setProperty('visibility','visible','important');
+        el.style.setProperty('opacity','1','important');
+        el.style.setProperty('pointer-events','auto','important');
+      }
+    });
+
+    // Inline onclick injection (doesn't rely on main app listeners)
+    injectOnclicks(byId('crmo-role-mode-bar') || byId('crmo-role-toggle'));
+    injectOnclicks(byId('crmo-admin-bar'));
+    injectOnclicks(byId('crmo-admin-subbar'));
+
+    refineStack();
+    setInterval(function(){
+      injectOnclicks(byId('crmo-role-mode-bar') || byId('crmo-role-toggle'));
+      injectOnclicks(byId('crmo-admin-bar'));
+      refineStack();
+    }, 1000);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  }else{
     init();
   }
 })();
