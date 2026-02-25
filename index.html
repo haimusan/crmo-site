@@ -1,8 +1,22 @@
 <!DOCTYPE html>
-<!-- CRMO_v1692 single -->
+<!-- CRMO_v1699 single -->
 
 <html dir="rtl" lang="he">
 <head>
+  <script id="crmo-force-owner-head-v1699">
+/* Force Owner/UI visibility ASAP when ?admin=1 is present (no waiting for Supabase). */
+(function(){
+  try{
+    var sp = new URLSearchParams(location.search || "");
+    if(sp.get("admin") === "1"){
+      window.CRMO_FORCE_OWNER = 1;
+      try{ localStorage.setItem("crmo-role","master"); }catch(e){}
+      document.documentElement.classList.add("crmo-owner","is-admin","crmo-auth-optimistic");
+      document.documentElement.setAttribute("data-crmo-admin-flag","1");
+    }
+  }catch(e){}
+})();
+  </script>
   <script id="crmo-safe-session-v1681">
 (function(){
   window.CRMO_safeGetSession = async function(client){
@@ -64,19 +78,64 @@ window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOi
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1692";
+window.CRMO_BUILD_VERSION = "1699";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = 'CRMO_v1692';
-window.CRMO_VERSION_NUMBER = 1692;
+window.CRMO_VERSION = 'CRMO_v1699';
+window.CRMO_VERSION_NUMBER = 1699;
 window.CRMO_getCurrentVersion = function(){ return String(window.CRMO_VERSION||""); };
 window.CRMO_getCurrentBuild = function(){ return String(window.CRMO_BUILD_VERSION||""); };
 
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
-
-<script id="crmo_factory_reset_v1692">
+<script id="crmo-preauth-bars-v1695">
+/* Prevent admin/view bars flicker on refresh:
+   If a Supabase session token exists in localStorage, show bars immediately
+   while async RBAC/session verification runs. */
 (function(){
-  var FLAG = 'crmo_factory_reset_done__v1692';
+  try{
+    var hasToken = false;
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        if(/^sb-.*-auth-token$/i.test(k)){ hasToken = true; break; }
+      }
+    }catch(e){}
+    if(hasToken){
+      document.documentElement.classList.add('crmo-auth-optimistic');
+      // mark early to let CSS keep bars visible before scripts run
+      document.documentElement.setAttribute('data-crmo-bars','preauth');
+    }
+  }catch(e){}
+})();
+</script>
+
+<style id="crmo-bars-lock-css-v1695">
+/* Hard rule: if there's an authenticated user (optimistic or verified), bars must stay visible. */
+html.crmo-auth-optimistic #crmo-role-toggle,
+html.crmo-auth-optimistic #crmo-admin-bar,
+html.crmo-auth-optimistic #crmo-admin-subbar,
+html.crmo-owner #crmo-role-toggle,
+html.crmo-owner #crmo-admin-bar,
+html.crmo-owner #crmo-admin-subbar,
+html.is-admin #crmo-role-toggle,
+html.is-admin #crmo-admin-bar,
+html.is-admin #crmo-admin-subbar{
+  display:flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+}
+
+/* v1699 zero-flicker: let CSS show bars instantly when owner/admin flags exist */
+.crmo-owner .admin-bar, .is-admin .admin-bar { display: flex !important; opacity: 1 !important; visibility: visible !important; }
+html.crmo-owner #crmo-admin-bar, html.is-admin #crmo-admin-bar, html.crmo-owner #crmo-role-toggle, html.is-admin #crmo-role-toggle, html.crmo-owner #crmo-admin-subbar, html.is-admin #crmo-admin-subbar { display:flex !important; opacity:1 !important; visibility:visible !important; }
+</style>
+
+
+<script id="crmo_factory_reset_v1693">
+(function(){
+  var FLAG = 'crmo_factory_reset_done__v1693';
   try{
     if(localStorage.getItem(FLAG)==='1') return;
     // Clear CRMO local content/state keys (keep Supabase auth tokens sb-*-auth-token)
@@ -96,7 +155,7 @@ window.CRMO_STUDIO_TITLE = "CRMO";
 })();
 </script>
 
-<script id="crmo_preowner_boot_v1692">
+<script id="crmo_preowner_boot_v1693">
 (function(){
   // Show admin + view-mode bars immediately if a Supabase session token exists (prevents "bars disappear for seconds" on refresh)
   try{
@@ -121,7 +180,7 @@ window.CRMO_STUDIO_TITLE = "CRMO";
 })();
 </script>
 
-<style id="crmo_preowner_force_visible_v1692">
+<style id="crmo_preowner_force_visible_v1693">
 /* Force the bars to stay visible whenever a session exists (prevents refresh flicker). */
 html.crmo-preowner #crmo-role-toggle,
 html.crmo-preowner #crmo-admin-bar {
@@ -131,47 +190,23 @@ html.crmo-preowner #crmo-admin-bar {
 }
 </style>
 
-<script id="crmo_prevent_double_tile_editor_v1692">
+<script id="crmo_prevent_double_tile_editor_v1693">
 (function(){
-  // v1692: Ensure ONLY ONE tile editor modal is ever used (keep #tm-tile-editor-modal).
-  // We do NOT call any legacy opener that could create/activate a second modal.
-  window.__CRMO_SINGLE_TILE_EDITOR__ = true;
-
-  window.CRMO_consolidateTileEditors = function(){
-    try{
-      var keep = document.getElementById('tm-tile-editor-modal');
-      // Remove/disable any legacy/duplicate editor modals (keep the TM modal only)
-      var selectors = [
-        '#tileEditorModal',
-        '#tile-editor',
-        '#crmo-tile-editor',
-        '.tile-editor-modal',
-        '.crmo-tile-editor-modal',
-        '.te-modal',
-        '.te-overlay'
-      ];
-      var all = [];
-      selectors.forEach(function(sel){
-        try{ all = all.concat([].slice.call(document.querySelectorAll(sel))); }catch(e){}
-      });
-      var uniq = [];
-      all.forEach(function(el){ if(el && uniq.indexOf(el)===-1) uniq.push(el); });
-      uniq.forEach(function(el){
-        if(!el) return;
-        if(keep && (el === keep || keep.contains(el))) return;
-        try{ el.parentNode && el.parentNode.removeChild(el); }catch(e){}
-      });
-    }catch(e){}
-  };
-
-  // Run once after DOM is ready
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){
-      try{ window.CRMO_consolidateTileEditors(); }catch(e){}
-    });
-  }else{
-    try{ window.CRMO_consolidateTileEditors(); }catch(e){}
-  }
+  // Safety: if a legacy tile editor opener exists, neutralize it so we don't break drag by opening the wrong editor.
+  try{
+    if(window.openTileEditor && !window.__CRMO_LEGACY_TILE_EDITOR_BLOCKED__){
+      window.__CRMO_LEGACY_TILE_EDITOR_BLOCKED__ = true;
+      var _orig = window.openTileEditor;
+      window.openTileEditor = function(){
+        // Prefer the modern editor (#tile-editor) if present; otherwise fallback
+        try{
+          var te = document.getElementById('tile-editor');
+          if(te && te.style) { te.style.display = 'block'; }
+        }catch(e){}
+        try{ return _orig.apply(this, arguments); }catch(e){ return; }
+      };
+    }
+  }catch(e){}
 })();
 </script>
 
@@ -1480,7 +1515,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1692</title>
+<title>CRMO_v1699</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -5213,7 +5248,7 @@ mpAdd.addEventListener('click', function(){
       var anchor = wrapper.querySelector('a.ph');
       if(!anchor) return;
       // v1685: open Tile Editor modal on pencil click (and stop tile click navigation)
-      try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
+      try{ ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation(); }catch(e){}
       try{
         if(window.CRMO_openTileEditor){
           var grid = wrapper.closest('.gallery-grid, .grid, #stands, #exhibitions, #brands, #stores, #retail-interiors') || wrapper.parentElement;
@@ -8825,7 +8860,9 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
       if(owner){
         localStorage.setItem("crmo-role","master");
       }else{
-        localStorage.removeItem("crmo-role");
+        if(!window.CRMO_FORCE_OWNER && document.documentElement.getAttribute("data-crmo-admin-flag")!=="1"){
+          localStorage.removeItem("crmo-role");
+        }
       }
     }catch(e){}
   }
@@ -8895,7 +8932,8 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
 
   async function refresh(){
     const r = await readOwnerFromSupabase();
-    const owner = !!r.owner;
+    const forced = !!window.CRMO_FORCE_OWNER || (document.documentElement.getAttribute('data-crmo-admin-flag')==='1');
+    const owner = forced ? true : !!r.owner;
     const key = (r.email || "") + "|" + (owner ? "1":"0");
     if(key !== lastKey){
       lastKey = key;
@@ -8938,7 +8976,7 @@ body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role swit
     if(!btn || btn.__crmo_hooked) return;
     btn.__crmo_hooked = true;
     btn.addEventListener("click", async function(ev){
-      try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
+      try{ ev.preventDefault(); ev.stopPropagation(); ev.stopImmediatePropagation(); }catch(e){}
       try{
         const client = await getSupabaseClient();
         if(client && client.auth && client.auth.signOut){
@@ -9147,6 +9185,224 @@ html.crmo-owner .tile-admin-icons{ display:flex !important; }
 html.crmo-owner .tile-edit-btn{ pointer-events:auto !important; }
 </style>
 
+
+<style id="crmo-hide-legacy-tile-editor">
+/* v1695: hide legacy/duplicate tile editor modal (keep the modern one #tm-tile-editor-modal) */
+#tileEditorModal,
+#tileEditorBackdrop,
+#tileEditorOverlay,
+#tile-editor-modal,
+#tile-editor-backdrop,
+.tileEditorModal,
+.tile-editor-modal.legacy,
+.legacy-tile-editor{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+</style>
+
+
+<style id="crmo-v1699-hide-legacy-tm-editor">
+/* v1699: Keep ONLY the custom project editor (#tile-editor). Hide legacy "Edit Tile" modal (tm-tile-editor-modal). */
+#tm-tile-editor-modal{ display:none !important; visibility:hidden !important; opacity:0 !important; pointer-events:none !important; }
+</style>
+
+<script id="crmo-v1699-perf-and-double-editor-fix">
+(function(){
+  // ---- Perf: simple bar lock without MutationObserver ----
+  function hasSbToken(){
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        if(/^sb-.*-auth-token$/i.test(k)){
+          var v = localStorage.getItem(k) || '';
+          if(String(v).length > 20) return true;
+        }
+      }
+    }catch(e){}
+    return false;
+  }
+
+  function lockBarsOnce(){
+    try{
+      if(!hasSbToken()) return;
+      document.documentElement.classList.add('crmo-auth-optimistic');
+      document.documentElement.setAttribute('data-crmo-bars','locked');
+      var ids = ['crmo-role-toggle','crmo-admin-bar','crmo-admin-subbar'];
+      for(var i=0;i<ids.length;i++){
+        var el = document.getElementById(ids[i]);
+        if(!el) continue;
+        el.style.display = 'flex';
+        el.style.visibility = 'visible';
+        el.style.opacity = '1';
+        el.style.pointerEvents = 'auto';
+      }
+    }catch(e){}
+  }
+
+  // apply early (as soon as possible)
+  try{ lockBarsOnce(); }catch(e){}
+
+  // re-apply every 2s (cheap) as a safety net
+  var __crmoBarsTimer = null;
+  try{
+    __crmoBarsTimer = setInterval(lockBarsOnce, 2000);
+  }catch(e){}
+
+  // also re-apply after any editor closes (no observers)
+  function hookCloseReapply(){
+    document.addEventListener('click', function(ev){
+      try{
+        var t = ev.target;
+        if(!t || !t.closest) return;
+        if(t.closest('#te-close-x') || t.closest('#te-cancel') || t.closest('.tm-te-close') || t.closest('#tm-te-close')){
+          setTimeout(lockBarsOnce, 30);
+          setTimeout(lockBarsOnce, 250);
+        }
+      }catch(e){}
+    }, true);
+  }
+
+  // ---- Double editor fix: keep ONLY custom editor (#tile-editor) ----
+  function disableLegacyOpenTileEditor(){
+    try{
+      if(typeof window.openTileEditor === 'function'){
+        window.openTileEditor = function(){
+          // legacy disabled in v1699
+          return;
+        };
+      }
+    }catch(e){}
+  }
+
+  function cleanupPencilListeners(){
+    // Remove existing listeners by cloning the pencil buttons (clean slate)
+    try{
+      var btns = document.querySelectorAll('.tile-edit-btn');
+      (btns.forEach || Array.prototype.forEach).call(btns, function(btn){
+        if(!btn || !btn.parentNode) return;
+        var clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+      });
+    }catch(e){}
+  }
+
+  function bindPencilsToCustomEditor(){
+    // Capture phase: stop any legacy scripts from firing
+    document.addEventListener('click', function(ev){
+      try{
+        var t = ev.target;
+        if(!t || !t.closest) return;
+        var btn = t.closest('.tile-edit-btn');
+        if(!btn) return;
+        ev.preventDefault();
+        if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+        else ev.stopPropagation();
+
+        // Open the custom editor (the one with "עריכת פרויקט")
+        var wrapper = btn.closest('.tile-edit-wrapper');
+        if(wrapper && typeof window.CRMO_openLegacyTileEditor === 'function'){
+          window.CRMO_openLegacyTileEditor(wrapper);
+          return;
+        }
+        // Fallback: try showing the panel if it exists
+        var panel = document.getElementById('tile-editor');
+        if(panel){
+          panel.classList.add('open');
+          panel.style.display = 'block';
+          return;
+        }
+        console.error('[CRMO v1699] Editor failed to launch (no custom editor hook)');
+        alert('Editor failed to launch');
+      }catch(e){
+        console.error('[CRMO v1699] Editor failed to launch', e);
+        try{ alert('Editor failed to launch'); }catch(_){}
+      }
+    }, true);
+  }
+
+  function bindSaveToSupabase(){
+    // Ensure the custom editor's Save button pushes to Supabase via CRMO_saveMainNow
+    function attach(){
+      var b = document.getElementById('te-save');
+      if(!b) return false;
+      if(b.__crmo_save_hooked__) return true;
+      b.__crmo_save_hooked__ = true;
+
+      b.addEventListener('click', function(){
+        try{
+          if(typeof window.CRMO_saveMainNow === 'function'){
+            // Let the original save handler update local state first, then push to DB
+            setTimeout(function(){
+              try{ window.CRMO_saveMainNow(); }catch(e){ console.warn('[CRMO v1699] CRMO_saveMainNow failed', e); }
+            }, 0);
+          }
+        }catch(e){}
+      }, true);
+      return true;
+    }
+    // Try now and after DOM ready
+    if(!attach()){
+      document.addEventListener('DOMContentLoaded', function(){
+        attach();
+        setTimeout(attach, 300);
+        setTimeout(attach, 1200);
+      });
+    }
+  }
+
+  function asyncSessionCheckNonBlocking(){
+    // Do not block render: if getSession takes >1s, continue UI anyway.
+    // We simply call CRMO_refreshRoleAndAdminUI, but we won't wait for it to finish before showing UI.
+    try{
+      if(typeof window.CRMO_refreshRoleAndAdminUI === 'function'){
+        var done = false;
+        var t = setTimeout(function(){
+          if(done) return;
+          done = true;
+          // keep UI as-is; bars already locked optimistically
+          try{ lockBarsOnce(); }catch(e){}
+        }, 1000);
+
+        Promise.resolve().then(function(){
+          return window.CRMO_refreshRoleAndAdminUI();
+        }).then(function(){
+          if(done) return;
+          done = true;
+          clearTimeout(t);
+          try{ lockBarsOnce(); }catch(e){}
+        }).catch(function(){
+          if(done) return;
+          done = true;
+          clearTimeout(t);
+          try{ lockBarsOnce(); }catch(e){}
+        });
+      }
+    }catch(e){}
+  }
+
+  // Boot: disable legacy, clean listeners, bind custom, hook save
+  function boot(){
+    disableLegacyOpenTileEditor();
+    cleanupPencilListeners();
+    bindPencilsToCustomEditor();
+    bindSaveToSupabase();
+    hookCloseReapply();
+    asyncSessionCheckNonBlocking();
+    // Final safety: lock bars now
+    lockBarsOnce();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', boot);
+  }else{
+    boot();
+  }
+})();
+</script>
 </head>
 <body class="gallery-hover-ready role-guest">
 
@@ -22710,6 +22966,12 @@ if (key === currentGalleryKey){
   var currentEditIndex = null;
   var currentEditGalleryKey = null;
   function openTileEditor(key, idx){
+    // v1693: prevent double-open (duplicate listeners)
+    try{
+      if(window.__CRMO_TILE_EDITOR_OPEN__) return;
+      if(typeof tileEditorModal !== "undefined" && tileEditorModal && tileEditorModal.getAttribute("aria-hidden")==="false") { window.__CRMO_TILE_EDITOR_OPEN__=true; return; }
+    }catch(e){}
+
     ensureGalleryState(key);
     var arr = galleryState[key];
     if (!arr || !arr[idx]) return;
@@ -22736,6 +22998,7 @@ if (key === currentGalleryKey){
     if (tileEditorModal){
       tileEditorModal.style.display = "flex";
       tileEditorModal.setAttribute("aria-hidden", "false");
+      try{ window.__CRMO_TILE_EDITOR_OPEN__ = true; }catch(e){}
     }
   }
   window.CRMO_openTileEditor = openTileEditor;
@@ -22745,6 +23008,7 @@ if (key === currentGalleryKey){
     if (tileEditorModal){
       tileEditorModal.style.display = "none";
       tileEditorModal.setAttribute("aria-hidden", "true");
+      try{ window.__CRMO_TILE_EDITOR_OPEN__ = false; }catch(e){}
     }
   }
   function saveTileEditor(){
@@ -33956,7 +34220,46 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
       el.textContent=String(msg||'');
       el.style.display='block';
       clearTimeout(el.__t);
-      el.__t=setTimeout(function(){ try{ el.style.display='none'; }catch(e){} }, 2400);
+      el.__t=set
+<script id="crmo-hide-legacy-tile-editor-js">
+/* v1695: actively suppress any legacy/duplicate tile editor modal that may be opened by old listeners */
+(function(){
+  function hideLegacy(){
+    try{
+      var ids = ['tileEditorModal','tileEditorBackdrop','tileEditorOverlay','tile-editor-modal','tile-editor-backdrop'];
+      ids.forEach(function(id){
+        var el = document.getElementById(id);
+        if(el && el.id !== 'tm-tile-editor-modal'){
+          el.style.display = 'none';
+          el.style.visibility = 'hidden';
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
+          el.setAttribute('aria-hidden','true');
+        }
+      });
+      var nodes = document.querySelectorAll('.tileEditorModal,.tile-editor-modal,.legacy-tile-editor');
+      nodes.forEach(function(el){
+        if(el && el.id !== 'tm-tile-editor-modal'){
+          el.style.display = 'none';
+          el.style.visibility = 'hidden';
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
+          el.setAttribute('aria-hidden','true');
+        }
+      });
+    }catch(e){}
+  }
+  hideLegacy();
+  try{
+    var mo = new MutationObserver(function(){ hideLegacy(); });
+    mo.observe(document.documentElement, { childList:true, subtree:true });
+  }catch(e){}
+  window.addEventListener('focus', hideLegacy, true);
+  window.addEventListener('pageshow', hideLegacy, true);
+})();
+</script>
+
+Timeout(function(){ try{ el.style.display='none'; }catch(e){} }, 2400);
     }catch(e){}
   };
 })();
@@ -33978,346 +34281,49 @@ window.CRMO_PLACEHOLDER_DATA = PLACEHOLDER_DATA;
 </script>
 
 
-<script id="crmo_tile_editor_singleton_patch_v1692">
+<script id="crmo-bars-lock-runtime-v1695">
 (function(){
-  // v1692: Wrap the tile editor openers so clicking the pencil opens ONLY the TM editor.
-  function consolidate(){ try{ window.CRMO_consolidateTileEditors && window.CRMO_consolidateTileEditors(); }catch(e){} }
-
-  // Capture current assigned opener once everything is loaded
-  function install(){
+  function hasSbToken(){
     try{
-      consolidate();
-
-      // Prefer TM modal opener if present (it is wired to #tm-tile-editor-modal in this build)
-      var baseOpen = window.CRMO_openTileEditor;
-      if(typeof baseOpen !== 'function') return;
-
-      if(!window.__CRMO_BASE_OPEN_TILE_EDITOR__){
-        window.__CRMO_BASE_OPEN_TILE_EDITOR__ = baseOpen;
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(k && /^sb-.*-auth-token$/i.test(k)) return true;
       }
-
-      window.CRMO_openTileEditor = function(key, idx){
-        consolidate();
-        return window.__CRMO_BASE_OPEN_TILE_EDITOR__.apply(this, arguments);
-      };
-
-      // Kill any legacy global opener that might still be called by old listeners
-      window.openTileEditor = function(){
-        // Route to the single opener if possible
-        try{
-          var args = arguments;
-          if(args && args.length>=2 && typeof window.CRMO_openTileEditor === 'function'){
-            return window.CRMO_openTileEditor(args[0], args[1]);
-          }
-        }catch(e){}
-        return;
-      };
-
-      // Strong ESC handling: close TM modal only
-      document.addEventListener('keydown', function(ev){
-        try{
-          if(ev.key !== 'Escape') return;
-          var tm = document.getElementById('tm-tile-editor-modal');
-          if(tm && tm.getAttribute('aria-hidden') === 'false'){
-            // Trigger existing close buttons if wired
-            var btn = document.getElementById('tm-te-close') || tm.querySelector('.tm-te-close');
-            if(btn) btn.click();
-            else {
-              tm.setAttribute('aria-hidden','true');
-              tm.style.display='none';
-            }
-          }
-        }catch(e){}
-      }, true);
-
     }catch(e){}
+    return false;
   }
-
-  if(document.readyState === 'complete' || document.readyState === 'interactive'){
-    setTimeout(install, 0);
-  }else{
-    window.addEventListener('DOMContentLoaded', install);
+  function shouldLock(){
+    var de = document.documentElement;
+    return hasSbToken() || de.classList.contains('crmo-owner') || de.classList.contains('is-admin') || de.classList.contains('crmo-auth-optimistic') || de.getAttribute('data-crmo-admin-flag')==='1';
   }
-})();
-</script>
-
-<!-- CRMO Simple Tile Editor Modal v1692 -->
-<style id="crmo-simple-editor-css-v1692">
-  #crmo-simple-editor-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;z-index:999999;}
-  #crmo-simple-editor{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(720px,92vw);max-height:86vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.35);display:none;z-index:1000000;padding:18px 18px 14px;}
-  #crmo-simple-editor .crmo-se-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
-  #crmo-simple-editor .crmo-se-title{font-size:18px;font-weight:700;margin:0;}
-  #crmo-simple-editor .crmo-se-close{border:0;background:transparent;font-size:22px;line-height:1;cursor:pointer;padding:6px 10px;border-radius:10px;}
-  #crmo-simple-editor label{display:block;font-size:13px;margin-top:10px;margin-bottom:6px;opacity:.85;}
-  #crmo-simple-editor input, #crmo-simple-editor textarea{width:100%;box-sizing:border-box;border:1px solid rgba(0,0,0,.25);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;}
-  #crmo-simple-editor textarea{min-height:90px;resize:vertical;}
-  #crmo-simple-editor .crmo-se-actions{display:flex;gap:10px;justify-content:flex-start;margin-top:14px;}
-  #crmo-simple-editor .crmo-se-btn{border:1px solid rgba(0,0,0,.25);background:#fff;border-radius:999px;padding:10px 16px;font-size:14px;cursor:pointer;}
-  #crmo-simple-editor .crmo-se-btn.primary{background:#111;color:#fff;border-color:#111;}
-  /* Safety: hide any legacy tile editor modals if they still exist */
-  #tileEditorModal, #tile-editor, #tm-tile-editor-modal, .tile-editor-modal, .tm-tile-editor-modal{display:none !important;}
-</style>
-
-<div id="crmo-simple-editor-backdrop" aria-hidden="true"></div>
-<div id="crmo-simple-editor" role="dialog" aria-modal="true" aria-label="עורך אריח">
-  <div class="crmo-se-header">
-    <h3 class="crmo-se-title">עריכת אריח</h3>
-    <button class="crmo-se-close" type="button" aria-label="סגירה">×</button>
-  </div>
-
-  <div style="font-size:12px;opacity:.7;margin-bottom:6px" id="crmo-se-subtitle"></div>
-
-  <label for="crmo-se-title">כותרת</label>
-  <input id="crmo-se-title" type="text" placeholder="פרויקט לדוגמה"/>
-
-  <label for="crmo-se-desc">תיאור</label>
-  <textarea id="crmo-se-desc" placeholder="פרויקט לדוגמה"></textarea>
-
-  <label for="crmo-se-img">Image URL</label>
-  <input id="crmo-se-img" type="text" placeholder="https://..."/>
-
-  <div class="crmo-se-actions">
-    <button class="crmo-se-btn primary" id="crmo-se-save" type="button">שמירה</button>
-    <button class="crmo-se-btn" id="crmo-se-cancel" type="button">סגירה</button>
-  </div>
-</div>
-
-<script id="crmo-simple-tile-editor-v1692">
-(function(){
-  "use strict";
-
-  function q(sel){ return document.querySelector(sel); }
-  var backdrop = null, modal = null, btnClose=null, btnCancel=null, btnSave=null;
-  var inpTitle=null, inpDesc=null, inpImg=null, subtitle=null;
-
-  var ctx = { galleryKey:null, index:null };
-
-  function ensureEls(){
-    if(modal) return true;
-    backdrop = q('#crmo-simple-editor-backdrop');
-    modal = q('#crmo-simple-editor');
-    btnClose = modal ? modal.querySelector('.crmo-se-close') : null;
-    btnCancel = q('#crmo-se-cancel');
-    btnSave = q('#crmo-se-save');
-    inpTitle = q('#crmo-se-title');
-    inpDesc  = q('#crmo-se-desc');
-    inpImg   = q('#crmo-se-img');
-    subtitle = q('#crmo-se-subtitle');
-    if(!backdrop || !modal || !btnSave || !inpTitle || !inpDesc || !inpImg){
-      console.error('[v1692] Editor failed to mount elements');
-      alert('Editor failed to launch');
-      return false;
-    }
-    // close handlers
-    function close(){ closeEditor(); }
-    try{ btnClose && btnClose.addEventListener('click', close); }catch(e){}
-    try{ btnCancel && btnCancel.addEventListener('click', close); }catch(e){}
-    try{ backdrop && backdrop.addEventListener('click', close); }catch(e){}
-    document.addEventListener('keydown', function(ev){
-      if(ev.key === 'Escape' && isOpen()){ ev.preventDefault(); closeEditor(); }
+  function forceShowOnce(){
+    if(!shouldLock()) return;
+    var role = document.getElementById('crmo-role-toggle');
+    var admin = document.getElementById('crmo-admin-bar');
+    var sub = document.getElementById('crmo-admin-subbar');
+    [role,admin,sub].forEach(function(el){
+      if(!el) return;
+      el.style.display='flex';
+      el.style.visibility='visible';
+      el.style.opacity='1';
+      el.style.pointerEvents='auto';
+      el.setAttribute('data-crmo-locked','1');
     });
-
-    btnSave.addEventListener('click', async function(){
-      try{
-        if(ctx.galleryKey == null || ctx.index == null){
-          console.error('[v1692] save without context', ctx);
-          alert('Editor failed to launch');
-          return;
-        }
-        // Ensure galleryState exists
-        if(typeof window.ensureGalleryState === 'function'){
-          window.ensureGalleryState(ctx.galleryKey);
-        }else if(typeof ensureGalleryState === 'function'){
-          ensureGalleryState(ctx.galleryKey);
-        }
-
-        var gs = window.CRMO__galleryState || (typeof galleryState !== 'undefined' ? galleryState : null);
-        if(!gs || !gs[ctx.galleryKey]){
-          console.error('[v1692] galleryState missing', ctx.galleryKey);
-          alert('Editor failed to launch');
-          return;
-        }
-        var arr = gs[ctx.galleryKey];
-        if(!arr[ctx.index]) arr[ctx.index] = {client:"",title:"",desc:"",tag:"",imageName:"",imageSrc:"",extraImages:[],multi:false};
-
-        var t = (inpTitle.value || '').trim();
-        var d = (inpDesc.value || '').trim();
-        var img = (inpImg.value || '').trim();
-
-        // Clean content requirement
-        if(t === '11' || t === '111') t = 'פרויקט לדוגמה';
-        if(d === '11' || d === '111') d = 'פרויקט לדוגמה';
-
-        arr[ctx.index].title = t || 'פרויקט לדוגמה';
-        arr[ctx.index].desc  = d || 'פרויקט לדוגמה';
-        arr[ctx.index].imageSrc = img;
-
-        // sync to DOM if helpers exist
-        try{
-          if(typeof window.syncTileToDom === 'function') window.syncTileToDom(ctx.galleryKey, ctx.index);
-          else if(typeof syncTileToDom === 'function') syncTileToDom(ctx.galleryKey, ctx.index);
-        }catch(e){}
-        try{
-          if(typeof window.persistGalleryState === 'function') window.persistGalleryState(ctx.galleryKey);
-          else if(typeof persistGalleryState === 'function') persistGalleryState(ctx.galleryKey);
-        }catch(e){}
-        try{
-          if(typeof window.renderCurrentGallery === 'function') window.renderCurrentGallery();
-          else if(typeof renderCurrentGallery === 'function') renderCurrentGallery();
-        }catch(e){}
-
-        // Supabase upsert - keep existing logic (CRMO_saveMainNow)
-        if(typeof window.CRMO_saveMainNow === 'function'){
-          var r = await window.CRMO_saveMainNow();
-          if(r && r.ok){
-            alert('Saved ✓');
-          }else{
-            alert('Save failed');
-            console.error('[v1692] saveMainNow returned error', r);
-          }
-        }else{
-          console.error('[v1692] CRMO_saveMainNow not found - cannot upsert');
-          alert('Save failed');
-        }
-
-        closeEditor();
-      }catch(err){
-        console.error('[v1692] Save error', err);
-        alert('Save failed');
-      }
-    });
-
-    return true;
   }
-
-  function isOpen(){
-    return modal && modal.style.display === 'block';
-  }
-
-  function openEditor(galleryKey, index, tileEl){
-    if(!ensureEls()) return;
-    ctx.galleryKey = galleryKey;
-    ctx.index = index;
-
-    // Pull current values
-    var gs = window.CRMO__galleryState || (typeof galleryState !== 'undefined' ? galleryState : null);
-    var tObj = null;
-    if(gs && gs[galleryKey] && gs[galleryKey][index]) tObj = gs[galleryKey][index];
-
-    var t = (tObj && tObj.title) ? String(tObj.title) : '';
-    var d = (tObj && tObj.desc) ? String(tObj.desc) : '';
-    var img = (tObj && tObj.imageSrc) ? String(tObj.imageSrc) : '';
-
-    // Clean content
-    if(t === '11' || t === '111') t = 'פרויקט לדוגמה';
-    if(d === '11' || d === '111') d = 'פרויקט לדוגמה';
-
-    inpTitle.value = t || 'פרויקט לדוגמה';
-    inpDesc.value  = d || 'פרויקט לדוגמה';
-    inpImg.value   = img || '';
-
-    // Subtitle
-    try{
-      var gLabel = galleryKey;
-      if(window.CRMO_GALLERIES_MAP && window.CRMO_GALLERIES_MAP[galleryKey] && window.CRMO_GALLERIES_MAP[galleryKey].title){
-        gLabel = window.CRMO_GALLERIES_MAP[galleryKey].title;
-      }
-      subtitle.textContent = gLabel + ' • אריח ' + (index+1);
-    }catch(e){}
-
-    backdrop.style.display = 'block';
-    modal.style.display = 'block';
-  }
-
-  function closeEditor(){
-    if(!modal || !backdrop) return;
-    modal.style.display = 'none';
-    backdrop.style.display = 'none';
-  }
-
-  // Compute gallery key + index from pencil click
-  function resolveContextFromPencil(btn){
-    try{
-      var wrapper = btn.closest('.tile-edit-wrapper');
-      if(!wrapper) return null;
-      var grid = wrapper.closest('.gallery-grid, .grid');
-      var section = wrapper.closest('section[id], .section, .gallery-section') || null;
-
-      // Determine galleryKey by section id mapping
-      var galleryKey = null;
-      if(window.CRMO_GALLERIES_MAP){
-        for(var k in window.CRMO_GALLERIES_MAP){
-          if(!window.CRMO_GALLERIES_MAP.hasOwnProperty(k)) continue;
-          var cfg = window.CRMO_GALLERIES_MAP[k];
-          if(cfg && cfg.sectionId){
-            var secEl = document.getElementById(cfg.sectionId);
-            if(secEl && (secEl.contains(wrapper))) { galleryKey = k; break; }
-          }
-        }
-      }
-      if(!galleryKey){
-        // fallback: currentGalleryKey if exists
-        if(typeof window.currentGalleryKey !== 'undefined' && window.currentGalleryKey) galleryKey = window.currentGalleryKey;
-        else if(typeof currentGalleryKey !== 'undefined' && currentGalleryKey) galleryKey = currentGalleryKey;
-      }
-      if(!galleryKey) return null;
-
-      // index in its grid
-      var wrappers = [];
-      try{
-        wrappers = Array.prototype.slice.call((grid && grid.querySelectorAll) ? grid.querySelectorAll('.tile-edit-wrapper') : []);
-      }catch(e){}
-      var idx = wrappers.length ? wrappers.indexOf(wrapper) : -1;
-      if(idx < 0){
-        // fallback: count previous siblings with class tile-edit-wrapper
-        idx = 0;
-        var n = wrapper;
-        while(n && (n = n.previousElementSibling)){
-          if(n.classList && n.classList.contains('tile-edit-wrapper')) idx++;
-        }
-      }
-      return { galleryKey: galleryKey, index: idx, wrapper: wrapper };
-    }catch(e){
-      console.error('[v1692] resolveContext error', e);
-      return null;
-    }
-  }
-
-  // Clean slate: remove existing openTileEditor / consolidate logic
-  try{ window.openTileEditor = null; }catch(e){}
-  try{ window.CRMO_openTileEditor = null; }catch(e){}
-
-  // Capture click to prevent legacy listeners and open our modal
+  try{ forceShowOnce(); }catch(e){}
+  document.addEventListener('DOMContentLoaded', function(){ try{ forceShowOnce(); }catch(e){} }, {once:true});
+  try{ setInterval(function(){ try{ forceShowOnce(); }catch(e){} }, 2000); }catch(e){}
+  document.addEventListener('keyup', function(ev){
+    if(ev && ev.key === 'Escape'){ try{ setTimeout(forceShowOnce, 0); }catch(e){} }
+  }, true);
   document.addEventListener('click', function(ev){
-    try{
-      var btn = ev.target && ev.target.closest ? ev.target.closest('button.tile-edit-btn') : null;
-      if(!btn) return;
-      // prevent any other handlers (double modal etc.)
-      ev.preventDefault();
-      ev.stopPropagation();
-      if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
-
-      var ctx2 = resolveContextFromPencil(btn);
-      if(!ctx2){
-        console.error('[v1692] Editor failed to resolve context');
-        alert('Editor failed to launch');
-        return;
-      }
-      // ensure gallery state exists
-      try{
-        if(typeof window.ensureGalleryState === 'function') window.ensureGalleryState(ctx2.galleryKey);
-        else if(typeof ensureGalleryState === 'function') ensureGalleryState(ctx2.galleryKey);
-      }catch(e){}
-
-      openEditor(ctx2.galleryKey, ctx2.index, ctx2.wrapper);
-    }catch(err){
-      console.error('[v1692] Editor failed to launch', err);
-      alert('Editor failed to launch');
+    var t = ev && ev.target;
+    if(!t) return;
+    if(t.classList && (t.classList.contains('modal-backdrop') || t.classList.contains('close') || t.getAttribute('data-action')==='close')){
+      try{ setTimeout(forceShowOnce, 0); }catch(e){}
     }
   }, true);
-
 })();
 </script>
-
 </body>
 </html>
