@@ -32180,13 +32180,26 @@ function boot(){
 
 <script id="CRMO_v1646_role_bootstrap">
 (function(){
+  window.CRMO_OWNER_EMAILS = ['boochin@gmail.com', 'boochin@walla.co.il'];
+
+  function isOwnerEmail(email){
+    return !!email && window.CRMO_OWNER_EMAILS.includes(String(email).toLowerCase().trim());
+  }
+
   function byId(id){ return document.getElementById(id); }
   function setRoleClasses(role){
     var root = document.body;
     if(!root) return;
+
+    if(isOwnerEmail(window.CRMO_currentSessionEmail)){
+      role = 'master';
+    }
+
     root.classList.remove('role-admin','role-user','role-guest','role-master','role-usability','role-ux','role-user-social','role-client');
+    root.classList.remove('is-owner','is-admin');
     if(role === 'master'){
       root.classList.add('role-admin','role-master');
+      root.classList.add('is-owner','is-admin');
     }else if(role === 'admin'){
       root.classList.add('role-admin');
     }else if(role === 'ux'){
@@ -32256,6 +32269,16 @@ function boot(){
 
       var sb = await getSb();
 
+      var out = await sb.auth.getSession();
+      var session = out && out.data && out.data.session ? out.data.session : null;
+      var email = session && session.user ? session.user.email : '';
+      window.CRMO_currentSessionEmail = String(email || '').toLowerCase().trim();
+
+      if(session && isOwnerEmail(email)){
+        setRoleClasses('master');
+        return;
+      }
+
       // get role from db
       var dbRole = await readProfileRole(sb);
       if(dbRole){
@@ -32267,8 +32290,6 @@ function boot(){
 
       // fallback: if signed in but no profile row yet -> user
       try{
-        var out = await sb.auth.getSession();
-        var session = out && out.data && out.data.session ? out.data.session : null;
         if(session) setRoleClasses('user');
       }catch(e){}
     }catch(e){}
@@ -32280,9 +32301,18 @@ function boot(){
     try{
       if(window.CRMO_getSbClient){
         window.CRMO_getSbClient().then(function(sb){
-          sb.auth.onAuthStateChange(function(){ bootstrap(); });
+          sb.auth.onAuthStateChange(function(event, session){
+            if(event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION' || event === 'USER_UPDATED' || event === 'SIGNED_OUT'){
+              window.CRMO_currentSessionEmail = session && session.user && session.user.email ? String(session.user.email).toLowerCase().trim() : '';
+              bootstrap();
+            }
+          });
         }).catch(function(){});
       }
+    }catch(e){}
+
+    try{
+      window.addEventListener('focus', function(){ bootstrap(); });
     }catch(e){}
   }
 
