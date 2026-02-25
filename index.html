@@ -32416,6 +32416,35 @@ try{
     return hits;
   };
 
+  // Quick helper: set one tile image URL and save to Supabase in one call
+  // Usage: CRMO_uploadOneUrlAndSave('https://...')
+  window.CRMO_uploadOneUrlAndSave = async function(imageUrl, galleryKey) {
+    const src = String(imageUrl || '').trim();
+    if (!src) return { ok:false, error:'missing_url' };
+
+    // try to find a target tile (optionally by gallery key)
+    const scope = galleryKey
+      ? (document.querySelector('[data-gallery-key="' + galleryKey + '"]') || document.getElementById(galleryKey) || document)
+      : document;
+
+    const tile = scope.querySelector('.brandcell, .tile, .tm-tile, [data-tile], .ph');
+    if (!tile) return { ok:false, error:'tile_not_found' };
+
+    // update first image/link in tile
+    const img = tile.querySelector('img');
+    if (img) img.setAttribute('src', src);
+    const a = tile.querySelector('a');
+    if (a) a.setAttribute('href', src);
+
+    // sync and persist
+    try{ if (window.CRMO_tilesManagerSyncFromDom) window.CRMO_tilesManagerSyncFromDom(tile); }catch(e){}
+    try{ if (window.CRMO_syncAllGalleryTiles) window.CRMO_syncAllGalleryTiles(); }catch(e){}
+    try{ if (window.CRMO_persistEditorState) window.CRMO_persistEditorState('uploadOneUrlAndSave'); }catch(e){}
+
+    if (window.CRMO_saveMainNow) return await window.CRMO_saveMainNow();
+    return { ok:true, warning:'save_function_missing' };
+  };
+
   // DB helpers
   window.CRMO_dbPing = async function() {
     const sb = await getSb();
