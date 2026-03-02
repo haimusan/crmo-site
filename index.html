@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- CRMO_v2043 -->
+<!-- CRMO_v2044 -->
 
 <html dir="rtl" lang="he">
 <head>
 
-<script>window.CRMO_VERSION="v2043";</script>
+<script>window.CRMO_VERSION="v2044";</script>
 <script id="crmo_storage_ns">
 (function(){
   try{
@@ -1481,7 +1481,7 @@ form textarea.autogrow{ overflow:hidden; resize:none; }
     };
   }catch(e){}
 })();</script>
-<script>(function(){try{var p=(location.pathname||'').split('/').pop()||'CRMO_v2043.html';p=p.split('?')[0].split('#')[0];
+<script>(function(){try{var p=(location.pathname||'').split('/').pop()||'CRMO_v2044.html';p=p.split('?')[0].split('#')[0];
 var t=document.querySelector('head>title')||(function(){var el=document.createElement('title');document.head.appendChild(el);return el;})();t.textContent=p;
 var og=document.querySelector('meta[property="og:title"]');if(og)og.setAttribute('content',p);
 var tw=document.querySelector('meta[name="twitter:title"]');if(tw)tw.setAttribute('content',p);}catch(e){}})();</script>
@@ -3687,7 +3687,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
   left:12px;
 }
 </style>
-<style id="CRMO_v2043_cosmetic_css">
+<style id="CRMO_v2044_cosmetic_css">
 /* v1092 cosmetics: close buttons + brand dropdown + remove button */
 #tile-editor .te-header{ position:relative; padding-left:44px; }
 #tile-editor .te-close-x{
@@ -4869,7 +4869,7 @@ if(!finalList.length){
         currentAnchor.setAttribute('data-files', filesValue);
         currentWrapper.setAttribute('data-files', filesValue);
 
-        // v2043: שומר גם איזה קבצים להציג בלייטבוקס
+        // v2044: שומר גם איזה קבצים להציג בלייטבוקס
         try{
           var visValue = (visibleFinal || []).join(',');
           if (visibleFinal && visibleFinal.length && finalList && visibleFinal.length < finalList.length){
@@ -5284,12 +5284,15 @@ body:not(.role-guest) #crmo-role-toggle .crmo-auth-status svg{
    Production safety (v2042 index):
    Hide dev/admin UI unless authenticated (session exists)
    ========================================================= */
-body:not(.crmo-authenticated) #crmo-role-toggle{ display:none !important; }
-body:not(.crmo-authenticated) #crmo-admin-bar{ display:none !important; }
-body:not(.crmo-authenticated) #crmo-admin-subbar{ display:none !important; }
-body:not(.crmo-authenticated) #crmo-admin-subbar2{ display:none !important; }
-body:not(.crmo-authenticated) .crmo-admin-only{ display:none !important; }
-
+/* =========================================================
+   ADMIN BARS VISIBILITY (v2044)
+   Show admin/dev UI only for admin/master/ux roles (body.role-admin)
+   ========================================================= */
+body:not(.role-admin) #crmo-role-toggle{ display:none !important; }
+body:not(.role-admin) #crmo-admin-bar{ display:none !important; }
+body:not(.role-admin) #crmo-admin-subbar{ display:none !important; }
+body:not(.role-admin) #crmo-admin-subbar2{ display:none !important; }
+body:not(.role-admin) .crmo-admin-only{ display:none !important; }
 </style>
 <style id="crmo_admin_icons_fix">
 body.role-admin .tile-edit-btn{
@@ -5413,7 +5416,7 @@ body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
 /* 6. אם בפרודקשן תרצה להסתיר לגמרי באריח חד שכבתי,
    אפשר להחזיר כאן display:none; ל-tile-single .tile-layer-btn */
 </style>
-<style id="CRMO_v2043_brand_dropdown_css">
+<style id="CRMO_v2044_brand_dropdown_css">
 /* --- Brand dropdown (click-to-open) --- */
 .te-brand-field,
 .tm-brand-field{
@@ -5562,7 +5565,7 @@ body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
 }
 </style>
 
-<style id="CRMO_v2043_cosmetics">
+<style id="CRMO_v2044_cosmetics">
 /* ===== v1093 cosmetics (requested) ===== */
 
 /* Legacy tile editor (#tile-editor): close X should be plain on light bg */
@@ -5897,7 +5900,7 @@ section[id^="stands-"] nav.subcats{
 }
 </style>
 
-<style id="CRMO_v2043_overrides">
+<style id="CRMO_v2044_overrides">
 /* v1179: immediate update + visuals for tile manager */
 #tile-editor .te-close-x{ color:#d00; }
 #tile-editor .mp-row{ cursor:default; }
@@ -5963,7 +5966,7 @@ section[id^="stands-"] nav.subcats{
 #tile-editor .mp-drag-handle:active{ cursor:grabbing; }
 </style>
 
-<style id="CRMO_v2043_header_buttons_admin_css">
+<style id="CRMO_v2044_header_buttons_admin_css">
 /* v1205: Header buttons admin (visible only in admin role) */
 body:not(.role-admin) #crmo-header-admin{ display:none !important; }
 #crmo-header-admin{
@@ -6211,7 +6214,7 @@ body.role-admin #crmo-galleries-admin{
 </style>
 
 
-<style id="CRMO_v2043_future_admin_tabs_css">
+<style id="CRMO_v2044_future_admin_tabs_css">
 /* v1216: future admin tabs placeholders (visual only) */
 body:not(.role-admin) .crmo-future-panel{ display:none !important; }
 
@@ -6244,7 +6247,7 @@ body.role-admin .crmo-future-panel{
   font-size: 13px;
 }
 </style>
-<style id="CRMO_v2043_report_css">
+<style id="CRMO_v2044_report_css">
 #crmo-report-admin .crmo-report-wrap{
   display:grid;
   gap:12px;
@@ -6370,7 +6373,7 @@ body.role-admin .crmo-future-panel{
   font-size:13px;
 }
 </style>
-<style id="CRMO_v2043_ui_polish">
+<style id="CRMO_v2044_ui_polish">
 /* v1266: polish role tabs (user tabs) + admin tabs + report panel consistency */
 #crmo-role-toggle .crmo-role-tab{
   background:#ededed;
@@ -6422,7 +6425,7 @@ body.role-admin .crmo-future-panel{
 }
 </style>
 
-<style id="CRMO_v2043_ui_polish">
+<style id="CRMO_v2044_ui_polish">
 /* v1267: clearer active role tab + hide Settings for UX reviewer + polish Settings panel */
 #crmo-role-toggle .crmo-role-tab{
   background:#f2f2f2;
@@ -6469,7 +6472,7 @@ body.role-ux #crmo-settings-admin{
 
 
 
-<style id="CRMO_v2043_permissions_css">
+<style id="CRMO_v2044_permissions_css">
 /* Permissions tab (v1233): master-only admin management + demo link */
 #crmo-permissions-admin .crmo-perms-grid{
   display:grid;
@@ -7214,7 +7217,7 @@ html.crmo-usability-public #crmo-role-toggle{
 </style>
 
 
-<style id="CRMO_v2043_admin_dedupe_css">
+<style id="CRMO_v2044_admin_dedupe_css">
 /* Hide duplicated panel headers (titles/open buttons) – tabs bar is the single control */
 #crmo-header-admin .crmo-header-admin-head-top,
 #crmo-galleries-admin .crmo-galleries-admin-head-top{
@@ -7223,7 +7226,7 @@ html.crmo-usability-public #crmo-role-toggle{
 </style>
 
 
-<style id="CRMO_v2043_galleries_admin_gap_fix_css">
+<style id="CRMO_v2044_galleries_admin_gap_fix_css">
 /* v1212: remove extra white container/gap between admin tabs and galleries admin content */
 body.role-admin #crmo-galleries-admin{
   padding-top: 0 !important;
@@ -7236,7 +7239,7 @@ body.role-admin #crmo-galleries-admin .wrap{
 }
 </style>
 
-<style id="CRMO_v2043_internal_editor_layers">
+<style id="CRMO_v2044_internal_editor_layers">
 /* v1227: Internal editors should always float above admin tabs, and lock tabs while editor is open */
 #crmo-stands-tags-editor,
 #crmo-master-tags-editor,
@@ -7254,7 +7257,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
   pointer-events: none !important;
 }
 </style>
-<style id="CRMO_v2043_footer_and_accessibility_edit">
+<style id="CRMO_v2044_footer_and_accessibility_edit">
 /* v1230: Footer + section edit buttons + accessibility toggle (admin only) */
 #crmo-footer{
   border-top: 1px solid var(--line);
@@ -7693,7 +7696,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 }
 </style>
 
-<style id="CRMO_v2043_login_modal_position">
+<style id="CRMO_v2044_login_modal_position">
 /* v1235: Login popup smaller + top aligned so the form fields are always visible (desktop + mobile) */
 #crmo-auth{
   top: clamp(12px, 6vh, 56px) !important;
@@ -7722,7 +7725,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 }
 </style>
 
-<style id="CRMO_v2043_login_modal_position_fix">
+<style id="CRMO_v2044_login_modal_position_fix">
 /* v1236: Customer login popup — smaller + pinned near top (so fields are visible), reduce huge social blocks */
 #login-modal .crmo-login-card{
   top: clamp(10px, 4vh, 44px) !important;
@@ -7752,7 +7755,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 </style>
 
 
-<style id="CRMO_v2043_login_modal_pin_top">
+<style id="CRMO_v2044_login_modal_pin_top">
 /* v1238: Fix login popup position + remove "gap" by putting popup above admin tabs and tightening the social block */
 #login-backdrop{ z-index: 300000 !important; }
 #login-modal{ z-index: 300001 !important; }
@@ -7803,7 +7806,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 }
 </style>
 
-<style id="CRMO_v2043_dev_visibility_css">
+<style id="CRMO_v2044_dev_visibility_css">
   /* Dev tools (פיתוח) should be master-only */
   #crmo-adminbar-dev{ display:none; }
   #crmo-dev-admin{ display:none; }
@@ -7838,7 +7841,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 </style>
 
 
-<style id="CRMO_v2043_role_bar_swap_css">
+<style id="CRMO_v2044_role_bar_swap_css">
   /* v1292: switch positions — role bar above admin tabs, both centered (no other design changes) */
   #crmo-role-toggle{
     position: sticky;
@@ -7859,7 +7862,7 @@ body.crmo-internal-editor-open #crmo-admin-bar{
 </style>
 
 
-<style id="CRMO_v2043_ui_standardization">
+<style id="CRMO_v2044_ui_standardization">
 /* v1306: סטנדרטיזציה עיצובית — סרגל "תצוגה" העליון נראה כמו סרגל הניהול */
 #crmo-role-toggle{
   background:#f7f7f7;
@@ -8081,7 +8084,7 @@ body:not(.role-admin) .brands-manager-bar{ display:none; }
 </style>
 
 
-<style id="CRMO_v2043_brands_tiles_limit">
+<style id="CRMO_v2044_brands_tiles_limit">
 /* v1357: מותגים – מאפשרים עד 30 אריחים, אבל בתצוגת האתר מציגים רק 18 */
 #brands .gallery-grid.brands > .brandcell:nth-child(n+19){
   display: none !important;
@@ -8099,7 +8102,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
 </style>
 
 
-<style id="CRMO_v2043_brands_admin_panel">
+<style id="CRMO_v2044_brands_admin_panel">
 /* v1357: פאנל ניהול מותגים קטן בעורך */
 #brands .brands-manager-bar{ position: relative; }
 #brands .crmo-brands-admin-panel{
@@ -8138,7 +8141,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
 </style>
 
 
-<style id="CRMO_v2043_brands_gallery_modal_match">
+<style id="CRMO_v2044_brands_gallery_modal_match">
 /* v1369: Brands gallery editor uses the SAME modal look as Tiles Manager (gallery editor) */
 #crmo-brands-gallery-editor{
   position:fixed;
@@ -8171,7 +8174,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
   cursor:pointer;
 }
 </style>
-<style id="CRMO_v2043_brands_modal_tuning">
+<style id="CRMO_v2044_brands_modal_tuning">
 /* v1371: Brands modal tweaks (scoped) */
 #crmo-brands-gallery-editor .tm-subbar{justify-content:flex-end;}
 #crmo-brands-gallery-editor #crmo-brands-counter{margin-right:auto;}
@@ -8204,7 +8207,7 @@ body.crmo-admin-drawer-open #brands .gallery-grid.brands > .brandcell:nth-child(
 
 
 
-<style id="CRMO_v2043_admin_fixed_stack">
+<style id="CRMO_v2044_admin_fixed_stack">
 /* v1398: Admin bar + opened panels are fixed above the site header (no scroll, no gaps). */
 
 /* Make the display bar fully solid (prevents tiny see-through gap). */
@@ -8275,7 +8278,7 @@ body.role-admin header{
 </style>
 
 
-<style id="CRMO_v2043_content_selector_css">
+<style id="CRMO_v2044_content_selector_css">
 /* v2008: Content tab selector (enables gallery + header management from the "תוכן" tab) */
 body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
 .crmo-admin-selector{
@@ -8386,7 +8389,7 @@ body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
   .crmo-user-menu .ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
 </style>
 
-<style id="CRMO_v2043_subbar_css">
+<style id="CRMO_v2044_subbar_css">
 #crmo-admin-bar .crmo-admin-subbar{
   display:flex;
   align-items:flex-end;
@@ -8506,7 +8509,7 @@ body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
 
 </div>
 
-<script id="CRMO_v2043_admin_bar_js">
+<script id="CRMO_v2044_admin_bar_js">
 document.addEventListener('DOMContentLoaded', function(){
   var items = [
     { btnId: 'crmo-adminbar-content',    panelId: 'crmo-content-selector' },
@@ -8699,7 +8702,7 @@ var bar = document.getElementById('crmo-admin-bar');
 });
 </script>
 
-<script id="CRMO_v2043_persistent_subbar_js">
+<script id="CRMO_v2044_persistent_subbar_js">
 (function(){
   function byId(id){ return document.getElementById(id); }
   function isAdmin(){
@@ -9391,7 +9394,7 @@ var bar = document.getElementById('crmo-admin-bar');
     <div id="crmo-header-admin-list" class="crmo-header-admin-list" role="list"></div>
   </div>
 </div>
-<script id="CRMO_v2043_header_buttons_admin_js">
+<script id="CRMO_v2044_header_buttons_admin_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var nav = document.querySelector('header nav.nav') || document.querySelector('header nav');
@@ -9985,7 +9988,7 @@ function render(){
     </div>
   </div>
 </div>
-<script id="CRMO_v2043_permissions_js">
+<script id="CRMO_v2044_permissions_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var ADMINS_KEY = "CRMO_ADMINS_v1";
@@ -19529,7 +19532,7 @@ var requestedRole = null;
   }catch(e){}
 });
 </script>
-<script id="CRMO_v2043_capabilities_js">
+<script id="CRMO_v2044_capabilities_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     function getRole(){
@@ -19787,7 +19790,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }catch(e){}
 });
 </script>
-<script id="CRMO_v2043_history_ui_js">
+<script id="CRMO_v2044_history_ui_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     function getRole(){
@@ -27064,8 +27067,8 @@ if (document.readyState === 'loading'){
 </script>
 
 
-<script id="CRMO_v2043_stands_subcats_autowidth">
-/* CRMO_v2043: נקודות מכירה – כשהסתרת תגיות, רוחב הבלוק מצטמצם ונשאר ממורכז, עם אותו רווח שהיה ב-8 תגיות */
+<script id="CRMO_v2044_stands_subcats_autowidth">
+/* CRMO_v2044: נקודות מכירה – כשהסתרת תגיות, רוחב הבלוק מצטמצם ונשאר ממורכז, עם אותו רווח שהיה ב-8 תגיות */
 (function(){
   function onReady(fn){
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn);
@@ -27533,7 +27536,7 @@ document.addEventListener('click', function(ev){
 </script>
 
 
-<script id="CRMO_v2043_footer_accessibility_and_section_editor">
+<script id="CRMO_v2044_footer_accessibility_and_section_editor">
 (function(){
   function qs(sel, root){ return (root||document).querySelector(sel); }
   function qsa(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
@@ -28747,7 +28750,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
   });
 })();
 </script>
-<script id="CRMO_v2043_internal_editor_lock">
+<script id="CRMO_v2044_internal_editor_lock">
 (function(){
   function isVisible(el){
     if(!el) return false;
@@ -28836,7 +28839,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
 </script>
 
 <!-- CRMO Usability Feedback (v1260) -->
-<style id="CRMO_v2043_usability_feedback_css">
+<style id="CRMO_v2044_usability_feedback_css">
   .crmo-usability-fab{
     position:fixed; bottom:18px; left:18px;
     z-index:999999;
@@ -29005,7 +29008,7 @@ btnCancel && btnCancel.addEventListener('click', function(){ __restoreSnapshot()
   </div>
 </div>
 
-<script id="CRMO_v2043_usability_feedback_js">
+<script id="CRMO_v2044_usability_feedback_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     if(!window.CRMO_USABILITY_MODE) return;
@@ -29246,7 +29249,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 
-<script id="CRMO_v2043_report_js">
+<script id="CRMO_v2044_report_js">
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var panel = document.getElementById('crmo-report-admin');
@@ -29494,7 +29497,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 
-<script id="CRMO_v2043_hash_subgallery">
+<script id="CRMO_v2044_hash_subgallery">
 (function(){
   function applyHash(retry){
     try{
@@ -30415,7 +30418,7 @@ async function addFiles(files, startAt){
 })();
 </script>
 
-<script id="CRMO_v2043_brands_admin_panel_js">
+<script id="CRMO_v2044_brands_admin_panel_js">
 (function(){
   try{
     var btn = document.querySelector('#brands .brands-manager-bar .tiles-manager-open');
@@ -31585,7 +31588,7 @@ async function refreshStatus(){
 </script>
 
 
-<script id="CRMO_v2043_content_tree_sticky_js">
+<script id="CRMO_v2044_content_tree_sticky_js">
 (function(){
   function compute(){
     try{
@@ -32215,7 +32218,7 @@ if(btnLogout){
 
 
 <!-- === CRMO v2036: Fix honeycomb thumbs + wire gallery manager buttons (do not touch Content tab) === -->
-<script id="CRMO_v2043_honeycomb_and_tiles_manager_fix">
+<script id="CRMO_v2044_honeycomb_and_tiles_manager_fix">
 (function(){
   // 1) Ensure "ניהול גלריה" buttons actually open the Tiles Manager overlay
   function wireTilesManagerButtons(){
@@ -32511,6 +32514,113 @@ if(btnLogout){
 
   // expose manual command
   window.CRMO_paintHiveTilesNow = paintAll;
+})();
+</script>
+
+
+<script id="crmo_auth_bindings_v2044">
+(function(){
+  function byId(id){ return document.getElementById(id); }
+  function openLogin(){
+    try{
+      if(window.CRMO_openCustomerAuthAuto){ window.CRMO_openCustomerAuthAuto(); return; }
+      if(window.CRMO_openAuthAuto){ window.CRMO_openAuthAuto(); return; }
+      if(window.CRMO_openAuth){ window.CRMO_openAuth('admin'); return; }
+    }catch(e){}
+  }
+  function toggleUserMenu(){
+    var menu = byId('crmo-user-menu');
+    var avatar = byId('crmo-user-indicator');
+    if(!menu || !avatar) return;
+    try{
+      var r = avatar.getBoundingClientRect();
+      menu.style.top = Math.round(r.bottom + 8) + 'px';
+      menu.style.left = Math.round(r.left) + 'px';
+    }catch(e){}
+    var isOpen = !menu.classList.contains('open');
+    menu.classList.toggle('open', isOpen);
+    try{
+      menu.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+    }catch(e){}
+  }
+  function closeUserMenu(){
+    var menu = byId('crmo-user-menu');
+    if(!menu) return;
+    menu.classList.remove('open');
+    try{ menu.setAttribute('aria-hidden','true'); }catch(e){}
+  }
+  function wire(){
+    // Login trigger
+    var trigger = byId('login-trigger');
+    if(trigger && !trigger.__crmoWired){
+      trigger.__crmoWired = true;
+      trigger.addEventListener('click', function(ev){ ev.preventDefault(); openLogin(); });
+    }
+    // Avatar icon
+    var avatar = byId('crmo-user-indicator');
+    if(avatar && !avatar.__crmoWired){
+      avatar.__crmoWired = true;
+      avatar.addEventListener('click', function(ev){
+        ev.preventDefault();
+        // Guest -> open login/register; Authed -> open profile/logout menu
+        if(document.body.classList.contains('role-guest')){
+          openLogin();
+        }else{
+          toggleUserMenu();
+        }
+      });
+    }
+    // Clicking outside closes menu
+    if(!document.__crmoUserMenuGlobal){
+      document.__crmoUserMenuGlobal = true;
+      document.addEventListener('click', function(ev){
+        var menu = byId('crmo-user-menu');
+        var avatar = byId('crmo-user-indicator');
+        if(!menu || !menu.classList.contains('open')) return;
+        var t = ev.target;
+        if(t === menu || (menu.contains && menu.contains(t))) return;
+        if(t === avatar) return;
+        closeUserMenu();
+      }, true);
+    }
+    // Ensure guest menu buttons make sense
+    try{
+      var prof = byId('crmo-user-menu-profile');
+      var out  = byId('crmo-user-menu-logout');
+      if(document.body.classList.contains('role-guest')){
+        if(prof) prof.style.display = 'none';
+        if(out)  out.style.display  = 'none';
+        if(avatar){
+          avatar.setAttribute('aria-label','התחבר / הירשם');
+          avatar.setAttribute('title','התחבר / הירשם');
+        }
+      }else{
+        if(prof) prof.style.display = '';
+        if(out)  out.style.display  = '';
+        if(avatar){
+          avatar.setAttribute('aria-label','הפרופיל שלי');
+          avatar.setAttribute('title','הפרופיל שלי');
+        }
+      }
+    }catch(e){}
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', wire);
+  }else{
+    wire();
+  }
+  // Re-wire after role changes if applyRole exists
+  try{
+    if(window.applyRole && !window.applyRole.__crmoWrapped){
+      var orig = window.applyRole;
+      window.applyRole = function(role){
+        var r = orig(role);
+        try{ wire(); }catch(e){}
+        return r;
+      };
+      window.applyRole.__crmoWrapped = true;
+    }
+  }catch(e){}
 })();
 </script>
 
