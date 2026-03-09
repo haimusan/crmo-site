@@ -1,103 +1,8 @@
 <!DOCTYPE html>
-<!-- CRMO_v2068 -->
+<!-- CRMO_v2038 -->
 
 <html dir="rtl" lang="he">
 <head>
-
-<!-- === Auth/RBAC injected from v1699 (ported into v2059) === -->
-<script id="crmo-force-owner-head-v1699">
-/* Force Owner/UI visibility ASAP when ?admin=1 is present (no waiting for Supabase). */
-(function(){
-  try{
-    var sp = new URLSearchParams(location.search || "");
-    if(sp.get("admin") === "1"){
-      window.CRMO_FORCE_OWNER = 1;
-      try{ localStorage.setItem("crmo-role","master"); }catch(e){}
-      document.documentElement.classList.add("crmo-owner","is-admin","crmo-auth-optimistic");
-      document.documentElement.setAttribute("data-crmo-admin-flag","1");
-    }
-  }catch(e){}
-})();
-</script>
-
-<script id="crmo-safe-session-v1681">
-(function(){
-  window.CRMO_safeGetSession = async function(client){
-    try{
-      if(!client || !client.auth) return null;
-      if(typeof client.auth.getSession === 'function'){
-        const r = await client.auth.getSession();
-        return (r && r.data && r.data.session) ? r.data.session : null;
-      }
-      if(typeof client.auth.session === 'function'){
-        return client.auth.session() || null;
-      }
-      return null;
-    }catch(e){
-      return null;
-    }
-  };
-})();
-</script>
-
-<script id="crmo-admin-emailbox-helper-v2059">
-(function(){
-  function setEmail(email){
-    try{
-      var box = document.getElementById('crmo-admin-emailbox');
-      if(!box) return;
-      box.textContent = (email && String(email).trim()) ? String(email).trim() : '';
-    }catch(e){}
-  }
-  window.CRMO_setAdminEmailBox = setEmail;
-})();
-</script>
-
-<style id="crmo-bars-lock-css-v2059">
-/* v2059: Hard rule (ported): if owner/admin flags exist, bars must stay visible. */
-html.crmo-auth-optimistic #crmo-role-toggle,
-html.crmo-auth-optimistic #crmo-admin-bar,
-html.crmo-auth-optimistic #crmo-admin-subbar,
-html.crmo-owner #crmo-role-toggle,
-html.crmo-owner #crmo-admin-bar,
-html.crmo-owner #crmo-admin-subbar,
-html.is-admin #crmo-role-toggle,
-html.is-admin #crmo-admin-bar,
-html.is-admin #crmo-admin-subbar,
-html[data-crmo-admin-flag="1"] #crmo-role-toggle,
-html[data-crmo-admin-flag="1"] #crmo-admin-bar,
-html[data-crmo-admin-flag="1"] #crmo-admin-subbar{
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-}
-
-
-/* v2059: Admin email box (LTR, aligned to LEFT of the admin bar container) */
-#crmo-admin-bar .wrap{ position: relative; }
-#crmo-admin-emailbox.crmo-admin-emailbox{
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  min-width: 220px;
-  max-width: 44%;
-  padding: 6px 10px;
-  border: 1px solid rgba(0,0,0,.18);
-  border-radius: 10px;
-  background: rgba(255,255,255,.88);
-  color: rgba(0,0,0,.85);
-  font-size: 12px;
-  line-height: 1.2;
-  direction: ltr;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  pointer-events: none;
-}
-</style>
 <script id="crmo_storage_ns">
 (function(){
   try{
@@ -143,7 +48,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO | sales oriented design</title>
+<title>CRMO_v2038.html</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8537,321 +8442,6 @@ body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
 }
 </style>
 
-
-<!-- === Supabase bootstrap (local-first) v2060 === -->
-<script id="crmo-supabase-boot-v2060">
-(function(){
-  // Version discipline
-  window.CRMO_VERSION = 2068;
-  try{ document.title = "CRMO | sales oriented design"; }catch(e){}
-  // Force version text into header/footer UI
-  function __crmoApplyVersion(){
-    try{ document.title = "CRMO | sales oriented design"; }catch(e){}
-    var v = "v"+window.CRMO_VERSION;
-    var ids = ["crmo-top-version","crmo-topbar-version","crmo-admin-version","crmo-footer-version","footer-version","admin-version"];
-    for(var i=0;i<ids.length;i++){
-      var el = document.getElementById(ids[i]);
-      if(el) el.textContent = v;
-    }
-    // Also update any elements that already display a v#### token
-    try{
-      var nodes = document.querySelectorAll("[data-crmo-version], .crmo-version, .version-badge");
-      nodes.forEach(function(n){ n.textContent = v; });
-    }catch(e){}
-  }
-  // Apply immediately and again after DOM is ready
-  __crmoApplyVersion();
-  if(document.readyState==="loading"){
-    document.addEventListener("DOMContentLoaded", __crmoApplyVersion, {once:true});
-  }
-  // Re-apply a few times to defeat late overrides
-  var __crmoVTries = 0;
-  var __crmoVInt = setInterval(function(){
-    __crmoApplyVersion();
-    __crmoVTries++;
-    if(__crmoVTries>=10) clearInterval(__crmoVInt);
-  }, 300);
-
-  // Storage keys
-  var LS_KEY = "CRMO_SUPABASE_PUBLISHABLE_KEY";
-  var LS_URL = "CRMO_SUPABASE_URL";
-  // Default URL for this project (user-provided)
-  if(!localStorage.getItem(LS_URL)){
-    try{ localStorage.setItem(LS_URL, "https://rtodtmeqijhszdhelawy.supabase.co"); }catch(e){}
-  }
-
-  function getCfg(){
-    var url = "";
-    var key = "";
-    try{ url = localStorage.getItem(LS_URL) || ""; }catch(e){}
-    try{ key = localStorage.getItem(LS_KEY) || ""; }catch(e){}
-    return { url:url, key:key };
-  }
-
-  // Public helpers
-  window.CRMO_setSBKey = function(key){
-    if(!key || typeof key !== "string") return false;
-    key = key.trim();
-    // accept only publishable keys in browser
-    if(!key.startsWith("sb_publishable_")){
-      alert("SB KEY חייב להיות publishable שמתחיל ב- sb_publishable_");
-      return false;
-    }
-    try{ localStorage.setItem(LS_KEY, key); }catch(e){}
-    alert("נשמר. מרענן דף…");
-    location.reload();
-    return true;
-  };
-
-  window.CRMO_promptSBKey = function(){
-    var cur = "";
-    try{ cur = localStorage.getItem(LS_KEY) || ""; }catch(e){}
-    var key = prompt("הדבק כאן Supabase Publishable Key (sb_publishable_...)", cur ? (cur.slice(0,24)+"…") : "");
-    if(!key) return;
-    window.CRMO_setSBKey(key);
-  };
-
-  // Lazy-load supabase-js v2 from CDN if missing
-  
-  // --- CRMO Auth Storage (Local-first) ---
-  // Supabase v2 can accept a custom storage adapter. We persist tokens under a stable key so
-  // sessions survive even in file:// contexts where the default storage behavior can be inconsistent.
-  var CRMO_AUTH_STORAGE_KEY = 'CRMO_SUPABASE_AUTH_V1';
-  var CRMO_authStorage = {
-    getItem: function(key){
-      try{
-        var raw = localStorage.getItem(CRMO_AUTH_STORAGE_KEY);
-        if(!raw) return null;
-        var obj = JSON.parse(raw);
-        return (obj && Object.prototype.hasOwnProperty.call(obj, key)) ? obj[key] : null;
-      }catch(e){ return null; }
-    },
-    setItem: function(key, value){
-      try{
-        var raw = localStorage.getItem(CRMO_AUTH_STORAGE_KEY);
-        var obj = raw ? JSON.parse(raw) : {};
-        obj[key] = value;
-        localStorage.setItem(CRMO_AUTH_STORAGE_KEY, JSON.stringify(obj));
-      }catch(e){}
-    },
-    removeItem: function(key){
-      try{
-        var raw = localStorage.getItem(CRMO_AUTH_STORAGE_KEY);
-        var obj = raw ? JSON.parse(raw) : {};
-        if(obj && Object.prototype.hasOwnProperty.call(obj, key)) delete obj[key];
-        localStorage.setItem(CRMO_AUTH_STORAGE_KEY, JSON.stringify(obj));
-      }catch(e){}
-    }
-  };
-
-  async function CRMO_restoreSession(sb){
-    try{
-      // If Supabase already has a session, don't touch.
-      var cur = await sb.auth.getSession();
-      if(cur && cur.data && cur.data.session) return true;
-
-      // Try our manual tokens store (written after successful login)
-      var raw = localStorage.getItem('CRMO_MANUAL_SB_SESSION_V1');
-      if(!raw) return false;
-      var sess = JSON.parse(raw);
-      if(!sess || !sess.access_token || !sess.refresh_token) return false;
-
-      var out = await sb.auth.setSession({ access_token: sess.access_token, refresh_token: sess.refresh_token });
-      return !!(out && out.data && out.data.session);
-    }catch(e){
-      return false;
-    }
-  }
-
-  function ensureLib(){
-    return new Promise(function(resolve, reject){
-      if(window.supabase && typeof window.supabase.createClient === "function") return resolve();
-      var s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-      s.async = true;
-      s.onload = function(){ resolve(); };
-      s.onerror = function(){ reject(new Error("Failed to load supabase-js")); };
-      document.head.appendChild(s);
-    });
-  }
-
-  // Main: get client
-  window.CRMO_getSB = async function(){
-    if(window.__CRMO_SB__ && window.__CRMO_SB__.auth) return window.__CRMO_SB__;
-    var cfg = getCfg();
-    if(!cfg.url || !cfg.key) return null;
-    await ensureLib();
-    window.__CRMO_SB__ = window.supabase.createClient(cfg.url, cfg.key, {
-      auth: {  autoRefreshToken:true, persistSession:true, detectSessionInUrl:true , storage: CRMO_authStorage }
-    });
-    return window.__CRMO_SB__;
-  };
-
-  // Always provide a way to open SB KEY prompt (button + keyboard)
-  function mountBtn(){
-    try{
-      var btn = document.getElementById("crmo-sbkey-btn");
-      if(btn) return;
-      btn = document.createElement("button");
-      btn.id = "crmo-sbkey-btn";
-      btn.type = "button";
-      btn.textContent = "SB KEY";
-      btn.title = "הגדרת Supabase Publishable Key";
-      btn.style.cssText = "position:fixed;left:8px;bottom:8px;z-index:999999;padding:6px 10px;font:12px/1.2 Assistant,Arial,sans-serif;border-radius:10px;border:1px solid rgba(0,0,0,.25);background:#fff;cursor:pointer;opacity:.85";
-      btn.onmouseenter = function(){ btn.style.opacity = "1"; };
-      btn.onmouseleave = function(){ btn.style.opacity = ".85"; };
-      btn.onclick = function(){ window.CRMO_promptSBKey(); };
-      document.body.appendChild(btn);
-    }catch(e){}
-  }
-
-  window.addEventListener("keydown", function(e){
-    // Ctrl+Alt+K opens SB KEY prompt
-    if(e && e.ctrlKey && e.altKey && (e.key === "k" || e.key === "K")){
-      e.preventDefault();
-      window.CRMO_promptSBKey();
-    }
-  }, true);
-
-  // Mount after DOM
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", mountBtn);
-  } else {
-    mountBtn();
-  }
-
-})();
-</script>
-
-
-<!-- === Supabase Auto Init + Session Restore (no-typing) v2063 === -->
-<script id="crmo-supabase-auto-v2063">
-(function() {
-  // Project config (safe: publishable key only)
-  const SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_I8FsIRkA1yGcINMDv1Bcng__kNvn16I";
-
-  // Lazy-load supabase-js v2 from CDN if needed
-  function loadSupabaseJs() {
-    return new Promise((resolve, reject) => {
-      if (window.supabase && typeof window.supabase.createClient === "function") return resolve();
-      const existing = document.querySelector('script[data-crmo-supabase-js]');
-      if (existing) {
-        existing.addEventListener('load', () => resolve());
-        existing.addEventListener('error', () => reject(new Error('Failed to load supabase-js')));
-        return;
-      }
-      const s = document.createElement('script');
-      s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
-      s.async = true;
-      s.defer = true;
-      s.setAttribute('data-crmo-supabase-js','1');
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error('Failed to load supabase-js'));
-      document.head.appendChild(s);
-    });
-  }
-
-  // Create or return singleton client
-  window.CRMO_getSB = async function CRMO_getSB() {
-    try {
-      await loadSupabaseJs();
-      if (!window.__CRMO_SB__) {
-        window.__CRMO_SB__ = window.supabase.createClient(
-          SUPABASE_URL,
-          SUPABASE_PUBLISHABLE_KEY,
-          {
-            auth: {
-              persistSession: true,
-              autoRefreshToken: true,
-              detectSessionInUrl: true,
-              storageKey: "crmo_sb_auth_v1"
-            }
-          }
-        );
-      }
-      return window.__CRMO_SB__;
-    } catch (e) {
-      console.warn("[CRMO] Supabase init failed:", e);
-      return null;
-    }
-  };
-
-  // Auto-restore session (and optionally create anonymous session) without typing
-  async function autoAuthBootstrap() {
-    const sb = await window.CRMO_getSB();
-    if (!sb) return;
-    try {
-      const sess = await sb.auth.getSession();
-      const hasSession = !!sess?.data?.session;
-      window.__CRMO_HAS_SESSION__ = hasSession;
-      if (!hasSession) {
-        // If anonymous sign-in is available/enabled, use it to avoid any typing.
-        if (sb.auth && typeof sb.auth.signInAnonymously === "function") {
-          const r = await sb.auth.signInAnonymously();
-          if (!r?.error) {
-            document.documentElement.classList.add("crmo-anon");
-            window.__CRMO_HAS_SESSION__ = true;
-            console.log("[CRMO] Anonymous session created.");
-          } else {
-            console.log("[CRMO] Anonymous sign-in failed:", r.error?.message || r.error);
-          }
-        } else {
-          console.log("[CRMO] No existing session. Login form required for owner/admin actions.");
-        }
-      } else {
-        console.log("[CRMO] Session restored.");
-      }
-    } catch (e) {
-      console.log("[CRMO] Session check failed:", e?.message || e);
-    }
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", autoAuthBootstrap);
-  } else {
-    autoAuthBootstrap();
-  }
-})();
-</script>
-
-
-<script id="CRMO_v2066_force_title">
-(function(){
-  try{
-    var desired = 'CRMO | sales oriented design';
-    if (document && document.title !== desired) document.title = desired;
-    // re-assert shortly after load to beat late scripts
-    setTimeout(function(){ try{ document.title = desired; }catch(e){} }, 50);
-    setTimeout(function(){ try{ document.title = desired; }catch(e){} }, 500);
-  }catch(e){}
-})();
-</script>
-
-
-<script id="crmo-version-discipline-v2068">
-(function(){
-  try{ document.title = 'CRMO | sales oriented design'; }catch(e){}
-  function apply(){
-    try{ document.title = 'CRMO | sales oriented design'; }catch(e){}
-    try{
-      var v = 'v' + (window.CRMO_VERSION||'');
-      // footer
-      var fv = document.getElementById('footer-version') || document.getElementById('crmo-footer-version');
-      if(fv) fv.textContent = v;
-      // admin/top
-      var av = document.getElementById('crmo-admin-version');
-      if(av) av.textContent = v;
-      var any = document.querySelector('[data-crmo-version]');
-      if(any) any.textContent = v;
-    }catch(e){}
-  }
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', apply); }
-  apply();
-  setTimeout(apply, 50); setTimeout(apply, 250); setTimeout(apply, 1000);
-})();
-</script>
-
 </head>
 <body class="gallery-hover-ready role-guest">
 <div dir="rtl" id="crmo-role-toggle">
@@ -8867,12 +8457,10 @@ body:not(.role-admin) .crmo-admin-selector{ display:none !important; }
 <button class="crmo-role-tab" data-role="guest" type="button">צופה</button>
 <button class="crmo-role-tab" data-role="ux" type="button">ביקורת UX/UI</button>
 
-<span id="crmo-top-version" style="opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;">v2062</span>
+<span id="crmo-top-version" style="opacity:.65;font-size:11px;line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;">v2040</span>
 </div>
 <div id="crmo-admin-bar" aria-label="סרגל ניהול">
   <div class="wrap">
-    <span id="crmo-admin-version" style="margin-right:10px; opacity:.65; font-size:11px; line-height:1; padding:2px 6px; border:1px solid rgba(255,255,255,.15); border-radius:10px;">v2062</span>
-    <div id="crmo-admin-emailbox" class="crmo-admin-emailbox" dir="ltr"></div>
         <div class="crmo-admin-bar-row crmo-admin-tabs" dir="rtl">
       
       <button type="button" class="crmo-admin-bar-btn crmo-hard-reset-btn" id="crmo-adminbar-hardreset" title="ניקוי קשיח (בדיקות שמישות)" onclick="CRMO_clearLocalDataAndReload()">ניקוי קשיח</button>
@@ -10308,21 +9896,7 @@ function render(){
 
 <div id="crmo-dev-admin" class="crmo-future-panel is-collapsed" aria-label="פיתוח">
   <div class="wrap">
-    <div class="crmo-future-card" style="display:none;">פיתוח — בפיתוח עתידי</div>
-    <div class="crmo-future-card" style="text-align:right;direction:rtl;">
-      <div style="font-weight:800;margin-bottom:8px;">Supabase — שמירה/טעינה של תוכן (crmo_site_config)</div>
-      <div style="opacity:.85;margin-bottom:10px;">טוען/שומר את מצב האתר כ-JSON בטבלה <b>crmo_site_config</b> תחת id=<b>portfolio_state</b>. מדיה נשמרת ב-bucket <b>assets</b>.</div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0;">
-        <button class="crmo-pill" id="crmo-sb-pull" type="button">טען מהשרת</button>
-        <button class="crmo-pill" id="crmo-sb-push" type="button">שמור לשרת</button>
-        <button class="crmo-pill" id="crmo-sb-sync" type="button">Sync</button>
-        <span id="crmo-sb-status" style="margin-inline-start:auto;font-weight:700;"></span>
-      </div>
-      <div id="crmo-sb-syncinfo" style="opacity:.85;margin-bottom:6px;"></div>
-      <div id="crmo-sb-msg" style="color:#c00;font-weight:700;"></div>
-      <div style="opacity:.75;font-size:13px;margin-top:8px;">הערה: שמירה לשרת דורשת משתמש מחובר (authenticated). תצוגה ועריכה לוקאלית ממשיכות לעבוד גם בלי התחברות.</div>
-    </div>
+    <div class="crmo-future-card">פיתוח — בפיתוח עתידי</div>
   </div>
 </div>
 
@@ -14432,7 +14006,7 @@ function openEditor(mode, item){
   <div class="crmo-footer-bottom" dir="ltr">
     <img class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg" alt="Creative Monster favicon"/>
     <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span>
-    <span id="crmo-footer-version" style="margin-left:10px; opacity:.65; font-size:11px;">v2062</span>
+    <span id="crmo-footer-version" style="margin-left:10px; opacity:.65; font-size:11px;">v2040</span>
   </div>
 </div>
 </footer>
@@ -19188,9 +18762,6 @@ var requestedRole = null;
             window.CRMO_setStorageNamespace('');
                       // v1399: leaving UX mode - revert fallback to default (no base64)
             window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK = false;
-  // UI: לבטל את ווידג'ט הסופהבייס הצף (הכניסה/העלאה יישארו דרך הטופס שלך בלבד)
-  window.CRMO_DISABLE_SB_WIDGET = (typeof window.CRMO_DISABLE_SB_WIDGET === "boolean") ? window.CRMO_DISABLE_SB_WIDGET : true;
-
           }
         }
       }catch(e){}
@@ -20602,35 +20173,6 @@ document.addEventListener('DOMContentLoaded', function(){
                 // Also sync with Brands Gallery state so both editors control the SAME image
                 try{
                   var KEY = 'CRMO_BRANDS_GALLERY_v4';
-  // v2068: Resolve logo value to a usable URL (supports URL string OR {bucket,path} objects)
-  function crmoResolveLogoUrl(val){
-    try{
-      if(!val) return Promise.resolve(null);
-      if(typeof val === 'string'){
-        // If it's a full Supabase storage URL, optionally resolve to signed URL (if helper exists)
-        if(window.CRMO_resolveSupabaseUrl) return window.CRMO_resolveSupabaseUrl(val);
-        return Promise.resolve(val);
-      }
-      // object form: {bucket:'assets', path:'brands/x.png'} (preferred)
-      if(typeof val === 'object'){
-        var bucket = val.bucket || val.b || val.Bucket;
-        var path = val.path || val.p || val.key || val.Key;
-        if(bucket && path){
-          var base = (window.CRMO_SUPABASE_URL) ? String(window.CRMO_SUPABASE_URL) : 'https://rtodtmeqijhszdhelawy.supabase.co';
-          base = base.replace(/\/+$/,'');
-          var url = base + '/storage/v1/object/public/' + encodeURIComponent(bucket) + '/' + String(path).replace(/^\/+/, '');
-          // keep slashes in path (decode encodeURIComponent effect on '/')
-          url = url.replace(/%2F/g,'/');
-          if(window.CRMO_resolveSupabaseUrl) return window.CRMO_resolveSupabaseUrl(url);
-          return Promise.resolve(url);
-        }
-      }
-      return Promise.resolve(null);
-    }catch(e){
-      return Promise.resolve(null);
-    }
-  }
-
                   var st = null;
                   try{ st = JSON.parse(localStorage.getItem(KEY) || 'null'); }catch(e){}
                   if(!st || typeof st !== 'object') st = {};
@@ -30052,7 +29594,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // Bind ONLY the brands gallery button to this editor (do not use regular galleries manager)
   // Capture phase so it overrides the generic .tiles-manager-open handler elsewhere
   try{
-    var _brandsOpenBtn = document.querySelector('#crmo-brands-manager-open') || document.querySelector('.brands-manager-open');
+    var _brandsOpenBtn = document.querySelector('.brands-manager-open');
     if(_brandsOpenBtn && !_brandsOpenBtn.__crmoBrandsBound){
       _brandsOpenBtn.__crmoBrandsBound = true;
       _brandsOpenBtn.addEventListener('click', function(ev){
@@ -30352,7 +29894,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
       var th = document.createElement('div');
       th.className = 'crmo-brands-thumb';
-      if(it.logo){ crmoResolveLogoUrl(it.logo).then(function(u){ if(u) window.CRMO_setImageVisual(th, null, u); }); }
+      if(it.logo) window.CRMO_setImageVisual(th, null, it.logo);
 
       // Thumbnails in Brands gallery should show image only (no extra meta fields)
       card.appendChild(th);
@@ -30632,11 +30174,6 @@ async function addFiles(files, startAt){
     renderList();
     try{ editorEl.hidden = false; }catch(e){}
     try{ document.addEventListener('keydown', _crmoBrandsEscHandler, true); }catch(e){}
-
-    // expose for other scripts/buttons
-    try{ window.CRMO_openBrandsGalleryEditor = openEditor; }catch(e){}
-    try{ window.CRMO_closeBrandsGalleryEditor = closeEditor; }catch(e){}
-
   }
 
 // close handlers
@@ -30872,16 +30409,8 @@ async function addFiles(files, startAt){
     }catch(e){}
 
     btn.addEventListener('click', function(ev){
-      // Brands gallery manager button: open the full Brands/Clients/Logos editor
-      try{ ev.preventDefault(); }catch(e){}
-      try{ ev.stopPropagation(); }catch(e){}
-      try{
-        if (window.CRMO_openBrandsGalleryEditor) {
-          window.CRMO_openBrandsGalleryEditor();
-          return;
-        }
-      }catch(e){}
-      // Fallback: toggle the small admin panel if editor not available
+      // button already used for "brands manager" – here we toggle the panel
+      ev.preventDefault();
       try{ panel.hidden = !panel.hidden; }catch(e){}
     }, {passive:false});
 
@@ -30900,21 +30429,6 @@ async function addFiles(files, startAt){
   }catch(e){}
 })();
 </script>
-
-<script id="CRMO_v2066_brands_button_guard">
-(function(){
-  try{
-    document.addEventListener('click', function(e){
-      var btn = e.target && (e.target.closest ? e.target.closest('#brands .brands-manager-open') : null);
-      if(!btn) return;
-      try{ e.preventDefault(); }catch(_){}
-      try{ e.stopPropagation(); }catch(_){}
-      try{ if(window.CRMO_openBrandsGalleryEditor) { window.CRMO_openBrandsGalleryEditor(); } }catch(_){}
-    }, true); // capture: beat generic handlers
-  }catch(e){}
-})();
-</script>
-
 
 
 <script id="CRMO_brand_editor_esc_guard_v1374">
@@ -30946,18 +30460,18 @@ async function addFiles(files, startAt){
 <script>
   // === 1) CONFIG - הדבק/י כאן את הפרטים מה-Supabase Dashboard ===
   // Project URL + anon key:
-  window.CRMO_SUPABASE_URL = window.CRMO_SUPABASE_URL || "https://rtodtmeqijhszdhelawy.supabase.co";
-  window.CRMO_SUPABASE_ANON_KEY = window.CRMO_SUPABASE_ANON_KEY || (function(){ try{ return localStorage.getItem("CRMO_SUPABASE_ANON_KEY") || ""; }catch(e){ return ""; } })() || "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
+  window.CRMO_SUPABASE_URL = window.CRMO_SUPABASE_URL || "PASTE_YOUR_SUPABASE_URL_HERE";
+  window.CRMO_SUPABASE_ANON_KEY = window.CRMO_SUPABASE_ANON_KEY || "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
 
   // Storage bucket (צריכ/ה ליצור Bucket בשם הזה בתוך Supabase Storage)
-  window.CRMO_SUPABASE_BUCKET = window.CRMO_SUPABASE_BUCKET || "assets";
+  window.CRMO_SUPABASE_BUCKET = window.CRMO_SUPABASE_BUCKET || "images";
 
   
   // DB sync (טבלה שמחזיקה את כל ה-LocalStorage של CRMO בשרת)
   // צריך ליצור טבלה בשם הזה ב-Supabase (ראה הוראות למטה)
   window.CRMO_SUPABASE_CONFIG_TABLE = window.CRMO_SUPABASE_CONFIG_TABLE || "crmo_site_config";
   // מזהה יחיד לתצורת האתר (אפשר להשאיר "main")
-  window.CRMO_SUPABASE_CONFIG_ID = window.CRMO_SUPABASE_CONFIG_ID || "portfolio_state";
+  window.CRMO_SUPABASE_CONFIG_ID = window.CRMO_SUPABASE_CONFIG_ID || "main";
   // סנכרון אוטומטי: כל שינוי (safeSet) יישמר לשרת אחרי ~1.5 שניות (אדמין בלבד)
   window.CRMO_SUPABASE_AUTO_SYNC = (typeof window.CRMO_SUPABASE_AUTO_SYNC === "boolean") ? window.CRMO_SUPABASE_AUTO_SYNC : true;
 // אבטחה: מומלץ להשאיר true כדי שלא כל מי שנכנס לאתר יוכל להעלות תמונות
@@ -30970,58 +30484,6 @@ async function addFiles(files, startAt){
 
   // אל תשתמש/י ב-base64 כגיבוי (כדי לא למלא localStorage שוב)
   window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK = false;
-  // UI: לבטל את ווידג'ט הסופהבייס הצף (הכניסה/העלאה יישארו דרך הטופס שלך בלבד)
-  window.CRMO_DISABLE_SB_WIDGET = (typeof window.CRMO_DISABLE_SB_WIDGET === "boolean") ? window.CRMO_DISABLE_SB_WIDGET : true;
-
-
-</script>
-
-<script id="crmo-supabase-key-helper-v2059">
-(function(){
-  function hasRealKey(){
-    try{
-      var k = (window.CRMO_SUPABASE_ANON_KEY||"").trim();
-      return k && k !== "PASTE_YOUR_SUPABASE_ANON_KEY_HERE";
-    }catch(e){ return false; }
-  }
-  window.CRMO_setSupabaseAnonKey = function(){
-    try{
-      var k = prompt("הדבק כאן את Supabase ANON KEY (Public anon key)\nיישמר רק בדפדפן (localStorage).","");
-      if(!k) return;
-      localStorage.setItem("CRMO_SUPABASE_ANON_KEY", String(k).trim());
-      alert("נשמר. מרענן דף…");
-      location.reload();
-    }catch(e){
-      alert("שמירה נכשלה: "+(e && e.message ? e.message : e));
-    }
-  };
-
-  // Tiny helper button (only if key missing)
-  function mountBtn(){
-    if(document.getElementById("crmo-sb-key-btn")) return;
-    var b = document.createElement("button");
-    b.id = "crmo-sb-key-btn";
-    b.type = "button";
-    b.textContent = "SB KEY";
-    b.title = "הדבק Supabase ANON KEY כדי לאפשר התחברות/סנכרון";
-    b.style.cssText = "position:fixed;bottom:12px;right:12px;z-index:99999;background:#111;color:#fff;border:1px solid rgba(255,255,255,.22);border-radius:12px;padding:8px 10px;font:600 12px/1 system-ui,-apple-system,Segoe UI,Arial;cursor:pointer;opacity:.85";
-    b.onmouseenter = function(){ b.style.opacity = "1"; };
-    b.onmouseleave = function(){ b.style.opacity = ".85"; };
-    b.onclick = function(ev){ ev.preventDefault(); ev.stopPropagation(); window.CRMO_setSupabaseAnonKey(); };
-    document.body.appendChild(b);
-  }
-
-  if(!hasRealKey()){
-    if(document.readyState === "loading"){
-      document.addEventListener("DOMContentLoaded", mountBtn);
-    }else{
-      mountBtn();
-    }
-  }
-})();
-</script>
-
-
 </script>
 
 <script>
@@ -31094,8 +30556,7 @@ async function addFiles(files, startAt){
       + '  </div>'
             + '  <div style="display:flex;gap:8px;margin-top:8px">'
       + '    <button id="crmo-sb-pull" style="flex:1;border:0;background:#ffffff22;color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer">טען מהשרת</button>'
-      + '    <button id="crmo-sb-push" style="flex:1;border:0;background:#ffffff22;color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer">שמור לשרת</button>\'
-      + \'    <button id="crmo-sb-sync" style="flex:1;border:0;background:#ffffff22;color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer">Sync</button>'
+      + '    <button id="crmo-sb-push" style="flex:1;border:0;background:#ffffff22;color:#fff;border-radius:10px;padding:8px 10px;cursor:pointer">שמור לשרת</button>'
       + '  </div>'
       + '  <div id="crmo-sb-syncinfo" style="margin-top:6px;opacity:.8;font-size:12px"></div>'
 + '  <div id="crmo-sb-msg" style="margin-top:8px;opacity:.9;line-height:1.25"></div>'
@@ -31122,7 +30583,7 @@ async function addFiles(files, startAt){
     }
     await loadSupabaseJs();
     _sb = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY, {
-      auth: {  autoRefreshToken:true, persistSession:true, detectSessionInUrl:true , storage: CRMO_authStorage }
+      auth: { autoRefreshToken:true, persistSession:true, detectSessionInUrl:true }
     });
     return _sb;
   }
@@ -31131,83 +30592,17 @@ async function addFiles(files, startAt){
     return (s||'').toString().trim().toLowerCase();
   }
 
-  var _roleCache = { at:0, role:null, email:null, user_id:null };
-
-async function getUserRole(session){
-  try{
-    if(!session || !session.user) return null;
-    var uid = session.user.id || null;
-    var email = session.user.email || null;
-
-    // cache for 10s
-    var now = Date.now();
-    if(_roleCache.role && _roleCache.user_id === uid && (now - _roleCache.at) < 10000){
-      return _roleCache.role;
-    }
-
+  async function isAdminAllowed(){
+    if (!window.CRMO_SUPABASE_REQUIRE_LOGIN) return true;
     var sb = await getClient();
-    var table = window.CRMO_SUPABASE_ROLES_TABLE || 'crmo_user_roles';
-
-    // try common schemas: by user_id or by email
-    var roleRow = null;
-    var tried = 0;
-
-    async function tryQuery(q){
-      tried++;
-      var r = q.limit(1);
-      r = r.maybeSingle ? await r.maybeSingle() : await r.single();
-      if(r && !r.error && r.data) return r.data;
-      return null;
-    }
-
-    if(uid){
-      roleRow = await tryQuery(sb.from(table).select('*').eq('user_id', uid));
-    }
-    if(!roleRow && email){
-      roleRow = await tryQuery(sb.from(table).select('*').eq('email', email));
-    }
-
-    var role = null;
-    if(roleRow){
-      // normalize: accept role strings or boolean flags
-      var rstr = (roleRow.role || roleRow.user_role || roleRow.kind || '').toString().toLowerCase();
-      var isOwner = !!(roleRow.is_owner || roleRow.owner || roleRow.isOwner);
-      var isAdmin = !!(roleRow.is_admin || roleRow.admin || roleRow.isAdmin);
-
-      if(rstr) role = rstr;
-      if(isOwner) role = 'owner';
-      if(isAdmin && !isOwner) role = 'admin';
-    }
-
-    _roleCache = { at: now, role: role, email: email, user_id: uid };
-    return role;
-  }catch(e){
-    return null;
-  }
-}
-
-async function isAdminAllowed(){
-  if (!window.CRMO_SUPABASE_REQUIRE_LOGIN) return true;
-  var sb = await getClient();
-  var out = await sb.auth.getSession();
-  var session = out && out.data && out.data.session;
-  var email = session && session.user && session.user.email;
-  try{ window.CRMO_setAdminEmailBox(email || ''); }catch(e){}
-  if (!session) return false;
-
-  var role = await getUserRole(session);
-
-  // treat owner/admin as allowed, master if you set it locally
-  if(role === 'owner' || role === 'admin') return true;
-
-  // allow legacy allowlist as fallback (optional)
-  var allow = (window.CRMO_SUPABASE_ADMIN_EMAILS || []).map(normalizeEmail).filter(Boolean);
-  if (allow.length){
+    var out = await sb.auth.getSession();
+    var session = out && out.data && out.data.session;
+    var email = session && session.user && session.user.email;
+    if (!session) return false;
+    var allow = (window.CRMO_SUPABASE_ADMIN_EMAILS || []).map(normalizeEmail).filter(Boolean);
+    if (!allow.length) return true; // any signed-in user
     return allow.indexOf(normalizeEmail(email)) !== -1;
   }
-
-  return false;
-}
 
   function setStatus(text){
     try{
@@ -31911,60 +31306,40 @@ async function isAdminAllowed(){
   function getConfigId(){ return window.CRMO_SUPABASE_CONFIG_ID || 'main'; }
 
   function collectCrmoStorage(){
-  var out = {};
-  try{
-    for (var i=0;i<localStorage.length;i++){
-      var k = localStorage.key(i);
-      if(!k) continue;
-      var sk = String(k);
-      var lk = sk.toLowerCase();
-
-      // keep only CRMO/CRMO_ app state. Exclude auth/session noise.
-      var isCrmo = (lk.indexOf('crmo_') === 0) || (sk.indexOf('CRMO_') === 0);
-      if(!isCrmo) continue;
-
-      // exclude role/session/internal transient keys
-      if(lk.indexOf('supabase') >= 0) continue;
-      if(lk.indexOf('sb-') === 0) continue;
-      if(lk.indexOf('crmo-auth') === 0) continue;
-      if(lk === 'crmo-role') continue;
-
-      out[sk] = localStorage.getItem(sk);
-    }
-  }catch(e){}
-  return out;
-}      }
+    var out = {};
+    try{
+      for (var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(!k) continue;
+        var lk = String(k).toLowerCase();
+        if(lk.indexOf('crmo_') === 0){
+          out[k] = localStorage.getItem(k);
+        }
+      }
     }catch(e){}
     return out;
   }
 
   function clearCrmoStorage(){
-  try{
-    var todel = [];
-    for (var i=0;i<localStorage.length;i++){
-      var k = localStorage.key(i);
-      if(!k) continue;
-      var sk = String(k);
-      var lk = sk.toLowerCase();
-      var isCrmo = (lk.indexOf('crmo_') === 0) || (sk.indexOf('CRMO_') === 0);
-      if(isCrmo) todel.push(sk);
-    }
-    todel.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
-  }catch(e){}
-}
+    try{
+      var todel = [];
+      for (var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(k && String(k).toLowerCase().indexOf('crmo_') === 0) todel.push(k);
+      }
       todel.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
     }catch(e){}
   }
 
   function applyCrmoStorage(storage){
-  clearCrmoStorage();
-  try{
-    var obj = storage || {};
-    Object.keys(obj).forEach(function(k){
-      try{ localStorage.setItem(k, obj[k]); }catch(e){}
-    });
-  }catch(e){}
-}
+    clearCrmoStorage();
+    try{
+      var obj = storage || {};
+      Object.keys(obj).forEach(function(k){
+        try{ localStorage.setItem(k, obj[k]); }catch(e){}
+      });
+    }catch(e){}
+  }
 
   function setSyncInfo(t){
     try{
@@ -32025,78 +31400,7 @@ async function isAdminAllowed(){
     var ts = row && row.updated_at ? new Date(row.updated_at).toLocaleString('he-IL') : '';
     setSyncInfo('נשמר לשרת ' + (ts ? '(' + ts + ')' : ''));
 
-    // === 6) Local-first sync queue for media uploads (assets bucket) ===
-var CRMO_SB_QUEUE_KEY = 'CRMO_SB_SYNC_QUEUE_v1';
-
-function _queueLoad(){
-  try{ return JSON.parse(localStorage.getItem(CRMO_SB_QUEUE_KEY) || '[]') || []; }catch(e){ return []; }
-}
-function _queueSave(arr){
-  try{ localStorage.setItem(CRMO_SB_QUEUE_KEY, JSON.stringify(arr||[])); }catch(e){}
-  try{ setSyncInfo('תור סנכרון: ' + ((arr||[]).length||0)); }catch(e){}
-}
-function queueAdd(item){
-  try{
-    var arr = _queueLoad();
-    arr.push(item);
-    _queueSave(arr);
-  }catch(e){}
-}
-
-function dataUrlToBlob(dataUrl){
-  try{
-    var parts = String(dataUrl||'').split(',');
-    var head = parts[0] || '';
-    var b64 = parts[1] || '';
-    var m = head.match(/data:([^;]+);base64/i);
-    var mime = m ? m[1] : 'application/octet-stream';
-    var bin = atob(b64);
-    var len = bin.length;
-    var bytes = new Uint8Array(len);
-    for (var i=0;i<len;i++) bytes[i] = bin.charCodeAt(i);
-    return new Blob([bytes], { type: mime });
-  }catch(e){
-    return null;
-  }
-}
-
-async function syncQueue(){
-  if(!_isConfigured()) throw new Error('Supabase not configured (missing URL/key)');
-  var sb = await getClient();
-  var ok = await isAdminAllowed();
-  if(!ok) throw new Error('not-auth');
-
-  var arr = _queueLoad();
-  if(!arr.length){
-    setSyncInfo('תור סנכרון ריק');
     return true;
-  }
-
-  setStatus('Sync…');
-  var remain = [];
-  for (var i=0;i<arr.length;i++){
-    var it = arr[i] || {};
-    try{
-      if(!it.dataUrl || !it.path) throw new Error('bad-queue-item');
-      var blob = dataUrlToBlob(it.dataUrl);
-      if(!blob) throw new Error('bad-dataurl');
-      var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
-      var up = await sb.storage.from(bucket).upload(it.path, blob, { upsert: true, contentType: it.mime || blob.type || undefined });
-      if(up.error) throw up.error;
-    }catch(e){
-      // keep item for later
-      remain.push(it);
-    }
-  }
-  _queueSave(remain);
-  setStatus('OK');
-  setSyncInfo('Sync הסתיים. נשארו בתור: ' + remain.length);
-  return true;
-}
-
-window.CRMO_SB_syncQueue = syncQueue;
-
-return true;
   }
 
   // Auto push debounce
@@ -32214,20 +31518,15 @@ async function refreshStatus(){
     try{
       var pullBtn = document.getElementById('crmo-sb-pull');
       var pushBtn = document.getElementById('crmo-sb-push');
-      var syncBtn = document.getElementById('crmo-sb-sync');
-if(pullBtn) pullBtn.addEventListener('click', function(){
+
+      if(pullBtn) pullBtn.addEventListener('click', function(){
         pullFromDb(true).catch(function(err){ CRMO_showUploadHint(err); });
       });
 
       if(pushBtn) pushBtn.addEventListener('click', function(){
         pushToDb().catch(function(err){ CRMO_showUploadHint(err); });
       });
-
-      if(syncBtn) syncBtn.addEventListener('click', function(){
-        (window.CRMO_SB_syncQueue ? window.CRMO_SB_syncQueue() : Promise.reject(new Error('no-sync')))
-          .catch(function(err){ CRMO_showUploadHint(err); });
-      });
-}catch(e){}
+    }catch(e){}
 
     refreshStatus();
     try{ autoPullOnce(); }catch(e){}
@@ -32406,9 +31705,9 @@ if(btnLogout){
 
 <script id="crmo_version_sync_v2012">
 (function(){
-  try{ window.CRMO_BUILD_VERSION = "2059"; }catch(e){}
-  try{ var a=document.getElementById('crmo-top-version'); if(a) a.textContent="v2059"; }catch(e){}
-  try{ var b=document.getElementById('crmo-footer-version'); if(b) b.textContent='v'+window.CRMO_VERSION; }catch(e){}
+  try{ window.CRMO_BUILD_VERSION = "2024"; }catch(e){}
+  try{ var a=document.getElementById('crmo-top-version'); if(a) a.textContent="v2036"; }catch(e){}
+  try{ var b=document.getElementById('crmo-footer-version'); if(b) b.textContent="v2036"; }catch(e){}
 })();
 </script>
 <style id="crmo_profile_modal_css_v2036">
@@ -33090,7 +32389,7 @@ if(btnLogout){
 })();
 </script>
 
-<script id="crmo_hive_thumb_paint_v2059">
+<script id="crmo_hive_thumb_paint_v2040">
 (function(){
   function firstFileFromAttr(attr){
     if(!attr) return '';
@@ -33176,283 +32475,6 @@ if(btnLogout){
 
   // expose manual command
   window.CRMO_paintHiveTilesNow = paintAll;
-})();
-</script>
-
-<script id="crmo-force-show-once-v1699">
-/* v2059: Ported from v1699 — lock admin/view bars visible once owner/admin is detected. */
-(function(){
-  function hasSbToken(){
-    try{
-      for(var i=0;i<localStorage.length;i++){
-        var k = localStorage.key(i);
-        if(k && /^sb-.*-auth-token$/i.test(k)) return true;
-      }
-    }catch(e){}
-    return false;
-  }
-  function shouldLock(){
-    var de = document.documentElement;
-    return hasSbToken() ||
-      de.classList.contains('crmo-owner') ||
-      de.classList.contains('is-admin') ||
-      de.classList.contains('crmo-auth-optimistic') ||
-      de.getAttribute('data-crmo-admin-flag')==='1';
-  }
-  function forceShowOnce(){
-    if(!shouldLock()) return;
-    var role = document.getElementById('crmo-role-toggle');
-    var admin = document.getElementById('crmo-admin-bar');
-    var sub = document.getElementById('crmo-admin-subbar');
-    [role,admin,sub].forEach(function(el){
-      if(!el) return;
-      try{ el.style.setProperty('display','flex','important'); }catch(e){ el.style.display='flex'; }
-      try{ el.style.setProperty('visibility','visible','important'); }catch(e){ el.style.visibility='visible'; }
-      try{ el.style.setProperty('opacity','1','important'); }catch(e){ el.style.opacity='1'; }
-      try{ el.style.setProperty('pointer-events','auto','important'); }catch(e){ el.style.pointerEvents='auto'; }
-      try{ el.setAttribute('data-crmo-locked','1'); }catch(e){}
-    });
-  }
-  // expose for other scripts (e.g., post-login)
-  window.CRMO_forceShowOnce = forceShowOnce;
-
-  try{ forceShowOnce(); }catch(e){}
-  document.addEventListener('DOMContentLoaded', function(){ try{ forceShowOnce(); }catch(e){} }, {once:true});
-  try{ setInterval(function(){ try{ forceShowOnce(); }catch(e){} }, 2000); }catch(e){}
-})();
-</script>
-<script id="crmo-auth-wiring-v2059">
-/* v2059: Bind existing 2041 auth modal UI to Supabase sign-in (ported behavior from v1699, keeping 2041 UI). */
-(function(){
-  function byId(id){ return document.getElementById(id); }
-  function qs(sel, root){ try{ return (root||document).querySelector(sel); }catch(e){ return null; } }
-
-  function getModal(){
-    return byId('crmo-auth-modal-client') || byId('crmo-auth-modal') || qs('#crmo-auth-modal-client, #crmo-auth-modal');
-  }
-  function getErrorBox(){
-    return byId('crmo-auth-error-client') || byId('crmo-auth-error') || qs('#crmo-auth-error-client, #crmo-auth-error');
-  }
-  function showErr(msg){
-    var box = getErrorBox();
-    if(!box) return;
-    try{ box.hidden = false; }catch(e){}
-    box.textContent = String(msg||'שגיאה');
-  }
-  function clearErr(){
-    var box = getErrorBox();
-    if(!box) return;
-    try{ box.hidden = true; }catch(e){}
-    box.textContent = '';
-  }
-
-  async function getSbClient(){
-    try{
-      if(typeof window.CRMO_getSB === 'function'){
-        var sb = await window.CRMO_getSB();
-        if(sb && sb.auth) return sb;
-      }
-    }catch(e){}
-    if(window.__CRMO_SB__ && window.__CRMO_SB__.auth) return window.__CRMO_SB__;
-
-    if(!window.supabase || !window.supabase.createClient) throw new Error('Supabase library not loaded');
-    if(!window.CRMO_SUPABASE_URL || !window.CRMO_SUPABASE_ANON_KEY) throw new Error('Supabase keys missing');
-
-    window.__CRMO_SB__ = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY, {
-      auth:{ autoRefreshToken:true, persistSession:true, detectSessionInUrl:true, storage: CRMO_authStorage }
-    });
-    try{ await CRMO_restoreSession(window.__CRMO_SB__); }catch(e){}
-    return window.__CRMO_SB__;
-  }
-
-  function openAuth(){
-    var modal = getModal();
-    if(!modal) return;
-    modal.hidden = false;
-    modal.setAttribute('aria-hidden','false');
-    try{ document.documentElement.classList.add('crmo-auth-open'); }catch(e){}
-    clearErr();
-    setTimeout(function(){
-      var email = byId('crmo-auth-email-client') || byId('crmo-auth-email');
-      try{ email && email.focus && email.focus(); }catch(e){}
-    }, 0);
-  }
-  function closeAuth(){
-    var modal = getModal();
-    if(!modal) return;
-    modal.hidden = true;
-    modal.setAttribute('aria-hidden','true');
-    try{ document.documentElement.classList.remove('crmo-auth-open'); }catch(e){}
-    clearErr();
-  }
-
-  // Expose openers used across the page
-  window.CRMO_openAuth = function(){ openAuth(); };
-  window.CRMO_openAuthAuto = function(){ openAuth(); };
-
-  function bind(){
-    var modal = getModal();
-    if(!modal) return;
-
-    var backdrop = qs('.crmo-auth-backdrop', modal);
-    var closeBtn = qs('.crmo-auth-close', modal);
-
-    // 2041 modal uses *client* ids
-    var cancelBtn = byId('crmo-auth-cancel-client') || byId('crmo-auth-cancel');
-    var submitBtn = byId('crmo-auth-submit-client') || byId('crmo-auth-submit');
-
-    var emailEl = byId('crmo-auth-email-client') || byId('crmo-auth-email');
-    var passEl  = byId('crmo-auth-pass-client')  || byId('crmo-auth-pass') || byId('crmo-auth-password');
-
-    function onCloseClick(e){
-      try{ e && e.preventDefault && e.preventDefault(); }catch(_e){}
-      closeAuth();
-    }
-
-    backdrop && (backdrop.onclick = onCloseClick);
-    closeBtn && (closeBtn.onclick = onCloseClick);
-    cancelBtn && (cancelBtn.onclick = onCloseClick);
-
-    // ESC closes modal without breaking other listeners
-    document.addEventListener('keydown', function(ev){
-      if(ev && ev.key === 'Escape'){
-        if(modal && !modal.hidden) closeAuth();
-        try{ window.CRMO_forceShowOnce && window.CRMO_forceShowOnce(); }catch(e){}
-      }
-    }, true);
-
-    async function doLogin(){
-      clearErr();
-      var email = (emailEl && emailEl.value ? String(emailEl.value).trim().toLowerCase() : '');
-      var pass = (passEl && passEl.value ? String(passEl.value) : '');
-      if(!email || !pass){
-        showErr('יש למלא מייל וסיסמה');
-        return;
-      }
-      try{
-        if(submitBtn){
-          submitBtn.disabled = true;
-          submitBtn.dataset._crmoOldText = submitBtn.textContent || '';
-          submitBtn.textContent = 'מתחבר...';
-        }
-
-        var sb = await getSbClient();
-        var out = await sb.auth.signInWithPassword({ email: email, password: pass });
-        if(out && out.error) throw out.error;
-        try{
-          var sess = out && out.data && out.data.session ? out.data.session : null;
-          if(sess && sess.access_token && sess.refresh_token){
-            localStorage.setItem('CRMO_MANUAL_SB_SESSION_V1', JSON.stringify({ access_token: sess.access_token, refresh_token: sess.refresh_token, at: Date.now() }));
-          }
-        }catch(e){}
-        try{ await CRMO_restoreSession(sb); }catch(e){}
-
-        // Optimistic admin visibility; final RBAC may refine later.
-        try{ document.documentElement.classList.add('crmo-auth-optimistic'); }catch(e){}
-
-        // If URL has ?admin=1, treat as owner (ported behavior)
-        try{
-          var sp = new URLSearchParams(location.search || "");
-          if(sp.get('admin') === '1'){
-            document.documentElement.classList.add('crmo-owner','is-admin');
-            document.documentElement.setAttribute('data-crmo-admin-flag','1');
-            window.CRMO_FORCE_OWNER = 1;
-          }
-        }catch(e){}
-
-        try{ window.CRMO_refreshRoleAndAdminUI && window.CRMO_refreshRoleAndAdminUI(); }catch(e){}
-        try{ window.CRMO_forceShowOnce && window.CRMO_forceShowOnce(); }catch(e){}
-
-        closeAuth();
-      }catch(err){
-        var msg = (err && (err.message||err.error_description||err.error)) ? (err.message||err.error_description||err.error) : String(err||'שגיאה');
-        showErr(msg);
-      }finally{
-        if(submitBtn){
-          submitBtn.disabled = false;
-          submitBtn.textContent = submitBtn.dataset._crmoOldText || 'כניסה';
-        }
-      }
-    }
-
-    if(submitBtn){
-      // Overwrite any previous wiring so we reliably run.
-      submitBtn.onclick = function(e){ try{ e.preventDefault(); }catch(_e){} doLogin(); };
-    }
-
-    // Enter key triggers login
-    [emailEl, passEl].forEach(function(el){
-      if(!el) return;
-      el.addEventListener('keydown', function(ev){
-        if(ev && ev.key === 'Enter'){ try{ ev.preventDefault(); }catch(e){} doLogin(); }
-      });
-    });
-  }
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', bind, {once:true});
-  }else{
-    bind();
-  }
-})();
-</script>
-
-<script id="crmo-version-paint-v2060">
-(function(){
-  function setText(id, val){
-    var el = document.getElementById(id);
-    if(el) el.textContent = val;
-  }
-  try{
-    setText("footer-version", window.CRMO_VERSION);
-    setText("crmo-topbar-version", window.CRMO_VERSION);
-    setText("crmo-admin-version", window.CRMO_VERSION);
-  }catch(e){}
-})();
-</script>
-
-
-<script id="crmo-version-discipline-v2062">
-(function(){
-  function force(){
-    try{
-      var v = (window.CRMO_VERSION||'');
-      if(v){
-        document.title = "CRMO | sales oriented design";
-        var ids = ["crmo-top-version","crmo-topbar-version","crmo-admin-version","crmo-footer-version","footer-version"];
-        for(var i=0;i<ids.length;i++){
-          var el = document.getElementById(ids[i]);
-          if(el) el.textContent = "v"+v;
-        }
-      }
-    }catch(e){}
-  }
-  // Run now + after other scripts potentially override
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", function(){ force(); setTimeout(force,50); setTimeout(force,500); });
-  }else{
-    force(); setTimeout(force,50); setTimeout(force,500);
-  }
-})();
-</script>
-
-
-<script id="CRMO_v2066_force_version_labels">
-(function(){
-  try{
-    window.CRMO_VERSION = 2066;
-    function setText(id, txt){
-      var el = document.getElementById(id);
-      if(el) el.textContent = txt;
-    }
-    // Common ids in CRMO
-    setText('crmo-admin-version', 'v2066');
-    setText('crmo-footer-version', 'v2066');
-    setText('footer-version', 'v2066');
-    // Also patch any .crmo-version-text
-    var els = document.querySelectorAll('.crmo-version-text,[data-crmo-version]');
-    els.forEach(function(el){ try{ el.textContent = 'v2066'; }catch(e){} });
-  }catch(e){}
 })();
 </script>
 
