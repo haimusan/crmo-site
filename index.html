@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<!-- CRMO_v1806 -->
+<!-- CRMO_v1807 -->
 <html dir="rtl" lang="he">
 <head>
 <script id="crmo_storage_ns">
@@ -39,19 +39,21 @@
   }
 })();
 </script><script id="crmo-force-owner-head-v1699">
-/* Force Owner/UI visibility ASAP when ?admin=1 is present (no waiting for Supabase). */
+/* Admin flag ASAP when ?admin=1 is present.
+   NOTE (v1807): We DO NOT auto-grant owner/master locally. Edit rights still require a real Supabase session + owner role.
+*/
 (function(){
   try{
     var sp = new URLSearchParams(location.search || "");
-    if(sp.get("admin") === "1"){
-      window.CRMO_FORCE_OWNER = 1;
-      try{ localStorage.setItem("crmo-role","master"); }catch(e){}
-      document.documentElement.classList.add("crmo-owner","is-admin","crmo-auth-optimistic");
+    var adm = sp.get("admin") || sp.get("qadmin"); // tolerate typo ?qadmin=1
+    if(adm === "1"){
+      window.CRMO_ADMIN_FLAG = 1;
+      document.documentElement.classList.add("crmo-admin-flag");
       document.documentElement.setAttribute("data-crmo-admin-flag","1");
     }
   }catch(e){}
 })();
-  </script>
+</script>
 <script id="crmo-safe-session-v1681">
 (function(){
   window.CRMO_safeGetSession = async function(client){
@@ -231,9 +233,17 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = [];
   function cloudEnabled(){
     try{
       var sp = getParams();
-      var allow = truthy(sp.get('cloud'));
-      if(typeof window.CRMO_ALLOW_CLOUD === 'boolean') return window.CRMO_ALLOW_CLOUD || allow;
-      return allow;
+      var v = (sp.get('cloud') || '').toLowerCase();
+      // Explicit off
+      if(v === '0' || v === 'false' || v === 'no' || v === 'off') return false;
+      // Explicit on
+      if(truthy(v)) return true;
+      // v1807: AUTO enable cloud when a real session exists AND user is owner/admin in UI.
+      var email = '';
+      try{ email = document.documentElement.getAttribute('data-crmo-auth-email') || ''; }catch(e){}
+      var isOwner = false;
+      try{ isOwner = document.documentElement.classList.contains('crmo-owner') || document.documentElement.classList.contains('is-admin'); }catch(e){}
+      return !!(email && isOwner);
     }catch(e){}
     return false;
   }
@@ -960,14 +970,14 @@ document.getElementById('crmo-cloud-fix-stands-folders').onclick = async functio
 })();
 </script>
 <script id="crmo_build_info_v1804">
-window.CRMO_BUILD_VERSION = "1806";
+window.CRMO_BUILD_VERSION = "1807";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = "CRMO_v1806";
-window.CRMO_VERSION_NUMBER = 1806;
+window.CRMO_VERSION = "CRMO_v1807";
+window.CRMO_VERSION_NUMBER = 1807;
 </script>
 <script id="crmo_topbars_status_v1804">
 (function(){
-  var VERSION = (window.CRMO_BUILD_VERSION || "1806");
+  var VERSION = (window.CRMO_BUILD_VERSION || "1807");
   function setText(id, txt){
     var el = document.getElementById(id);
     if(el) el.textContent = txt;
@@ -1256,7 +1266,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 </style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1806</title>
+<title>CRMO_v1807</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -13853,7 +13863,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 </div>
 <div class="crmo-footer-bottom" dir="ltr">
 <img alt="Creative Monster favicon" class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg"/>
-<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1806</span>
+<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1807</span>
 </div>
 </div>
 </footer>
@@ -18426,15 +18436,8 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
         email = normEmail(email || '');
         pass  = (pass || '').trim();
         if(!email || !pass) return null;
-        if(email === MASTER_EMAIL){
-          var hm = await sha256Hex("CRMO|" + email + "|" + pass);
-          if(hm === MASTER_HASH){
-            var expiresAtM = nowTs() + (12*60*60*1000);
-            setSession({ role: 'master', email: email, expiresAt: expiresAtM });
-            applyRole('master');
-            try{ if(window.CRMO_refreshPermissionsUI) window.CRMO_refreshPermissionsUI(); }catch(e){}
-            return 'master';
-          }
+        /* v1807: disabled local/master password bypass; edit requires real Supabase owner session */
+        if(false && email === MASTER_EMAIL){
           return null;
         }
         var admins = getAdmins();
@@ -18579,52 +18582,10 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
         email = normEmail(email || '');
         pass  = (pass || '').trim();
         if(!email || !pass) return null;
-        if(email === MASTER_EMAIL){
-          var hm = await sha256Hex("CRMO|" + email + "|" + pass);
-          if(hm === MASTER_HASH){
-            var expiresAtM = nowTs() + (12*60*60*1000);
-            setSession({ role: 'master', email: email, expiresAt: expiresAtM });
-            applyRole('master');
-            try{ if(window.CRMO_refreshPermissionsUI) window.CRMO_refreshPermissionsUI(); }catch(e){}
-            return 'master';
-          }
+        /* v1807: disabled local/master password bypass; edit requires real Supabase owner session */
+        if(false && email === MASTER_EMAIL){
+          return null;
         }
-        var admins = getAdmins();
-        var ok = false;
-        var item = null;
-        for(var i=0;i<admins.length;i++){
-          var a = admins[i] || {};
-          if(normEmail(a.email) !== email) continue;
-          item = a;
-          if(a.suspended) { ok = false; break; }
-          if(a.expiresAt){
-            var expTs = new Date(a.expiresAt).getTime();
-            if(!isNaN(expTs)){
-              expTs = expTs + (24*60*60*1000) - 1;
-              if(nowTs() > expTs){ ok = false; break; }
-            }
-          }
-          var ha = await sha256Hex("CRMO|" + email + "|" + pass);
-          ok = (ha === (a.passHash || ''));
-          break;
-        }
-        if(!ok) return null;
-        var maxSession = nowTs() + (12*60*60*1000);
-        var expiresAt = maxSession;
-        if(item && item.expiresAt){
-          var expTs2 = new Date(item.expiresAt).getTime();
-          if(!isNaN(expTs2)){
-            expTs2 = expTs2 + (24*60*60*1000) - 1;
-            expiresAt = Math.min(expiresAt, expTs2);
-          }
-        }
-        setSession({ role: 'admin', email: email, expiresAt: expiresAt });
-        applyRole('admin');
-        try{ if(window.CRMO_refreshPermissionsUI) window.CRMO_refreshPermissionsUI(); }catch(e){}
-        return 'admin';
-      }catch(e){
-        return null;
-      }
     };
     }
     if(authModal){
@@ -18930,13 +18891,8 @@ if(authErrClient){ authErrClient.hidden = true; authErrClient.textContent = ''; 
     });
     root.classList.toggle('crmo-demo', isDemoEnabled());
     var sess0 = getSession();
-    try{
-      if(!sess0 && (location.protocol === 'file:' || location.hostname === 'localhost')){
-        setSession({ role: 'master', issuedAt: nowTs(), expiresAt: nowTs() + (12*60*60*1000) });
-        sess0 = getSession();
-      }
-    }catch(e){}
-    var nextRole = null;
+    // v1807: no local auto-master session; edit requires real Supabase login
+var nextRole = null;
     try{ nextRole = localStorage.getItem('USABILITY_PREVIEW_NEXT_ROLE'); }catch(e){}
     if(nextRole){
       try{ localStorage.removeItem('USABILITY_PREVIEW_NEXT_ROLE'); }catch(e){}
