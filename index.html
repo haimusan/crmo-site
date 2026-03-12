@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<!-- CRMO_v1824 -->
+<!-- CRMO_v1822 -->
 <html dir="rtl" lang="he">
 <head>
 <script id="crmo_storage_ns">
@@ -946,10 +946,10 @@ document.getElementById('crmo-cloud-fix-stands-folders').onclick = async functio
 })();
 </script>
 <script id="crmo_build_info_v1822">
-window.CRMO_BUILD_VERSION = "1824";
+window.CRMO_BUILD_VERSION = "1822";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = "CRMO_v1824";
-window.CRMO_VERSION_NUMBER = 1824;
+window.CRMO_VERSION = "CRMO_v1822";
+window.CRMO_VERSION_NUMBER = 1822;
 </script>
 <script id="crmo_topbars_status_v1804">
 (function(){
@@ -1219,7 +1219,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 </style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1824</title>
+<title>CRMO_v1822</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -8631,83 +8631,7 @@ body.role-admin header{
     padding:8px 10px;
   }
 }
-</style><script id="crmo-preauth-bars-v1695">
-/* Prevent admin/view bars flicker on refresh:
-   If a Supabase session token exists in localStorage, show bars immediately
-   while async RBAC/session verification runs. */
-(function(){
-  try{
-    var hasToken = false;
-    try{
-      for(var i=0;i<localStorage.length;i++){
-        var k = localStorage.key(i);
-        if(!k) continue;
-        if(/^sb-.*-auth-token$/i.test(k)){ hasToken = true; break; }
-      }
-    }catch(e){}
-    if(hasToken){
-      document.documentElement.classList.add('crmo-auth-optimistic');
-      // mark early to let CSS keep bars visible before scripts run
-      document.documentElement.setAttribute('data-crmo-bars','preauth');
-    }
-  }catch(e){}
-})();
-</script>
-<script id="crmo_preowner_boot_v1693">
-(function(){
-  // Show admin + view-mode bars immediately if a Supabase session token exists (prevents "bars disappear for seconds" on refresh)
-  try{
-    var hasToken = false;
-    for(var i=0;i<localStorage.length;i++) {
-      var k = localStorage.key(i);
-      if(!k) continue;
-      if(k.indexOf('sb-')===0 && k.indexOf('-auth-token')>0) {
-        var v = localStorage.getItem(k) || '';
-        if(String(v).length > 20) { hasToken = true; break; }
-      }
-    }
-    if(hasToken) {
-      document.documentElement.classList.add('crmo-preowner','crmo-owner');
-      // Default role selection: Owner
-      try{
-        if(document.body) document.body.classList.add('role-admin');
-        document.addEventListener('DOMContentLoaded', function(){ document.body.classList.add('role-admin'); });
-      }catch(e){}
-    }
-  }catch(e){}
-})();
-</script>
-<style id="crmo-bars-lock-css-v1695">
-/* Hard rule: if there's an authenticated user (optimistic or verified), bars must stay visible. */
-html.crmo-auth-optimistic #crmo-role-toggle,
-html.crmo-auth-optimistic #crmo-admin-bar,
-html.crmo-auth-optimistic #crmo-admin-subbar,
-html.crmo-owner #crmo-role-toggle,
-html.crmo-owner #crmo-admin-bar,
-html.crmo-owner #crmo-admin-subbar,
-html.is-admin #crmo-role-toggle,
-html.is-admin #crmo-admin-bar,
-html.is-admin #crmo-admin-subbar{
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  pointer-events:auto !important;
-}
-
-/* v1699 zero-flicker: let CSS show bars instantly when owner/admin flags exist */
-.crmo-owner .admin-bar, .is-admin .admin-bar { display: flex !important; opacity: 1 !important; visibility: visible !important; }
-html.crmo-owner #crmo-admin-bar, html.is-admin #crmo-admin-bar, html.crmo-owner #crmo-role-toggle, html.is-admin #crmo-role-toggle, html.crmo-owner #crmo-admin-subbar, html.is-admin #crmo-admin-subbar { display:flex !important; opacity:1 !important; visibility:visible !important; }
-</style>
-<style id="crmo_preowner_force_visible_v1693">
-/* Force the bars to stay visible whenever a session exists (prevents refresh flicker). */
-html.crmo-preowner #crmo-role-toggle,
-html.crmo-preowner #crmo-admin-bar {
-  display:flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-}
-</style>
-</head>
+</style></head>
 <body class="gallery-hover-ready role-guest">
 <div dir="rtl" id="crmo-role-toggle">
   <div class="wrap">
@@ -29959,17 +29883,17 @@ async function refreshStatus(){
 <script id="crmo-version-sync-v1822">
 (function(){
   try{
-    var VNUM = 1824;
+    var VNUM = 1822;
     var VSTR = "V"+VNUM;
-    window.CRMO_VERSION = "CRMO_v1824";
-    window.CRMO_VERSION_NUMBER = 1824;
-    window.CRMO_BUILD_VERSION = "1824";
+    window.CRMO_VERSION = "CRMO_v1822";
+    window.CRMO_VERSION_NUMBER = 1822;
+    window.CRMO_BUILD_VERSION = "1822";
     var a = document.getElementById("crmo-version-rolebar");
     var b = document.getElementById("crmo-version-adminbar");
     if(a) a.textContent = VSTR;
     if(b) b.textContent = VSTR;
     var f = document.getElementById("crmo-footer-version");
-    if(f) f.textContent = "1824";
+    if(f) f.textContent = "1822";
   }catch(e){}
 })();
 </script>
@@ -30040,131 +29964,5 @@ window.CRMO_diagRender = function(){
   };
 };
 </script>
-
-<script id="crmo-auth-ui-sync-v1824">
-(function(){
-  function norm(v){ return String(v || '').trim().toLowerCase(); }
-  function byId(id){ return document.getElementById(id); }
-  function admins(){
-    try{
-      var arr = window.CRMO_SUPABASE_ADMIN_EMAILS;
-      if(Array.isArray(arr) && arr.length) return arr.map(norm).filter(Boolean);
-    }catch(e){}
-    return ["boochin@gmail.com","boochin@walla.co.il"];
-  }
-  async function getSb(){
-    try{
-      if(window.__CRMO_CLIENT_SB) return window.__CRMO_CLIENT_SB;
-      if(typeof window.CRMO_getSB === 'function'){
-        var sb = await window.CRMO_getSB();
-        try{ window.__CRMO_CLIENT_SB = sb; }catch(e){}
-        return sb;
-      }
-      if(typeof window.CRMO_getSbClient === 'function'){
-        var sb2 = await window.CRMO_getSbClient();
-        try{ window.__CRMO_CLIENT_SB = sb2; }catch(e){}
-        return sb2;
-      }
-    }catch(e){}
-    return null;
-  }
-  function setDisplay(el, on){
-    try{ if(el) el.style.display = on ? '' : 'none'; }catch(e){}
-  }
-  function paintAvatar(authed){
-    var a = byId('crmo-user-indicator');
-    if(!a) return;
-    a.classList.toggle('is-authed', !!authed);
-    a.style.color = authed ? '#c00000' : '#111';
-    a.setAttribute('aria-label', authed ? 'הפרופיל שלי' : 'הרשמה / התחברות');
-    a.title = authed ? 'הפרופיל שלי' : 'הרשמה / התחברות';
-  }
-  function paintMenu(authed){
-    var profileBtn = byId('crmo-user-menu-profile');
-    var logoutBtn  = byId('crmo-user-menu-logout');
-    setDisplay(profileBtn, authed);
-    setDisplay(logoutBtn, authed);
-  }
-  function paintBars(authed, isAdmin){
-    setDisplay(byId('crmo-role-toggle'), authed);
-    setDisplay(byId('crmo-admin-bar'), authed && isAdmin);
-    setDisplay(byId('crmo-admin-subbar'), authed && isAdmin);
-    try{
-      document.documentElement.classList.toggle('crmo-owner', !!isAdmin);
-      document.documentElement.classList.toggle('is-admin', !!isAdmin);
-      document.documentElement.classList.toggle('crmo-auth-optimistic', !!authed);
-    }catch(e){}
-    try{
-      document.body.classList.remove('role-guest','role-user','role-admin');
-      if(!authed) document.body.classList.add('role-guest');
-      else if(isAdmin) document.body.classList.add('role-admin');
-      else document.body.classList.add('role-user');
-    }catch(e){}
-  }
-  async function refresh(){
-    var authed = false, email = null;
-    try{
-      var sb = await getSb();
-      if(sb && sb.auth && sb.auth.getSession){
-        var out = await sb.auth.getSession();
-        var s = out && out.data && out.data.session ? out.data.session : null;
-        authed = !!s;
-        email = s && s.user && s.user.email ? norm(s.user.email) : null;
-      }
-    }catch(e){}
-    var isAdmin = !!(email && admins().indexOf(email) !== -1);
-    try{
-      window.CRMO_AUTH = window.CRMO_AUTH || {};
-      window.CRMO_AUTH.email = email;
-      window.CRMO_AUTH.isAuthenticated = authed;
-      window.CRMO_IS_OWNER = isAdmin;
-    }catch(e){}
-    paintAvatar(authed);
-    paintMenu(authed);
-    paintBars(authed, isAdmin);
-    return {session:authed,user:email,isOwner:isAdmin};
-  }
-  window.CRMO_diagAuthState = refresh;
-
-  function hookGuestClick(){
-    var avatar = byId('crmo-user-indicator');
-    if(!avatar || avatar.__crmo1824hook) return;
-    avatar.__crmo1824hook = true;
-    avatar.addEventListener('click', function(ev){
-      try{
-        var authed = !!(window.CRMO_AUTH && window.CRMO_AUTH.isAuthenticated);
-        if(!authed){
-          ev.preventDefault();
-          ev.stopPropagation();
-          if(window.CRMO_openCustomerAuthAuto) window.CRMO_openCustomerAuthAuto('register');
-          else if(window.CRMO_openAuthAuto) window.CRMO_openAuthAuto('register');
-        }
-      }catch(e){}
-    }, true);
-  }
-
-  async function boot(){
-    hookGuestClick();
-    await refresh();
-    try{
-      var sb = await getSb();
-      if(sb && sb.auth && sb.auth.onAuthStateChange && !window.__CRMO_1824_SUB){
-        window.__CRMO_1824_SUB = true;
-        sb.auth.onAuthStateChange(function(){ setTimeout(function(){ refresh(); }, 50); });
-      }
-    }catch(e){}
-  }
-
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
-  else boot();
-
-  try{
-    window.addEventListener('focus', function(){ setTimeout(function(){ refresh(); }, 50); });
-    document.addEventListener('visibilitychange', function(){ if(!document.hidden) refresh(); });
-    window.addEventListener('crmo:role-changed', function(){ refresh(); });
-  }catch(e){}
-})();
-</script>
-
 </body>
 </html>
