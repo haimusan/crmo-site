@@ -1,9 +1,18 @@
 <!DOCTYPE html>
 
-<!-- CRMO_v1855 -->
+<!-- CRMO_v1862 -->
 <html dir="rtl" lang="he">
 <head>
 <script id="crmo_storage_ns">
+/* CRMO SYSTEM PERMANENT RULES (DO NOT REMOVE):
+  1. VERSIONING: Version must be a pure number (e.g. 1862). NO ADJECTIVES.
+  2. SYNC: Version number MUST be identical in DOCTYPE, const VERSION, document.title, and Footer.
+  3. ASSETS: Use SmartResolver. Relative paths (assets/...) get Supabase Prefix. Full URLs remain untouched.
+  4. RENDERING: Render UI immediately from LocalStorage/DefaultJSON. Cloud fetch is background-only.
+  5. COVER LOGIC: 'imageSrc' or 'coverUrl' ALWAYS takes priority over files[0].
+  6. SAFETY: Never delete LocalStorage until Cloud Save returns HTTP 200 OK.
+  7. UPLOADS: Never re-upload the same cover/image file if a stable Supabase asset URL already exists.
+*/
 (function(){
   try{
     var p = String(location.pathname || '/');
@@ -86,6 +95,75 @@ window.CRMO_SUPABASE_CONFIG_TABLE = "crmo_site_config";
 window.CRMO_SUPABASE_CONFIG_ID = "main";
 window.CRMO_SUPABASE_REQUIRE_LOGIN = true;
 window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
+</script>
+<script id="crmo_early_boot_v1856">
+(function(){
+  function clone(v){ try{ return JSON.parse(JSON.stringify(v)); }catch(e){ return v; } }
+  function isObj(v){ return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function normalizeAssetValue(v){
+    if(typeof v !== 'string') return v;
+    try{
+      var url = String(window.CRMO_SUPABASE_URL || '').replace(/\/+$/,'');
+      if(!url) return v;
+      var p = '/storage/v1/object/public/assets/';
+      var i = v.indexOf(p);
+      if(i >= 0){
+        var rest = v.slice(i + p.length);
+        return rest ? ('assets/' + rest.replace(/^\/+/,'')) : v;
+      }
+    }catch(e){}
+    return v;
+  }
+  function deepNormalize(node){
+    if(Array.isArray(node)) return node.map(deepNormalize);
+    if(isObj(node)){
+      var out = {};
+      Object.keys(node).forEach(function(k){ out[k] = deepNormalize(node[k]); });
+      if((!out.imageSrc || !String(out.imageSrc).trim()) && out.coverUrl && String(out.coverUrl).trim()){
+        out.imageSrc = normalizeAssetValue(String(out.coverUrl).trim());
+      }
+      if((!out.coverUrl || !String(out.coverUrl).trim()) && out.imageSrc && String(out.imageSrc).trim()){
+        out.coverUrl = normalizeAssetValue(String(out.imageSrc).trim());
+      }
+      if(Array.isArray(out.filesMeta) && (!out.imageSrc || !String(out.imageSrc).trim()) && out.filesMeta[0] && out.filesMeta[0].src){
+        out.imageSrc = normalizeAssetValue(String(out.filesMeta[0].src));
+      }
+      return out;
+    }
+    return normalizeAssetValue(node);
+  }
+  async function preload(){
+    try{
+      var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
+      var id = (window.CRMO_getConfigId ? window.CRMO_getConfigId() : (window.CRMO_SUPABASE_CONFIG_ID || 'main')) || 'main';
+      var canCloud = !!(window.supabase && window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY);
+      if(canCloud){
+        try{
+          var client = window.__CRMO_EARLY_SB || (window.__CRMO_EARLY_SB = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY));
+          var r = await client.from(table).select('storage,updated_at').eq('id', id).single();
+          var s = r && r.data && r.data.storage;
+          if(s && typeof s === 'object' && Object.keys(s).length){
+            window.CRMO_EARLY_BOOT_STORAGE = deepNormalize(clone(s));
+            window.CRMO_EARLY_BOOT_SOURCE = 'cloud';
+            try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(window.CRMO_EARLY_BOOT_STORAGE)); }catch(e){}
+            return;
+          }
+        }catch(e){ window.CRMO_EARLY_BOOT_CLOUD_ERROR = String((e && e.message) || e); }
+      }
+      try{
+        var raw = localStorage.getItem('crmo_storage_CRMO_v1862') || localStorage.getItem('crmo_storage_CRMO_v1856') || localStorage.getItem('crmo_storage_CRMO_v1854');
+        if(raw){
+          var parsed = JSON.parse(raw);
+          if(parsed && typeof parsed === 'object'){
+            window.CRMO_EARLY_BOOT_STORAGE = deepNormalize(parsed);
+            window.CRMO_EARLY_BOOT_SOURCE = 'local';
+          }
+        }
+      }catch(e){}
+    }catch(e){ window.CRMO_EARLY_BOOT_ERROR = String((e && e.message) || e); }
+  }
+  preload();
+})();
 </script>
 <script id="crmo_asset_paths_v1557">
 /* v1556: Asset path resolver for hosted env (GitHub Pages / crmo.co.il).
@@ -581,95 +659,6 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
   else install();
 })();
 </script>
-<script id="crmo_boot_recovery_v1855">
-(function(){
-  try{ window.CRMO_BOOT_VERSION = '1855'; }catch(e){}
-  function isLocalRuntime(){
-    try{ return String(location.protocol||'')==='file:' || /^(localhost|127\.0\.0\.1)$/i.test(String(location.hostname||'')); }catch(e){ return false; }
-  }
-  function canCloud(){
-    try{ return !!(window.CRMO_cloudEnabled && window.CRMO_cloudEnabled()); }catch(e){ return false; }
-  }
-  function markBooting(){
-    try{
-      document.documentElement.classList.add('crmo-booting');
-      document.documentElement.setAttribute('data-crmo-boot','pending');
-      if(document.body){
-        document.body.classList.add('crmo-booting');
-        document.body.style.visibility = 'hidden';
-        document.body.style.opacity = '0';
-      }
-    }catch(e){}
-  }
-  function localTileHint(){
-    try{
-      if(window.CRMO_PAYLOAD && window.CRMO_PAYLOAD.tiles && window.CRMO_PAYLOAD.tiles.items) return Object.keys(window.CRMO_PAYLOAD.tiles.items||{}).length;
-    }catch(e){}
-    try{
-      return document.querySelectorAll('[data-tile-key]').length || 0;
-    }catch(e){}
-    return 0;
-  }
-  function finish(meta){
-    try{
-      document.documentElement.classList.remove('crmo-booting');
-      document.documentElement.classList.add('crmo-ready','is-ready','loaded');
-      document.documentElement.setAttribute('data-crmo-boot','done');
-      if(document.body){
-        document.body.classList.remove('crmo-booting');
-        document.body.style.visibility = 'visible';
-        document.body.style.opacity = '1';
-      }
-      window.CRMO_LAST_BOOT = { ok:true, at:new Date().toISOString(), meta: meta || null };
-    }catch(e){}
-  }
-  async function attempt(reason){
-    if(window.__CRMO_V1855_BOOT_RUNNING) return false;
-    window.__CRMO_V1855_BOOT_RUNNING = true;
-    markBooting();
-    try{
-      var applied = false;
-      var cloudStorage = null;
-      if(canCloud() && typeof window.CRMO_loadAllFromCloud === 'function'){
-        try{
-          var res = await window.CRMO_loadAllFromCloud();
-          cloudStorage = window.CRMO_LAST_CLOUD_LOADED_STORAGE || (res && res.data && res.data.storage) || null;
-        }catch(e){
-          window.CRMO_LAST_BOOT_CLOUD_ERROR = String((e && e.message) || e);
-        }
-      }
-      if(cloudStorage && typeof cloudStorage === 'object'){
-        applied = true;
-        try{ if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(cloudStorage); }catch(e){}
-        try{ if(window.batchRecover) window.batchRecover(cloudStorage, reason || 'boot-immediate-cloud'); }catch(e){}
-        try{ localStorage.setItem('crmo_storage_CRMO_v1855', JSON.stringify(cloudStorage)); }catch(e){}
-        finish({ reason: reason || 'boot-immediate-cloud', source:'cloud' });
-        return true;
-      }
-      var hint = localTileHint();
-      if(hint > 0){
-        applied = true;
-        try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
-        finish({ reason: reason || 'boot-local-existing', source:'local', tiles: hint });
-        return true;
-      }
-      finish({ reason: reason || 'boot-empty-fallback', source: isLocalRuntime() ? 'local-runtime' : 'empty' });
-      return applied;
-    }catch(e){
-      try{ window.CRMO_LAST_BOOT = { ok:false, at:new Date().toISOString(), reason:reason||'boot-immediate', error:String((e && e.message) || e) }; }catch(_e){}
-      finish({ reason: reason || 'boot-error-fallback', source:'error' });
-      return false;
-    }finally{
-      window.__CRMO_V1855_BOOT_RUNNING = false;
-    }
-  }
-  window.CRMO_bootRecoverNow = attempt;
-  markBooting();
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ attempt('domcontentloaded-immediate'); }, 0); }, { once:true });
-  else setTimeout(function(){ attempt('document-already-ready'); }, 0);
-  window.addEventListener('pageshow', function(){ setTimeout(function(){ attempt('pageshow'); }, 0); });
-})();
-</script>
 
 <script id="crmo_structured_tiles_restore_v1845">
 (function(){
@@ -1129,15 +1118,6 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
           if(cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity || '1') > 0) visible++;
         }catch(_e){}
       }
-      console.table([{
-        reason: (meta && meta.reason) || 'recover',
-        gridsCount: grids.length,
-        tilesInDom: tiles.length,
-        visibleTiles: visible,
-        applied: (meta && meta.applied) || 0,
-        items: (meta && meta.items) || 0,
-        galleries: (meta && meta.galleries) || 0
-      }]);
     }catch(e){}
   }
   function afterRecovery(meta, guardEl){
@@ -1199,14 +1179,14 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
 })();
 </script>
 <script id="crmo_build_info_v1845">
-window.CRMO_BUILD_VERSION = "1855";
+window.CRMO_BUILD_VERSION = "1862";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = "CRMO_v1855";
-window.CRMO_VERSION_NUMBER = 1855;
+window.CRMO_VERSION = "CRMO_v1862";
+window.CRMO_VERSION_NUMBER = 1862;
 </script>
 <script id="crmo_topbars_status_v1804">
 (function(){
-  var VERSION = (window.CRMO_BUILD_VERSION || "1855");
+  var VERSION = (window.CRMO_BUILD_VERSION || "1862");
   function setText(id, txt){
     var el = document.getElementById(id);
     if(el) el.textContent = txt;
@@ -1371,8 +1351,6 @@ window.CRMO_VERSION_NUMBER = 1855;
     if (typeof window.CRMO_saveServerConfig !== 'function') throw new Error("CRMO_saveServerConfig missing");
     var ok = await window.CRMO_saveServerConfig(data);
     try{
-      if(ok) console.log("Saved to Cloud");
-      else console.warn("Cloud save skipped/failed");
     }catch(e){}
     return ok;
   };
@@ -1472,7 +1450,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 </style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1855</title>
+<title>CRMO_v1862</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -14065,7 +14043,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 </div>
 <div class="crmo-footer-bottom" dir="ltr">
 <img alt="Creative Monster favicon" class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg"/>
-<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1855</span>
+<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1862</span>
 </div>
 </div>
 </footer>
@@ -18010,7 +17988,7 @@ inputEl.addEventListener('click', function(){
       closeEditor();
     });
   }
-saveBtn.addEventListener('click', function () {
+saveBtn.addEventListener('click', async function () {
     try{
       if (nameInput && nameInput.getAttribute('data-crmo-hint')==='1' && nameInput.value.trim()==='שם הפרויקט'){ nameInput.value=''; }
       if (descInput && descInput.getAttribute('data-crmo-hint')==='1' && descInput.value.trim()==='תיאור קצר על הפרויקט'){ descInput.value=''; }
@@ -18108,42 +18086,18 @@ saveBtn.addEventListener('click', function () {
       try {
         var mainFile = imgInput.files[0];
         var mainName = mainFile && mainFile.name ? mainFile.name : '';
-        if (mainName) {
-          var baseAnchor2 = currentTile.querySelector('a.ph');
-          currentTile.setAttribute('data-filename', mainName);
-          currentTile.setAttribute('data-files', mainName);
-          if (baseAnchor2) {
-            baseAnchor2.setAttribute('data-filename', mainName);
-            baseAnchor2.setAttribute('data-files', mainName);
+        var canonicalMainUrl = await _canonicalizeTileMainImage(currentTile, mainFile, mainName, 'tile-main');
+        try{
+          if (canonicalMainUrl && window.CRMO_mpThumbs && mainName){
+            window.CRMO_mpThumbs[mainName] = canonicalMainUrl;
           }
-        }
-        (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(mainFile, 'tile-main') : Promise.reject(new Error('no-uploader')))
-          .then(function(urlMain){
-            if (!urlMain) return;
-            try{
-              if (window.CRMO_mpThumbs && mainName){
-                window.CRMO_mpThumbs[mainName] = urlMain;
-              }
-            }catch(e){}
-            var anchor2 = currentTile.querySelector('a.ph');
-            var img2 = anchor2 && anchor2.querySelector('img');
-            if (img2){
-              img2.src = urlMain;
-            } else if (anchor2){
-              anchor2.style.backgroundImage = 'url(' + urlMain + ')';
-              anchor2.style.backgroundSize = 'cover';
-              anchor2.style.backgroundPosition = 'center center';
-            }
-          })
-          .catch(function(e){
-            try{ if(window.console && console.warn) console.warn('te main image upload failed', e); }catch(_){}
-            try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_){}
-          });
+        }catch(e){}
       } catch(e) {
-        if (window.console && console.warn){
-          console.warn('te main image save failed', e);
-        }
+        try{ if(window.console && console.warn) console.warn('te main image save failed', e); }catch(_){}
+        try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_){}
       }
+    } else if (currentTile && currentTile.__CRMO_mainImagePromise) {
+      try{ await currentTile.__CRMO_mainImagePromise; }catch(e){}
     }
 if (currentProject) {
       if (__teName) currentProject.title            = __teName;
@@ -18231,7 +18185,8 @@ if (currentProject) {
             data.files = data.files || [];
             data.multi = !!data.multi;
           }
-          if (imgSrc) data.imageSrc = imgSrc;
+          if (imgSrc) data.imageSrc = (!_isDataImageUrl(imgSrc) ? imgSrc : (data.imageSrc || ''));
+          if (data.imageSrc && !data.coverUrl) data.coverUrl = data.imageSrc;
           var fn = (currentTile.getAttribute('data-filename') || '').trim();
           if (fn) data.imageName = fn;
           arr[ixi] = data;
@@ -18264,21 +18219,25 @@ window.CRMO_tilesManagerSyncFromDom(currentTile);
         baseAnchor.setAttribute('data-files', filename);
       }
     }
-    (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, 'tile-main') : Promise.reject(new Error('no-uploader')))
+    var existingAnchor3 = currentTile.querySelector('a.ph');
+    var existingImg3 = existingAnchor3 && existingAnchor3.querySelector('img');
+    var existingSrc3 = (existingImg3 && (existingImg3.getAttribute('src') || existingImg3.src)) || (existingAnchor3 && existingAnchor3.getAttribute('data-image-src')) || currentTile.getAttribute('data-image-src') || '';
+    existingSrc3 = String(existingSrc3 || '').trim();
+    var existingName3 = String((existingAnchor3 && (existingAnchor3.getAttribute('data-filename') || existingAnchor3.getAttribute('data-files'))) || currentTile.getAttribute('data-filename') || currentTile.getAttribute('data-files') || '').trim();
+    var sameStableExisting3 = !!(existingSrc3 && /^https?:\/\//i.test(existingSrc3) && /\/storage\/v1\/object\/public\//i.test(existingSrc3) && filename && existingName3 && filename === existingName3);
+    currentTile.__CRMO_mainImageFilename = filename || '';
+    currentTile.__CRMO_mainImagePromise = (sameStableExisting3 ? Promise.resolve(existingSrc3) : (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, 'tile-main') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, 'tile-main') : Promise.reject(new Error('no-uploader')))))
       .then(function(url){
-        if(!url) return;
-        var anchor = currentTile.querySelector('a.ph');
-        var img = anchor && anchor.querySelector('img');
-        if (img) {
-          img.src = url;
-        } else if (anchor) {
-          anchor.style.backgroundImage = 'url(' + url + ')';
-          anchor.style.backgroundSize = 'cover';
-          anchor.style.backgroundPosition = 'center center';
-        }
+        if(!url) return '';
+        if (_isDataImageUrl(url)) return '';
+        return _syncCanonicalTileImageRefs(currentTile, url, filename);
       })
       .catch(function(err){
         try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(err); }catch(e){}
+        return '';
+      })
+      .finally(function(){
+        try{ if(currentTile) currentTile.__CRMO_mainImagePromise = null; }catch(e){}
       });
   });
   document.addEventListener('keydown', function(ev) {
@@ -28763,10 +28722,143 @@ try{
     return { url:url, path:path };
   };
   var _cache = (typeof WeakMap !== 'undefined') ? new WeakMap() : null;
+  var _assetCacheKey = 'CRMO_ASSET_UPLOAD_CACHE_V1';
+  var _assetPromiseCache = Object.create(null);
+  function _crmoFileFingerprint(file, folder){
+    try{
+      if(!file) return '';
+      var name = String(file.name || '').trim();
+      var size = String(file.size || 0);
+      var type = String(file.type || '').trim();
+      var mod  = String(file.lastModified || 0);
+      var fold = String(folder || '').trim();
+      return [fold, name, size, type, mod].join('||');
+    }catch(e){ return ''; }
+  }
+  function _readAssetUploadCache(){
+    try{ return JSON.parse(localStorage.getItem(_assetCacheKey) || '{}') || {}; }catch(e){ return {}; }
+  }
+  function _writeAssetUploadCache(cache){
+    try{ localStorage.setItem(_assetCacheKey, JSON.stringify(cache || {})); }catch(e){}
+  }
+  function _getCachedAssetUrl(file, folder){
+    try{
+      var fp = _crmoFileFingerprint(file, folder);
+      if(!fp) return '';
+      var cache = _readAssetUploadCache();
+      var hit = cache && cache[fp];
+      var url = (hit && (hit.url || hit.publicUrl || hit.src || '')) ? String(hit.url || hit.publicUrl || hit.src || '').trim() : '';
+      if(url && /^https?:\/\//i.test(url) && /\/storage\/v1\/object\/public\//i.test(url)) return url;
+      return '';
+    }catch(e){ return ''; }
+  }
+  function _rememberCachedAssetUrl(file, folder, url, path){
+    try{
+      var fp = _crmoFileFingerprint(file, folder);
+      if(!fp || !url) return;
+      var cache = _readAssetUploadCache();
+      cache[fp] = { url:String(url), path:String(path || ''), savedAt:new Date().toISOString() };
+      _writeAssetUploadCache(cache);
+    }catch(e){}
+  }
+  function _getPendingAssetPromise(file, folder){
+    try{
+      var fp = _crmoFileFingerprint(file, folder);
+      if(!fp) return null;
+      return _assetPromiseCache[fp] || null;
+    }catch(e){ return null; }
+  }
+  function _setPendingAssetPromise(file, folder, promise){
+    try{
+      var fp = _crmoFileFingerprint(file, folder);
+      if(!fp) return;
+      if (promise) _assetPromiseCache[fp] = promise;
+      else delete _assetPromiseCache[fp];
+    }catch(e){}
+  }
+  function _isDataImageUrl(src){
+    try{ return !!src && /^data:image\//i.test(String(src).trim()); }catch(e){ return false; }
+  }
+  function _isStableAssetLike(src){
+    try{
+      src = String(src || '').trim();
+      return !!src && (!/^data:/i.test(src)) && (/^https?:\/\//i.test(src) || /^assets\//i.test(src));
+    }catch(e){ return false; }
+  }
+  function _syncCanonicalTileImageRefs(tile, url, filename){
+    try{
+      if(!tile || !url) return url || '';
+      url = String(url).trim();
+      var anchor = tile.querySelector ? tile.querySelector('a.ph') : null;
+      var img = anchor && anchor.querySelector ? anchor.querySelector('img') : null;
+      try{ tile.setAttribute('data-image-src', url); }catch(e){}
+      try{ if(anchor) anchor.setAttribute('data-image-src', url); }catch(e){}
+      if (filename){
+        try{ tile.setAttribute('data-filename', filename); tile.setAttribute('data-files', filename); }catch(e){}
+        try{ if(anchor){ anchor.setAttribute('data-filename', filename); anchor.setAttribute('data-files', filename); } }catch(e){}
+      }
+      try{
+        var dm = (anchor && anchor.getAttribute && anchor.getAttribute('data-files-meta')) || (tile.getAttribute && tile.getAttribute('data-files-meta')) || '';
+        if (dm){
+          var parsed = JSON.parse(dm);
+          if (Array.isArray(parsed) && parsed[0]){
+            parsed[0].src = url;
+            if(filename && !parsed[0].file) parsed[0].file = filename;
+            var ser = JSON.stringify(parsed);
+            try{ if(anchor) anchor.setAttribute('data-files-meta', ser); }catch(e){}
+            try{ tile.setAttribute('data-files-meta', ser); }catch(e){}
+          }
+        }
+      }catch(e){}
+      try{ if(img){ img.src = url; } }catch(e){}
+      try{ if(anchor && !img){ anchor.style.backgroundImage = 'url(' + url + ')'; anchor.style.backgroundSize = 'cover'; anchor.style.backgroundPosition = 'center center'; } }catch(e){}
+      try{ if(tile.__CRMO_projectData){ tile.__CRMO_projectData.imageSrc = url; tile.__CRMO_projectData.coverUrl = url; } }catch(e){}
+      return url;
+    }catch(e){ return url || ''; }
+  }
+  async function _canonicalizeTileMainImage(tile, file, filename, folder){
+    try{
+      if(!tile) return '';
+      var anchor = tile.querySelector ? tile.querySelector('a.ph') : null;
+      var img = anchor && anchor.querySelector ? anchor.querySelector('img') : null;
+      var existing = String((img && (img.getAttribute('src') || img.src)) || (anchor && anchor.getAttribute && anchor.getAttribute('data-image-src')) || (tile.getAttribute && tile.getAttribute('data-image-src')) || '').trim();
+      var existingName = String((anchor && anchor.getAttribute && (anchor.getAttribute('data-filename') || anchor.getAttribute('data-files'))) || (tile.getAttribute && (tile.getAttribute('data-filename') || tile.getAttribute('data-files'))) || '').trim();
+      if (_isStableAssetLike(existing) && !/^data:/i.test(existing) && (!filename || !existingName || filename === existingName)){
+        return _syncCanonicalTileImageRefs(tile, existing, filename || existingName);
+      }
+      var pending = tile.__CRMO_mainImagePromise || null;
+      if (pending && (!file || !filename || (tile.__CRMO_mainImageFilename && tile.__CRMO_mainImageFilename === filename))){
+        var fromPending = await pending;
+        if (fromPending && !_isDataImageUrl(fromPending)) return _syncCanonicalTileImageRefs(tile, fromPending, filename || tile.__CRMO_mainImageFilename || existingName);
+      }
+      if (!file) return _syncCanonicalTileImageRefs(tile, existing, filename || existingName);
+      var url = await (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, folder || 'tile-main') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, folder || 'tile-main') : Promise.reject(new Error('no-uploader'))));
+      if (url && !_isDataImageUrl(url)) return _syncCanonicalTileImageRefs(tile, url, filename || (file && file.name) || existingName);
+      return _syncCanonicalTileImageRefs(tile, existing, filename || existingName);
+    }catch(e){
+      return '';
+    }
+  }
   window.CRMO_fileToSrc = async function(file, folder){
     try{
-      var res = await window.CRMO_uploadImage(file, folder);
-      return res && res.url ? res.url : null;
+      var cachedUrl = _getCachedAssetUrl(file, folder);
+      if (cachedUrl) return cachedUrl;
+      var pending = _getPendingAssetPromise(file, folder);
+      if (pending) return pending;
+      var task = (async function(){
+        try{
+          var againCachedUrl = _getCachedAssetUrl(file, folder);
+          if (againCachedUrl) return againCachedUrl;
+          var res = await window.CRMO_uploadImage(file, folder);
+          var finalUrl = res && res.url ? res.url : null;
+          if (finalUrl) _rememberCachedAssetUrl(file, folder, finalUrl, res && res.path ? res.path : '');
+          return finalUrl;
+        }finally{
+          try{ _setPendingAssetPromise(file, folder, null); }catch(_e){}
+        }
+      })();
+      _setPendingAssetPromise(file, folder, task);
+      return await task;
     }catch(err){
       if (window.CRMO_SUPABASE_ALLOW_BASE64_FALLBACK){
         try{
@@ -30132,17 +30224,17 @@ async function refreshStatus(){
 <script id="crmo-version-sync-v1852">
 (function(){
   try{
-    var VNUM = 1852;
+    var VNUM = 1862;
     var VSTR = "V"+VNUM;
-    window.CRMO_VERSION = "CRMO_v1855";
-    window.CRMO_VERSION_NUMBER = 1855;
-    window.CRMO_BUILD_VERSION = "1855";
+    window.CRMO_VERSION = "CRMO_v1862";
+    window.CRMO_VERSION_NUMBER = 1862;
+    window.CRMO_BUILD_VERSION = "1862";
     var a = document.getElementById("crmo-version-rolebar");
     var b = document.getElementById("crmo-version-adminbar");
     if(a) a.textContent = VSTR;
     if(b) b.textContent = VSTR;
     var f = document.getElementById("crmo-footer-version");
-    if(f) f.textContent = "CRMO System Version 1855";
+    if(f) f.textContent = "CRMO System Version 1862";
   }catch(e){}
 })();
 </script>
@@ -30257,11 +30349,11 @@ window.CRMO_diagRender = function(){
 
 <script id="crmo_v1852_final_patch">
 (function(){
-  var VERSION_NUM = '1855';
-  var VERSION_NAME = 'CRMO_v1855';
+  var VERSION_NUM = '1862';
+  var VERSION_NAME = 'CRMO_v1862';
   window.CRMO_BUILD_VERSION = VERSION_NUM;
   window.CRMO_VERSION = VERSION_NAME;
-  window.CRMO_VERSION_NUMBER = 1855;
+  window.CRMO_VERSION_NUMBER = 1862;
   window.CRMO_STORAGE_NS_PATH = '/';
   window.CRMO_ASSET_PUBLIC_ROOT = 'https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/';
 
@@ -30497,15 +30589,6 @@ window.CRMO_diagRender = function(){
       applied: meta && meta.applied || 0
     };
     try{
-      console.table([{
-        reason: window.CRMO_LAST_DOM_RENDER.reason,
-        gridsCount: gridsCount,
-        tilesInDom: tilesInDom,
-        visibleTiles: visibleTiles,
-        applied: window.CRMO_LAST_DOM_RENDER.applied,
-        items: window.CRMO_LAST_DOM_RENDER.items,
-        duration: window.CRMO_LAST_DOM_RENDER.duration
-      }]);
     }catch(e){}
     return window.CRMO_LAST_DOM_RENDER;
   }
@@ -30527,10 +30610,10 @@ window.CRMO_diagRender = function(){
     var start = (window.performance && performance.now) ? performance.now() : Date.now();
     var guardEl = null;
     try{
-      guardEl = byId('crmo-temp-recovery-guard-v1852');
+      guardEl = byId('crmo-temp-recovery-guard-v1862');
       if(!guardEl){
         guardEl = document.createElement('style');
-        guardEl.id = 'crmo-temp-recovery-guard-v1852';
+        guardEl.id = 'crmo-temp-recovery-guard-v1862';
         guardEl.textContent = '*,*::before,*::after{transition:none !important;animation:none !important;scroll-behavior:auto !important;}';
         (document.head || document.documentElement).appendChild(guardEl);
       }
@@ -30595,10 +30678,10 @@ window.CRMO_diagRender = function(){
   }
   function scheduleSave(reason, delay){
     try{
-      if(window.CRMO_scheduleStructuredSave) return window.CRMO_scheduleStructuredSave(reason || 'v1852', typeof delay === 'number' ? delay : 900);
+      if(window.CRMO_scheduleStructuredSave) return window.CRMO_scheduleStructuredSave(reason || 'v1862', typeof delay === 'number' ? delay : 900);
       if(window.CRMO_flushStructuredSave){
-        clearTimeout(window.__CRMO_V1852_SAVE_TIMER);
-        window.__CRMO_V1852_SAVE_TIMER = setTimeout(function(){ try{ window.CRMO_flushStructuredSave(reason || 'v1852'); }catch(e){} }, typeof delay === 'number' ? delay : 900);
+        clearTimeout(window.__CRMO_V1862_SAVE_TIMER);
+        window.__CRMO_V1862_SAVE_TIMER = setTimeout(function(){ try{ window.CRMO_flushStructuredSave(reason || 'v1862'); }catch(e){} }, typeof delay === 'number' ? delay : 900);
         return true;
       }
     }catch(e){}
@@ -30631,7 +30714,6 @@ window.CRMO_diagRender = function(){
       if(!(window.CRMO_cloudEnabled && window.CRMO_cloudEnabled())) return false;
       if(!isFn(window.CRMO_loadAllFromCloud)) return false;
       var res = await window.CRMO_loadAllFromCloud();
-      try{ console.info('[CRMO] Auto-pull activated - data fetched from cloud.'); }catch(e){}
       setTimeout(function(){ batchRecover(window.CRMO_LAST_CLOUD_LOADED_STORAGE || (res && res.data && res.data.storage) || null, reason || 'auto-threshold'); }, 60);
       return res;
     }catch(e){
@@ -30656,7 +30738,7 @@ window.CRMO_diagRender = function(){
     var wrappedApply = function(storage){
       storage = resolveStorageDeep(storage);
       var out = origApply.apply(this, [storage]);
-      setTimeout(function(){ batchRecover(storage, 'apply-wrapper-v1852'); }, 40);
+      setTimeout(function(){ batchRecover(storage, 'apply-wrapper-v1862'); }, 40);
       return out;
     };
     wrappedApply.__crmoV1853Patched = true;
@@ -30699,13 +30781,13 @@ window.CRMO_diagRender = function(){
     try{ document.title = VERSION_NAME; }catch(e){}
     try{
       var f = byId('crmo-footer-version');
-      if(f) f.textContent = 'CRMO System Version 1855';
+      if(f) f.textContent = 'CRMO System Version 1862';
     }catch(e){}
     try{
       var badges = qsa('[data-crmo-version], .crmo-version-badge, #crmo-version-badge, #crmo-top-version');
       badges.forEach(function(el){
         if(!el) return;
-        if(/185[0-9]/.test(el.textContent || '')) el.textContent = (el.textContent || '').replace(/185[0-9]+/g, '1852');
+        if(/185[0-9]/.test(el.textContent || '')) el.textContent = (el.textContent || '').replace(/185[0-9]+/g, '1862');
       });
     }catch(e){}
   }
@@ -30734,8 +30816,8 @@ window.CRMO_diagRender = function(){
 
 <script id="crmo_v1854_final_patch">
 (function(){
-  var VERSION = '1855';
-  var SEED_ROW = {"id": "main", "storage": {"site_config": {"version": "1854", "last_migration": "2024-03-20"}, "navigation": [{"label": "בית (לוגו)", "target": "top", "_logo": true, "visible": true}, {"label": "חנויות וחללי מסחר", "target": "stores", "visible": true}, {"label": "נקודות מכירה", "target": "stands", "visible": true}, {"label": "מיתוג עסקי", "target": "identity", "visible": true}, {"label": "עיצוב מוצר", "target": "product", "visible": true}, {"label": "תערוכות", "target": "exhibitions", "visible": true}, {"label": "המותגים שלנו", "target": "brands", "visible": true}, {"label": "על הסטודיו", "target": "about", "visible": true}, {"label": "צור קשר", "target": "contact", "visible": true}], "galleries": {"order": ["intro", "brands", "secondary-gallery", "stores", "stands", "identity", "product", "exhibitions", "packages", "small"], "states": {"intro": [{"client": "brand 1", "title": "פרויקט א", "imageSrc": "assets/drop/2026-02-15T19-25-42-939Z_c5a8326f88ebd8.jpg", "multi": false}, {"client": "brand 2", "title": "פרויקט ב", "imageSrc": "assets/drop/2026-02-15T06-04-44-321Z_61c41682b649f8.jpg", "multi": false}], "brands": {"meta": {"title": "brands shape decisions", "desc": "תיאור המותגים"}, "items": [{"id": "brand-01", "logo": "assets/brands/2026-02-15T19-27-41-224Z_4fb34f33cc98d8.jpg"}, {"id": "brand-02", "logo": "assets/brands/2026-02-15T19-27-41-845Z_d68a5f9bbc3c98.jpg"}]}}}}};
+  var VERSION = '1862';
+  var SEED_ROW = {"id": "main", "storage": {"site_config": {"version": "1862", "last_migration": "2024-03-20"}, "navigation": [{"label": "בית (לוגו)", "target": "top", "_logo": true, "visible": true}, {"label": "חנויות וחללי מסחר", "target": "stores", "visible": true}, {"label": "נקודות מכירה", "target": "stands", "visible": true}, {"label": "מיתוג עסקי", "target": "identity", "visible": true}, {"label": "עיצוב מוצר", "target": "product", "visible": true}, {"label": "תערוכות", "target": "exhibitions", "visible": true}, {"label": "המותגים שלנו", "target": "brands", "visible": true}, {"label": "על הסטודיו", "target": "about", "visible": true}, {"label": "צור קשר", "target": "contact", "visible": true}], "galleries": {"order": ["intro", "brands", "secondary-gallery", "stores", "stands", "identity", "product", "exhibitions", "packages", "small"], "states": {"intro": [{"client": "brand 1", "title": "פרויקט א", "imageSrc": "assets/drop/2026-02-15T19-25-42-939Z_c5a8326f88ebd8.jpg", "multi": false}, {"client": "brand 2", "title": "פרויקט ב", "imageSrc": "assets/drop/2026-02-15T06-04-44-321Z_61c41682b649f8.jpg", "multi": false}], "brands": {"meta": {"title": "brands shape decisions", "desc": "תיאור המותגים"}, "items": [{"id": "brand-01", "logo": "assets/brands/2026-02-15T19-27-41-224Z_4fb34f33cc98d8.jpg"}, {"id": "brand-02", "logo": "assets/brands/2026-02-15T19-27-41-845Z_d68a5f9bbc3c98.jpg"}]}}}}};
   var EDITABLE_SESSION = false;
 
   function safe(fn, fallback){ try{ var v = fn(); return typeof v === 'undefined' ? fallback : v; }catch(e){ return fallback; } }
@@ -30897,7 +30979,7 @@ window.CRMO_diagRender = function(){
       if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(s);
       if(window.CRMO_PAYLOAD == null) window.CRMO_PAYLOAD = s;
       if(window.batchRecover) {
-        try{ window.batchRecover(s, 'v1854-compat'); }catch(e){}
+        try{ window.batchRecover(s, 'v1862-compat'); }catch(e){}
       }
       try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
       try{ if(window.CRMO_refreshUiFromCloud) window.CRMO_refreshUiFromCloud(); }catch(e){}
@@ -30931,15 +31013,50 @@ window.CRMO_diagRender = function(){
     }
     return null;
   }
+  function isObj(v){ return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function toRelativeAssetPath(v){
+    if(typeof v !== 'string') return v;
+    try{
+      var url = String(window.CRMO_SUPABASE_URL || '').replace(/\/+$/,'');
+      if(!url) return v;
+      var p = '/storage/v1/object/public/assets/';
+      var i = v.indexOf(p);
+      if(i >= 0){
+        var rest = v.slice(i + p.length);
+        return rest ? ('assets/' + rest.replace(/^\/+/,'')) : v;
+      }
+    }catch(e){}
+    return v;
+  }
+  function deepNormalizeAssetPaths(node){
+    if(Array.isArray(node)) return node.map(deepNormalizeAssetPaths);
+    if(isObj(node)){
+      var out = {};
+      Object.keys(node).forEach(function(k){ out[k] = deepNormalizeAssetPaths(node[k]); });
+      return out;
+    }
+    return toRelativeAssetPath(node);
+  }
   async function cloudSaveSession(storage){
+    var snapshot = normalizeStorage(clone(storage));
+    var normalized = deepNormalizeAssetPaths(snapshot);
+    try{ localStorage.setItem('crmo_pending_cloud_save_v1862', JSON.stringify(normalized)); }catch(e){}
     var state = await getSessionState();
-    if(!state.editable) throw new Error('No active session for cloud save');
+    if(!state.editable){
+      try{ localStorage.setItem('crmo_last_local_only_save_v1862', JSON.stringify({ at:new Date().toISOString(), reason:'no-session', storage: normalized })); }catch(e){}
+      throw new Error('שגיאת הרשאה: הנתונים נשמרו מקומית אך לא סונכרנו לענן. וודא שאתה מחובר כמשתמש מורשה');
+    }
     var sb = await getSb();
     var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
     var id = (window.CRMO_getConfigId ? window.CRMO_getConfigId() : 'main') || 'main';
-    var payload = { id:id, storage: normalizeStorage(clone(storage)), updated_at:new Date().toISOString() };
+    var payload = { id:id, storage: normalized, updated_at:new Date().toISOString() };
     var r = await sb.from(table).upsert(payload, { onConflict:'id' }).select('id,updated_at').single();
-    if(r && r.error) throw r.error;
+    if(r && r.error){
+      try{ localStorage.setItem('crmo_last_local_only_save_v1862', JSON.stringify({ at:new Date().toISOString(), reason:String((r.error && r.error.message) || r.error), storage: normalized })); }catch(e){}
+      throw new Error('שגיאת הרשאה: הנתונים נשמרו מקומית אך לא סונכרנו לענן. וודא שאתה מחובר כמשתמש מורשה');
+    }
+    try{ localStorage.removeItem('crmo_pending_cloud_save_v1862'); }catch(e){}
+    try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(normalized)); }catch(e){}
     return r;
   }
   async function migrateOnce(){
@@ -30979,13 +31096,6 @@ window.CRMO_diagRender = function(){
       }
     }
     window.CRMO_LAST_MIGRATION_RESULT = result;
-    console.table([{
-      migratedKeys: result.legacyKeys.length,
-      removedKeys: result.cleaned ? result.legacyKeys.length : 0,
-      cloudLoaded: result.cloudLoaded,
-      tilesCount: result.mergedTiles,
-      galleriesCount: safe(function(){ return Object.keys((merged.galleries && merged.galleries.states) || {}).length; }, 0)
-    }]);
     return result;
   }
   function patchExports(){
@@ -31019,6 +31129,12 @@ window.CRMO_diagRender = function(){
     addLocalAdminUi();
     patchExports();
     syncVersionUi();
+    try{
+      if(window.CRMO_EARLY_BOOT_STORAGE && typeof window.CRMO_EARLY_BOOT_STORAGE === 'object'){
+        applyStorageCompat(window.CRMO_EARLY_BOOT_STORAGE);
+        window.CRMO_LAST_BOOT = { ok:true, stage:'early-preload-applied', source: window.CRMO_EARLY_BOOT_SOURCE || 'unknown', at:new Date().toISOString() };
+      }
+    }catch(e){}
     var state = await getSessionState();
     EDITABLE_SESSION = !!state.editable;
     window.CRMO_SESSION_EDITABLE = EDITABLE_SESSION;
@@ -31027,7 +31143,10 @@ window.CRMO_diagRender = function(){
       try{
         var cloud = await cloudLoadPublic();
         if(cloud) applyStorageCompat(cloud);
-      }catch(e2){}
+        else if(window.CRMO_EARLY_BOOT_STORAGE) applyStorageCompat(window.CRMO_EARLY_BOOT_STORAGE);
+      }catch(e2){
+        try{ if(window.CRMO_EARLY_BOOT_STORAGE) applyStorageCompat(window.CRMO_EARLY_BOOT_STORAGE); }catch(e3){}
+      }
     }
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ boot(); }, { once:true });
@@ -31036,161 +31155,315 @@ window.CRMO_diagRender = function(){
 </script>
 
 
-<script id="crmo_v1855_patch">
+<script id="crmo_render_first_v1856">
 (function(){
-  var VERSION = '1855';
-  var VERSION_NAME = 'CRMO_v1855';
-  var VERSION_NUM = 1855;
-  function isObj(v){ return !!v && typeof v === 'object' && !Array.isArray(v); }
+  if(window.__CRMO_RENDER_FIRST_1856__) return;
+  window.__CRMO_RENDER_FIRST_1856__ = true;
+
+  function truthy(v){ v = String(v || '').toLowerCase(); return v === '1' || v === 'true' || v === 'yes' || v === 'on'; }
+  function getParams(){
+    try{
+      var out = new URLSearchParams(location.search || '');
+      var h = location.hash || '';
+      var qi = h.indexOf('?');
+      if(qi >= 0){
+        var hp = new URLSearchParams(h.slice(qi + 1));
+        hp.forEach(function(v,k){ if(!out.has(k)) out.set(k,v); });
+      }
+      return out;
+    }catch(e){ return { get:function(){ return null; } }; }
+  }
+  window.CRMO_cloudEnabled = function(){
+    try{
+      var q = getParams().get('cloud');
+      if(q != null && q !== '') return truthy(q);
+      return !!(window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY && String(window.CRMO_SUPABASE_URL).indexOf('PASTE_') !== 0 && String(window.CRMO_SUPABASE_ANON_KEY).indexOf('PASTE_') !== 0);
+    }catch(e){ return false; }
+  };
+
   function clone(v){ try{ return JSON.parse(JSON.stringify(v)); }catch(e){ return v; } }
-  function bucketBase(){
+  function isObj(v){ return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function hasMeaningful(v){
+    if(v == null) return false;
+    if(typeof v === 'string') return v.trim() !== '';
+    if(typeof v === 'number' || typeof v === 'boolean') return true;
+    if(Array.isArray(v)) return v.length > 0;
+    if(isObj(v)) return Object.keys(v).length > 0;
+    return !!v;
+  }
+  function normalizeAssetValue(v){
+    if(typeof v !== 'string') return v;
     try{
       var url = String(window.CRMO_SUPABASE_URL || '').replace(/\/+$/,'');
-      var bucket = String(window.CRMO_SUPABASE_BUCKET || 'assets').replace(/^\/+|\/+$/g,'') || 'assets';
-      if(!url) return '';
-      return url + '/storage/v1/object/public/' + bucket + '/';
-    }catch(e){ return ''; }
-  }
-  function toRenderPath(v){
-    try{
-      if(typeof v !== 'string') return v;
-      var s = v.trim();
-      if(!s) return s;
-      if(/^(https?:|data:|blob:)/i.test(s)) return s;
-      if(/^assets\//i.test(s)){
-        var base = bucketBase();
-        return base ? (base + s.replace(/^assets\//i,'')) : s;
-      }
-      return s;
-    }catch(e){ return v; }
-  }
-  function toStoragePath(v){
-    try{
-      if(typeof v !== 'string') return v;
-      var s = v.trim();
-      if(!s) return s;
-      var base = bucketBase();
-      if(base && s.indexOf(base) === 0) return 'assets/' + s.slice(base.length).replace(/^\/+/, '');
-      var m = s.match(/\/storage\/v1\/object\/public\/assets\/(.+)$/i);
-      if(m && m[1]) return 'assets/' + m[1].replace(/^\/+/, '');
-      return s;
-    }catch(e){ return v; }
-  }
-  function deepMap(node, mode){
-    if(Array.isArray(node)) return node.map(function(x){ return deepMap(x, mode); });
-    if(!isObj(node)){
-      return mode === 'save' ? toStoragePath(node) : toRenderPath(node);
-    }
-    var out = {};
-    Object.keys(node).forEach(function(k){
-      var val = node[k];
-      if(typeof val === 'string' || Array.isArray(val) || isObj(val)) out[k] = deepMap(val, mode);
-      else out[k] = val;
-    });
-    return out;
-  }
-  function hasMeaningfulStorage(s){
-    try{
-      if(!s || typeof s !== 'object') return false;
-      if(s.tiles && s.tiles.items && Object.keys(s.tiles.items || {}).length) return true;
-      if(Array.isArray(s.tilesSnapshot) && s.tilesSnapshot.length) return true;
-      if(s.contentData && Array.isArray(s.contentData.projects) && s.contentData.projects.length) return true;
-      if(s.galleries && s.galleries.items && Object.keys(s.galleries.items || {}).length) return true;
-    }catch(e){}
-    return false;
-  }
-  function notifyAtomicSaveFailure(msg){
-    try{
-      window.CRMO_LAST_ATOMIC_SAVE = { ok:false, at:new Date().toISOString(), error:msg };
-      alert('שגיאת הרשאה: הנתונים נשמרו מקומית אך לא סונכרנו לענן. וודא שאתה מחובר כמשתמש מורשה');
-    }catch(e){}
-  }
-  var origCollect = window.CRMO_collectStructuredPayload;
-  if(typeof origCollect === 'function' && !origCollect.__crmoV1855SavePatch){
-    var wrappedCollect = function(data){
-      var payload = origCollect.apply(this, arguments);
-      return deepMap(payload, 'save');
-    };
-    wrappedCollect.__crmoV1855SavePatch = true;
-    window.CRMO_collectStructuredPayload = wrappedCollect;
-  }
-  var origApply = window.CRMO_applyLoadedStorage;
-  if(typeof origApply === 'function' && !origApply.__crmoV1855RenderPatch){
-    var wrappedApply = function(storage){
-      return origApply.call(this, deepMap(storage, 'render'));
-    };
-    wrappedApply.__crmoV1855RenderPatch = true;
-    window.CRMO_applyLoadedStorage = wrappedApply;
-  }
-  var origLoad = window.CRMO_loadAllFromCloud || window.CRMO_loadServerConfig;
-  if(typeof origLoad === 'function' && !origLoad.__crmoV1855BootPatch){
-    var wrappedLoad = async function(){
-      var out = await origLoad.apply(this, arguments);
-      try{
-        var storage = window.CRMO_LAST_CLOUD_LOADED_STORAGE || (out && out.data && out.data.storage) || null;
-        storage = deepMap(storage, 'render');
-        if(hasMeaningfulStorage(storage)){
-          window.CRMO_LAST_CLOUD_LOADED_STORAGE = storage;
-          window.CRMO_CLOUD_STATE = storage;
-          if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(storage);
-          if(window.batchRecover) setTimeout(function(){ window.batchRecover(storage, 'v1855-load-immediate'); }, 0);
+      if(url){
+        var p = '/storage/v1/object/public/assets/';
+        var i = v.indexOf(p);
+        if(i >= 0){
+          var rest = v.slice(i + p.length).replace(/^\/+/, '');
+          return rest ? ('assets/' + rest) : v;
         }
-      }catch(e){}
-      return out;
-    };
-    wrappedLoad.__crmoV1855BootPatch = true;
-    window.CRMO_loadAllFromCloud = wrappedLoad;
-    window.CRMO_loadServerConfig = wrappedLoad;
-  }
-  var origSave = window.CRMO_saveAllToCloud || window.CRMO_saveServerConfig;
-  if(typeof origSave === 'function' && !origSave.__crmoV1855AtomicPatch){
-    var wrappedSave = async function(data){
-      var source = (typeof data !== 'undefined') ? data : (window.CRMO_collectStructuredPayload ? window.CRMO_collectStructuredPayload() : null);
-      var payload = deepMap(clone(source), 'save');
-      try{
-        localStorage.setItem('crmo_pending_cloud_write_v1855', JSON.stringify({ at:new Date().toISOString(), storage: payload }));
-      }catch(e){}
-      try{
-        var res = await origSave.call(this, payload);
-        try{
-          localStorage.setItem('crmo_last_cloud_ok_v1855', JSON.stringify({ at:new Date().toISOString(), ok:true }));
-          localStorage.removeItem('crmo_pending_cloud_write_v1855');
-          window.CRMO_LAST_ATOMIC_SAVE = { ok:true, at:new Date().toISOString(), result:res || null };
-        }catch(e){}
-        return res;
-      }catch(e){
-        notifyAtomicSaveFailure(String((e && e.message) || e));
-        throw e;
       }
-    };
-    wrappedSave.__crmoV1855AtomicPatch = true;
-    window.CRMO_saveAllToCloud = wrappedSave;
-    window.CRMO_saveServerConfig = wrappedSave;
-  }
-  function syncVersionUi(){
-    try{ document.title = VERSION_NAME; }catch(e){}
-    try{ window.CRMO_VERSION = VERSION_NAME; }catch(e){}
-    try{ window.CRMO_VERSION_NUMBER = VERSION_NUM; }catch(e){}
-    try{ window.CRMO_BUILD_VERSION = String(VERSION_NUM); }catch(e){}
-    try{ document.documentElement.setAttribute('data-crmo-version', VERSION); }catch(e){}
-    try{
-      var footer = document.getElementById('crmo-footer-version');
-      if(footer) footer.textContent = 'CRMO System Version ' + VERSION;
     }catch(e){}
+    return v;
+  }
+  function deepNormalize(node){
+    if(Array.isArray(node)) return node.map(deepNormalize);
+    if(isObj(node)){
+      var out = {};
+      Object.keys(node).forEach(function(k){ out[k] = deepNormalize(node[k]); });
+      return out;
+    }
+    return normalizeAssetValue(node);
+  }
+  function getLocalSnapshot(){
+    var keys = [
+      'crmo_storage_CRMO_v1862',
+      'crmo_storage_CRMO_v1856',
+      'crmo_storage_CRMO_v1855',
+      'crmo_storage_CRMO_v1854',
+      'crmo_storage_CRMO_v1853',
+      'crmo_storage_CRMO_v1852',
+      'crmo_storage_CRMO_v1851'
+    ];
+    for(var i=0;i<keys.length;i++){
+      try{
+        var raw = localStorage.getItem(keys[i]);
+        if(!raw) continue;
+        var parsed = JSON.parse(raw);
+        if(parsed && typeof parsed === 'object' && Object.keys(parsed).length) return deepNormalize(parsed);
+      }catch(e){}
+    }
     try{
-      document.querySelectorAll('[data-crmo-version], .crmo-version-badge, #crmo-version-badge, #crmo-top-version, #crmo-version-rolebar, #crmo-version-adminbar').forEach(function(el){
-        if(!el) return;
-        var txt = String(el.textContent || '').trim();
-        if(/^v?\d+$/i.test(txt)) el.textContent = 'V' + VERSION;
-        else el.textContent = txt.replace(/CRMO_v\d+/g, VERSION_NAME).replace(/\b18\d{2}\b/g, VERSION) || ('V' + VERSION);
+      if(window.CRMO_EARLY_BOOT_STORAGE && typeof window.CRMO_EARLY_BOOT_STORAGE === 'object' && Object.keys(window.CRMO_EARLY_BOOT_STORAGE).length){
+        return deepNormalize(clone(window.CRMO_EARLY_BOOT_STORAGE));
+      }
+    }catch(e){}
+    return null;
+  }
+  function markReady(){
+    try{ document.documentElement.classList.add('crmo-ready','is-ready','loaded'); }catch(e){}
+    try{ document.body && document.body.classList.add('crmo-ready','is-ready','loaded'); }catch(e){}
+    try{ document.documentElement.style.visibility = 'visible'; }catch(e){}
+    try{ if(document.body) document.body.style.visibility = 'visible'; }catch(e){}
+    try{ document.documentElement.setAttribute('data-crmo-boot','ready'); }catch(e){}
+  }
+  function fixRelativeAssets(root){
+    try{
+      root = root || document;
+      var base = String(window.CRMO_ASSET_BASE || '').trim();
+      ['img[src]','source[src]','video[poster]','a[href]'].forEach(function(sel){
+        Array.prototype.forEach.call(root.querySelectorAll(sel), function(el){
+          try{
+            var attr = sel.indexOf('href') >= 0 ? 'href' : (sel.indexOf('poster') >= 0 ? 'poster' : 'src');
+            var val = el.getAttribute(attr);
+            if(!val) return;
+            if(/^https?:\/\//i.test(val) || /^data:/i.test(val) || /^blob:/i.test(val) || /^mailto:/i.test(val) || /^tel:/i.test(val) || /^#/i.test(val)) return;
+            if(/^assets\//i.test(val)){
+              el.setAttribute(attr, base ? (base + val.replace(/^assets\//i,'')) : val);
+            }
+          }catch(e){}
+        });
       });
     }catch(e){}
   }
-  syncVersionUi();
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncVersionUi, { once:true });
-  else setTimeout(syncVersionUi, 0);
+  function applyStorageNow(storage, reason){
+    try{
+      if(!storage || typeof storage !== 'object') return false;
+      var s = deepNormalize(clone(storage));
+      window.CRMO_LAST_CLOUD_LOADED_STORAGE = s;
+      window.CRMO_CLOUD_STATE = s;
+      window.CRMO_PAYLOAD = s;
+      try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(s)); }catch(e){}
+      try{ if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(s); }catch(e){}
+      try{ if(window.batchRecover) window.batchRecover(s, reason || 'render-first-v1862'); }catch(e){}
+      try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
+      try{ if(window.CRMO_refreshUiFromCloud) window.CRMO_refreshUiFromCloud(); }catch(e){}
+      fixRelativeAssets(document);
+      markReady();
+      window.CRMO_LAST_BOOT = { ok:true, stage:'render-first', reason:reason || 'render-first-v1862', at:new Date().toISOString() };
+      return true;
+    }catch(e){
+      window.CRMO_LAST_BOOT = { ok:false, stage:'render-first', reason:reason || 'render-first-v1862', error:String((e && e.message) || e), at:new Date().toISOString() };
+      markReady();
+      return false;
+    }
+  }
+
+  function initialRender(){
+    var local = getLocalSnapshot();
+    if(hasMeaningful(local)) return applyStorageNow(local, 'local-first');
+    try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
+    fixRelativeAssets(document);
+    markReady();
+    return false;
+  }
+
+  async function silentCloudPull(){
+    try{
+      if(!(window.CRMO_cloudEnabled && window.CRMO_cloudEnabled())) return false;
+      if(!(window.CRMO_getSB || window.supabase)) return false;
+      var sb = null;
+      try{ if(window.CRMO_getSB) sb = await window.CRMO_getSB(); }catch(e){}
+      if(!sb && window.supabase && window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY){
+        sb = window.__CRMO_1862_SB || (window.__CRMO_1862_SB = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY));
+      }
+      if(!sb) return false;
+      var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
+      var id = (window.CRMO_getConfigId ? window.CRMO_getConfigId() : (window.CRMO_SUPABASE_CONFIG_ID || 'main')) || 'main';
+      var r = await sb.from(table).select('id,storage,updated_at').eq('id', id).single();
+      if(r && r.error) throw r.error;
+      var cloud = r && r.data && r.data.storage ? deepNormalize(r.data.storage) : null;
+      if(hasMeaningful(cloud)){
+        var current = null;
+        try{ current = JSON.stringify(window.CRMO_LAST_CLOUD_LOADED_STORAGE || null); }catch(e){}
+        var next = null;
+        try{ next = JSON.stringify(cloud); }catch(e){}
+        if(!current || current !== next){
+          applyStorageNow(cloud, 'silent-cloud-hot-update');
+        }
+        try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(cloud)); }catch(e){}
+      }
+      return true;
+    }catch(e){
+      window.CRMO_LAST_CLOUD_PULL = { ok:false, error:String((e && e.message) || e), at:new Date().toISOString() };
+      markReady();
+      return false;
+    }
+  }
+
+  function patchSaveNoCleanup(){
+    try{
+      var original = window.CRMO_saveServerConfig;
+      if(typeof original !== 'function') return;
+      window.CRMO_saveServerConfig = async function(data){
+        var payload = data && data.storage ? data.storage : (data || (window.CRMO_collectStructuredPayload ? window.CRMO_collectStructuredPayload() : null));
+        if(payload){
+          try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){}
+        }
+        try{
+          var res = await original.apply(this, arguments);
+          if(payload){ try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){} }
+          return res;
+        }catch(err){
+          if(payload){
+            try{ localStorage.setItem('crmo_last_local_only_save_v1862', JSON.stringify({ at:new Date().toISOString(), reason:String((err && err.message) || err), storage: deepNormalize(clone(payload)) })); }catch(e){}
+          }
+          throw err;
+        }
+      };
+      window.CRMO_saveAllToCloud = window.CRMO_saveServerConfig;
+    }catch(e){}
+  }
+
+  function start(){
+    initialRender();
+    patchSaveNoCleanup();
+    setTimeout(function(){ silentCloudPull(); }, 1);
+    setTimeout(function(){ fixRelativeAssets(document); }, 50);
+    setTimeout(function(){ fixRelativeAssets(document); }, 500);
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once:true });
+  else start();
 })();
 </script>
 
+
+<script id="crmo_v1862_local_priority_patch">
+(function(){
+  function isoMs(v){ try{ var n = Date.parse(v||''); return isNaN(n)?0:n; }catch(e){ return 0; } }
+  function nowIso(){ try{ return new Date().toISOString(); }catch(e){ return ''; } }
+  function markLocalEdit(reason){
+    try{ window.CRMO_LAST_LOCAL_EDIT_AT = nowIso(); }catch(e){}
+    try{ localStorage.setItem('CRMO_LAST_LOCAL_EDIT_AT', window.CRMO_LAST_LOCAL_EDIT_AT || nowIso()); }catch(e){}
+    try{ window.CRMO_LAST_LOCAL_EDIT_REASON = reason || 'edit'; }catch(e){}
+    try{
+      if(window.CRMO_collectStructuredPayload){
+        var payload = window.CRMO_collectStructuredPayload();
+        localStorage.setItem('crmo_storage_' + (window.CRMO_VERSION || 'unknown'), JSON.stringify(payload));
+      }
+    }catch(e){}
+    return true;
+  }
+  function readLocalEditMs(){
+    try{
+      var a = window.CRMO_LAST_LOCAL_EDIT_AT || localStorage.getItem('CRMO_LAST_LOCAL_EDIT_AT') || '';
+      return isoMs(a);
+    }catch(e){ return 0; }
+  }
+  function countTilesFromStorage(storage){
+    try{
+      var c = 0;
+      if(storage && storage.tiles && storage.tiles.items) c += Object.keys(storage.tiles.items).length;
+      if(storage && storage.contentData && Array.isArray(storage.contentData.projects)) c += storage.contentData.projects.length;
+      if(storage && storage.tilesSnapshot && Array.isArray(storage.tilesSnapshot)) c += storage.tilesSnapshot.length;
+      return c;
+    }catch(e){ return 0; }
+  }
+  function shouldAcceptCloud(storage){
+    try{
+      if(!storage || typeof storage !== 'object') return false;
+      var localMs = readLocalEditMs();
+      if(!localMs) return true;
+      var cloudMs = isoMs((storage && storage.savedAt) || (storage && storage.updated_at) || '');
+      var localPayload = null;
+      try{ localPayload = window.CRMO_collectStructuredPayload ? window.CRMO_collectStructuredPayload() : null; }catch(e){}
+      var localTiles = countTilesFromStorage(localPayload || {});
+      var cloudTiles = countTilesFromStorage(storage);
+      if(cloudMs && cloudMs < localMs && cloudTiles < localTiles) return false;
+      if(cloudMs && cloudMs < localMs && localMs - cloudMs < 10 * 60 * 1000) return false;
+      return true;
+    }catch(e){ return true; }
+  }
+  window.CRMO_markLocalEdit = markLocalEdit;
+
+  var origApply = window.CRMO_applyLoadedStorage;
+  if(typeof origApply === 'function' && !origApply.__crmo1862patched){
+    var wrappedApply = function(storage){
+      if(!shouldAcceptCloud(storage)){
+        try{ window.CRMO_LAST_CLOUD_BLOCKED = { at: nowIso(), reason:'stale-cloud-over-local', cloudSavedAt:(storage&&storage.savedAt)||'', localEditedAt:(window.CRMO_LAST_LOCAL_EDIT_AT||localStorage.getItem('CRMO_LAST_LOCAL_EDIT_AT')||'') }; }catch(e){}
+        return storage;
+      }
+      return origApply.apply(this, arguments);
+    };
+    wrappedApply.__crmo1862patched = true;
+    window.CRMO_applyLoadedStorage = wrappedApply;
+  }
+
+  var origRecover = window.CRMO_recoverFromCloud;
+  if(typeof origRecover === 'function' && !origRecover.__crmo1862patched){
+    var wrappedRecover = function(storage, reason){
+      if(storage && !shouldAcceptCloud(storage)){
+        try{ window.CRMO_LAST_RECOVERY = { ok:false, skipped:true, reason:'stale-cloud-blocked', at: nowIso() }; }catch(e){}
+        return { ok:false, skipped:true, reason:'stale-cloud-blocked' };
+      }
+      return origRecover.apply(this, arguments);
+    };
+    wrappedRecover.__crmo1862patched = true;
+    window.CRMO_recoverFromCloud = wrappedRecover;
+    window.CRMO_renderAll = function(){
+      var src = window.CRMO_PAYLOAD || window.CRMO_LAST_CLOUD_LOADED_STORAGE || window.CRMO_CLOUD_STATE || null;
+      return wrappedRecover(src, 'renderAll-v1862');
+    };
+  }
+
+  document.addEventListener('click', function(ev){
+    try{
+      var t = ev && ev.target;
+      if(!t || !t.closest) return;
+      var btn = t.closest('#te-save, #tm-te-save');
+      if(!btn) return;
+      markLocalEdit('tile-editor-save');
+      setTimeout(function(){ try{ markLocalEdit('tile-editor-save-post'); }catch(e){} }, 60);
+      setTimeout(function(){ try{ if(window.CRMO_flushStructuredSave) window.CRMO_flushStructuredSave('tile-editor-save'); }catch(e){} }, 80);
+      setTimeout(function(){ try{ if(window.CRMO_flushStructuredSave) window.CRMO_flushStructuredSave('tile-editor-save-late'); }catch(e){} }, 650);
+    }catch(e){}
+  }, true);
+
+  window.addEventListener('beforeunload', function(){
+    try{ markLocalEdit('beforeunload'); }catch(e){}
+  });
+})();
+</script>
 </body>
 </html>
