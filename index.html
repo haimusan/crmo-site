@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<!-- CRMO_v1851 -->
+<!-- CRMO_v1855 -->
 <html dir="rtl" lang="he">
 <head>
 <script id="crmo_storage_ns">
@@ -39,15 +39,17 @@
   }
 })();
 </script><script id="crmo-force-owner-head-v1699">
-/* Force Owner/UI visibility ASAP when ?admin=1 is present (no waiting for Supabase). */
+/* Force Owner/UI visibility ASAP when ?admin=1 is present, or when running locally (file:// / localhost). */
 (function(){
   try{
     var sp = new URLSearchParams(location.search || "");
-    if(sp.get("admin") === "1"){
+    var isLocalRuntime = (String(location.protocol||'') === 'file:' || /^(localhost|127\.0\.0\.1)$/i.test(String(location.hostname||'')));
+    if(sp.get("admin") === "1" || isLocalRuntime){
       window.CRMO_FORCE_OWNER = 1;
       try{ localStorage.setItem("crmo-role","master"); }catch(e){}
       document.documentElement.classList.add("crmo-owner","is-admin","crmo-auth-optimistic");
       document.documentElement.setAttribute("data-crmo-admin-flag","1");
+      try{ document.body && document.body.classList.add("crmo-owner","is-admin"); }catch(e){}
     }
   }catch(e){}
 })();
@@ -408,20 +410,23 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
     return r;
   }
   async function loadFromServer(){
-    if(!cloudEnabled()) throw new Error('Cloud disabled. Use ?cloud=1');
-    var ok = await ensureAuthed();
-    if(!ok) throw new Error('Not authenticated');
-    var email = await getUserEmail();
-    if(!isAdminEmail(email)) throw new Error('Not admin: ' + email);
+    if(!cloudEnabled()) throw new Error('Cloud disabled');
     var sb = await getSbOrThrow();
     var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
     var id = getConfigId();
+    var ses = null, email = '', readMode = 'guest';
+    try{
+      ses = (sb && sb.auth && sb.auth.getSession) ? await sb.auth.getSession() : null;
+      email = (ses && ses.data && ses.data.session && ses.data.session.user && ses.data.session.user.email) ? String(ses.data.session.user.email).toLowerCase() : '';
+      readMode = (ses && ses.data && ses.data.session) ? (isAdminEmail(email) ? 'admin-session' : 'user-session') : 'guest';
+    }catch(e){}
     var r = await sb.from(table).select('id,storage,updated_at').eq('id', id).single();
     if(r && r.error) throw r.error;
     try{
       if(r && r.data && r.data.storage){
         window.CRMO_LAST_CLOUD_LOADED_STORAGE = r.data.storage;
         window.CRMO_LAST_CLOUD_SIG = String((r.data.storage && (r.data.storage.savedAt || r.data.storage.schemaVersion)) || (r.data && r.data.updated_at) || '');
+        window.CRMO_LAST_CLOUD_LOAD_META = { ok:true, mode:readMode, id:id, at:new Date().toISOString() };
         applyLoadedStorage(r.data.storage);
       }
     }catch(e){}
@@ -574,6 +579,95 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
   window.CRMO_tryAutoloadFromCloud = tryLoad;
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once:true });
   else install();
+})();
+</script>
+<script id="crmo_boot_recovery_v1855">
+(function(){
+  try{ window.CRMO_BOOT_VERSION = '1855'; }catch(e){}
+  function isLocalRuntime(){
+    try{ return String(location.protocol||'')==='file:' || /^(localhost|127\.0\.0\.1)$/i.test(String(location.hostname||'')); }catch(e){ return false; }
+  }
+  function canCloud(){
+    try{ return !!(window.CRMO_cloudEnabled && window.CRMO_cloudEnabled()); }catch(e){ return false; }
+  }
+  function markBooting(){
+    try{
+      document.documentElement.classList.add('crmo-booting');
+      document.documentElement.setAttribute('data-crmo-boot','pending');
+      if(document.body){
+        document.body.classList.add('crmo-booting');
+        document.body.style.visibility = 'hidden';
+        document.body.style.opacity = '0';
+      }
+    }catch(e){}
+  }
+  function localTileHint(){
+    try{
+      if(window.CRMO_PAYLOAD && window.CRMO_PAYLOAD.tiles && window.CRMO_PAYLOAD.tiles.items) return Object.keys(window.CRMO_PAYLOAD.tiles.items||{}).length;
+    }catch(e){}
+    try{
+      return document.querySelectorAll('[data-tile-key]').length || 0;
+    }catch(e){}
+    return 0;
+  }
+  function finish(meta){
+    try{
+      document.documentElement.classList.remove('crmo-booting');
+      document.documentElement.classList.add('crmo-ready','is-ready','loaded');
+      document.documentElement.setAttribute('data-crmo-boot','done');
+      if(document.body){
+        document.body.classList.remove('crmo-booting');
+        document.body.style.visibility = 'visible';
+        document.body.style.opacity = '1';
+      }
+      window.CRMO_LAST_BOOT = { ok:true, at:new Date().toISOString(), meta: meta || null };
+    }catch(e){}
+  }
+  async function attempt(reason){
+    if(window.__CRMO_V1855_BOOT_RUNNING) return false;
+    window.__CRMO_V1855_BOOT_RUNNING = true;
+    markBooting();
+    try{
+      var applied = false;
+      var cloudStorage = null;
+      if(canCloud() && typeof window.CRMO_loadAllFromCloud === 'function'){
+        try{
+          var res = await window.CRMO_loadAllFromCloud();
+          cloudStorage = window.CRMO_LAST_CLOUD_LOADED_STORAGE || (res && res.data && res.data.storage) || null;
+        }catch(e){
+          window.CRMO_LAST_BOOT_CLOUD_ERROR = String((e && e.message) || e);
+        }
+      }
+      if(cloudStorage && typeof cloudStorage === 'object'){
+        applied = true;
+        try{ if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(cloudStorage); }catch(e){}
+        try{ if(window.batchRecover) window.batchRecover(cloudStorage, reason || 'boot-immediate-cloud'); }catch(e){}
+        try{ localStorage.setItem('crmo_storage_CRMO_v1855', JSON.stringify(cloudStorage)); }catch(e){}
+        finish({ reason: reason || 'boot-immediate-cloud', source:'cloud' });
+        return true;
+      }
+      var hint = localTileHint();
+      if(hint > 0){
+        applied = true;
+        try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
+        finish({ reason: reason || 'boot-local-existing', source:'local', tiles: hint });
+        return true;
+      }
+      finish({ reason: reason || 'boot-empty-fallback', source: isLocalRuntime() ? 'local-runtime' : 'empty' });
+      return applied;
+    }catch(e){
+      try{ window.CRMO_LAST_BOOT = { ok:false, at:new Date().toISOString(), reason:reason||'boot-immediate', error:String((e && e.message) || e) }; }catch(_e){}
+      finish({ reason: reason || 'boot-error-fallback', source:'error' });
+      return false;
+    }finally{
+      window.__CRMO_V1855_BOOT_RUNNING = false;
+    }
+  }
+  window.CRMO_bootRecoverNow = attempt;
+  markBooting();
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ attempt('domcontentloaded-immediate'); }, 0); }, { once:true });
+  else setTimeout(function(){ attempt('document-already-ready'); }, 0);
+  window.addEventListener('pageshow', function(){ setTimeout(function(){ attempt('pageshow'); }, 0); });
 })();
 </script>
 
@@ -1105,14 +1199,14 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
 })();
 </script>
 <script id="crmo_build_info_v1845">
-window.CRMO_BUILD_VERSION = "1851";
+window.CRMO_BUILD_VERSION = "1855";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = "CRMO_v1851";
-window.CRMO_VERSION_NUMBER = 1851;
+window.CRMO_VERSION = "CRMO_v1855";
+window.CRMO_VERSION_NUMBER = 1855;
 </script>
 <script id="crmo_topbars_status_v1804">
 (function(){
-  var VERSION = (window.CRMO_BUILD_VERSION || "1851");
+  var VERSION = (window.CRMO_BUILD_VERSION || "1855");
   function setText(id, txt){
     var el = document.getElementById(id);
     if(el) el.textContent = txt;
@@ -1378,7 +1472,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 </style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1851</title>
+<title>CRMO_v1855</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -13971,7 +14065,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 </div>
 <div class="crmo-footer-bottom" dir="ltr">
 <img alt="Creative Monster favicon" class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg"/>
-<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1851</span>
+<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1855</span>
 </div>
 </div>
 </footer>
@@ -30035,20 +30129,20 @@ async function refreshStatus(){
 })();
 </script>
 
-<script id="crmo-version-sync-v1851">
+<script id="crmo-version-sync-v1852">
 (function(){
   try{
-    var VNUM = 1851;
+    var VNUM = 1852;
     var VSTR = "V"+VNUM;
-    window.CRMO_VERSION = "CRMO_v1851";
-    window.CRMO_VERSION_NUMBER = 1851;
-    window.CRMO_BUILD_VERSION = "1851";
+    window.CRMO_VERSION = "CRMO_v1855";
+    window.CRMO_VERSION_NUMBER = 1855;
+    window.CRMO_BUILD_VERSION = "1855";
     var a = document.getElementById("crmo-version-rolebar");
     var b = document.getElementById("crmo-version-adminbar");
     if(a) a.textContent = VSTR;
     if(b) b.textContent = VSTR;
     var f = document.getElementById("crmo-footer-version");
-    if(f) f.textContent = "CRMO System Version 1851";
+    if(f) f.textContent = "CRMO System Version 1855";
   }catch(e){}
 })();
 </script>
@@ -30157,6 +30251,944 @@ window.CRMO_diagRender = function(){
   else cleanTileMedia(document);
   setTimeout(function(){ cleanTileMedia(document); }, 100);
   setTimeout(function(){ cleanTileMedia(document); }, 1200);
+})();
+</script>
+
+
+<script id="crmo_v1852_final_patch">
+(function(){
+  var VERSION_NUM = '1855';
+  var VERSION_NAME = 'CRMO_v1855';
+  window.CRMO_BUILD_VERSION = VERSION_NUM;
+  window.CRMO_VERSION = VERSION_NAME;
+  window.CRMO_VERSION_NUMBER = 1855;
+  window.CRMO_STORAGE_NS_PATH = '/';
+  window.CRMO_ASSET_PUBLIC_ROOT = 'https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/';
+
+  function isFn(v){ return typeof v === 'function'; }
+  function clone(v){ try{ return JSON.parse(JSON.stringify(v)); }catch(e){ return v; } }
+  function normStr(v){ return String(v == null ? '' : v).trim(); }
+  function byId(id){ return document.getElementById(id); }
+  function qsa(sel, root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+  function sectionForWrapper(w){
+    try{
+      var sec = w && w.closest ? w.closest('section[id]') : null;
+      return sec && sec.id ? sec.id : '';
+    }catch(e){ return ''; }
+  }
+  function placeholderFor(type){
+    type = normStr(type).toLowerCase();
+    if(type === 'logo' || type === 'brand') return 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect width="100%" height="100%" fill="#f3f3f3"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#888" font-family="Assistant,Arial,sans-serif" font-size="28">placeholder-logo</text></svg>');
+    if(type === 'video') return 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect width="100%" height="100%" fill="#111"/><polygon points="255,145 255,255 360,200" fill="#fff"/></svg>');
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800"><rect width="100%" height="100%" fill="#efefef"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#8a8a8a" font-family="Assistant,Arial,sans-serif" font-size="42">placeholder-image</text></svg>');
+  }
+  function resolveAssetPath(path, type){
+    if(path == null) return path;
+    if(Array.isArray(path)) return path.map(function(x){ return resolveAssetPath(x, type); });
+    if(typeof path === 'object'){
+      if(path && typeof path.src === 'string') path.src = resolveAssetPath(path.src, type);
+      if(path && typeof path.file === 'string' && /^assets\//i.test(path.file)) path.file = path.file.replace(/^assets\//i,'');
+      return path;
+    }
+    var s = String(path).trim();
+    if(!s) return s;
+    if(/^https?:\/\//i.test(s) || /^data:/i.test(s) || /^blob:/i.test(s)) return s;
+    if(/^assets\//i.test(s)) return window.CRMO_ASSET_PUBLIC_ROOT + s.slice(7).replace(/^\/+/,'');
+    return s;
+  }
+  function normalizeFilesMeta(val){
+    if(val == null || val === '') return val;
+    var data = val;
+    if(typeof val === 'string'){
+      try{ data = JSON.parse(val); }catch(e){ return val; }
+    }
+    if(Array.isArray(data)){
+      data = data.map(function(entry){
+        entry = clone(entry) || {};
+        if(typeof entry === 'string') return { src: resolveAssetPath(entry, 'image') };
+        if(entry.src) entry.src = resolveAssetPath(entry.src, entry.type || 'image');
+        if(entry.file && /^assets\//i.test(String(entry.file))) entry.file = String(entry.file).replace(/^assets\//i,'');
+        if(Array.isArray(entry.files)) entry.files = entry.files.map(function(x){ return resolveAssetPath(x, entry.type || 'image'); });
+        return entry;
+      });
+      try{ return JSON.stringify(data); }catch(e){ return val; }
+    }
+    return val;
+  }
+  function resolveStorageDeep(storage){
+    function walk(node, keyHint){
+      if(node == null) return node;
+      if(Array.isArray(node)){
+        return node.map(function(x){ return walk(x, keyHint); });
+      }
+      if(typeof node === 'object'){
+        Object.keys(node).forEach(function(k){
+          var lower = String(k||'').toLowerCase();
+          var val = node[k];
+          if(lower === 'filesmeta'){
+            node[k] = normalizeFilesMeta(val);
+            return;
+          }
+          if(lower === 'files'){
+            if(typeof val === 'string'){
+              node[k] = val.split(',').map(function(s){ return resolveAssetPath(String(s).trim(), 'image'); }).filter(Boolean).join(',');
+            }else if(Array.isArray(val)){
+              node[k] = val.map(function(x){ return resolveAssetPath(x, 'image'); });
+            }else{
+              node[k] = walk(val, k);
+            }
+            return;
+          }
+          if(lower in {src:1,cover:1,imagesrc:1,logosrc:1,logo:1,poster:1,path:1,image:1,thumb:1,thumbnail:1}){
+            node[k] = resolveAssetPath(val, (lower === 'logo' ? 'logo' : 'image'));
+            return;
+          }
+          node[k] = walk(val, k);
+        });
+        return node;
+      }
+      if(typeof node === 'string'){
+        if(/^assets\//i.test(node)) return resolveAssetPath(node, keyHint || 'image');
+      }
+      return node;
+    }
+    try{ return walk(clone(storage), ''); }catch(e){ return storage; }
+  }
+  function bindImageFallback(img){
+    if(!img || img.__crmoFallbackBound) return;
+    img.__crmoFallbackBound = true;
+    img.addEventListener('error', function(){
+      try{
+        if(img.__crmoFallbackApplied) return;
+        img.__crmoFallbackApplied = true;
+        var kind = (img.closest && img.closest('#brands')) ? 'logo' : 'image';
+        img.src = placeholderFor(kind);
+      }catch(e){}
+    });
+  }
+  function scanImages(root){
+    qsa('img', root).forEach(function(img){
+      try{
+        var raw = img.getAttribute('src') || '';
+        if(/^assets\//i.test(raw)) img.setAttribute('src', resolveAssetPath(raw, (img.closest && img.closest('#brands')) ? 'logo' : 'image'));
+      }catch(e){}
+      bindImageFallback(img);
+    });
+  }
+  function readItems(storage){
+    try{
+      if(storage && Array.isArray(storage.tilesSnapshot) && storage.tilesSnapshot.length) return storage.tilesSnapshot;
+      if(storage && storage.tiles && storage.tiles.items && typeof storage.tiles.items === 'object') return Object.values(storage.tiles.items || {});
+    }catch(e){}
+    return [];
+  }
+  function applyTileItemLite(it){
+    if(!it || !it.galleryId || !it.position) return false;
+    var sec = byId(it.galleryId);
+    if(!sec) return false;
+    var grid = sec.querySelector('.gallery-grid');
+    if(!grid) return false;
+    var wrappers = grid.querySelectorAll('.tile-edit-wrapper');
+    var w = wrappers[it.position - 1];
+    if(!w) return false;
+    var a = w.querySelector('a.ph') || w.querySelector('a');
+    var hover = w.querySelector('.hover-desc');
+    var strong = hover && hover.querySelector('strong');
+    var d = hover && hover.querySelector('div');
+    var ovTitle = w.querySelector('.crmo-ov h4');
+    var ovDesc = w.querySelector('.crmo-ov .desc');
+    var key = String(it.key || it.projectId || (it.galleryId + ':' + it.position));
+    try{ w.setAttribute('data-tile-key', key); }catch(e){}
+    if(it.projectId) w.setAttribute('data-project-id', String(it.projectId));
+    if(typeof it.client === 'string') w.setAttribute('data-client', it.client);
+    if(typeof it.tags === 'string') w.setAttribute('data-tags', it.tags);
+    if(typeof it.title === 'string'){
+      w.setAttribute('data-title', it.title);
+      if(strong) strong.textContent = it.title || 'שם הפרויקט';
+      if(ovTitle) ovTitle.textContent = it.title || 'שם הפרויקט';
+    }
+    if(typeof it.shortDescription === 'string'){
+      w.setAttribute('data-short-description', it.shortDescription);
+      if(d) d.textContent = it.shortDescription || 'תיאור קצר על הפרויקט';
+      if(ovDesc) ovDesc.textContent = it.shortDescription || 'תיאור קצר על הפרויקט';
+    }
+    if(typeof it.files === 'string' && it.files){
+      var resolvedFiles = it.files.split(',').map(function(s){ return resolveAssetPath(String(s).trim(), 'image'); }).filter(Boolean).join(',');
+      w.setAttribute('data-files', resolvedFiles);
+      if(a) a.setAttribute('data-files', resolvedFiles);
+    }
+    if(typeof it.filesMeta === 'string' && it.filesMeta){
+      var resolvedMeta = normalizeFilesMeta(it.filesMeta);
+      w.setAttribute('data-files-meta', resolvedMeta);
+      if(a) a.setAttribute('data-files-meta', resolvedMeta);
+    }
+    if(typeof it.subcaps === 'string' && it.subcaps){
+      w.setAttribute('data-subcaps', it.subcaps);
+      if(a) a.setAttribute('data-subcaps', it.subcaps);
+    }
+    if(typeof it.link === 'string' && a){
+      if(it.link && it.link !== '#'){
+        a.setAttribute('href', it.link);
+        w.setAttribute('data-link', it.link);
+      }
+      if(it.linkNewTab){
+        a.setAttribute('target','_blank');
+        a.setAttribute('rel','noopener');
+      }else{
+        a.removeAttribute('target');
+        a.removeAttribute('rel');
+      }
+    }
+    var src = '';
+    try{
+      src = resolveAssetPath((it.cover && it.cover.src) || it.imageSrc || '', 'image') || '';
+    }catch(e){ src = ''; }
+    if(src){
+      var img = a && a.querySelector('img');
+      if(img){
+        img.setAttribute('src', src);
+        bindImageFallback(img);
+      }else if(a){
+        a.style.backgroundImage = 'url("' + src.replace(/"/g,'%22') + '")';
+        a.style.backgroundSize = 'cover';
+        a.style.backgroundPosition = 'center center';
+      }
+      w.setAttribute('data-cover-src', src);
+      if(a) a.setAttribute('data-cover-src', src);
+    }
+    try{
+      w.hidden = false;
+      w.style.display = '';
+      w.style.visibility = 'visible';
+      w.style.opacity = '1';
+    }catch(e){}
+    return true;
+  }
+  function finalizeDomRender(meta){
+    try{
+      document.body.classList.remove('initializing', 'loading', 'auth-pending');
+      document.body.style.opacity = '1';
+      document.body.style.visibility = 'visible';
+      document.documentElement.classList.add('crmo-ready', 'is-ready', 'loaded');
+      qsa('.loading-overlay, #loading, .initial-loader').forEach(function(el){ try{ el.remove(); }catch(e){} });
+      scanImages(document);
+    }catch(e){}
+    var gridsCount = 0, tilesInDom = 0, visibleTiles = 0;
+    try{ gridsCount = qsa('.gallery-grid').length; }catch(e){}
+    try{
+      var tiles = qsa('[data-tile-key]');
+      tilesInDom = tiles.length;
+      tiles.forEach(function(el){
+        try{
+          var cs = getComputedStyle(el);
+          if(cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity || '1') > 0) visibleTiles++;
+        }catch(e){}
+      });
+    }catch(e){}
+    window.CRMO_LAST_DOM_RENDER = {
+      ok: true,
+      at: new Date().toISOString(),
+      reason: (meta && meta.reason) || 'render-batch',
+      gridsFilled: gridsCount,
+      tilesInjected: tilesInDom,
+      visibleTiles: visibleTiles,
+      duration: meta && meta.duration || 0,
+      items: meta && meta.items || 0,
+      applied: meta && meta.applied || 0
+    };
+    try{
+      console.table([{
+        reason: window.CRMO_LAST_DOM_RENDER.reason,
+        gridsCount: gridsCount,
+        tilesInDom: tilesInDom,
+        visibleTiles: visibleTiles,
+        applied: window.CRMO_LAST_DOM_RENDER.applied,
+        items: window.CRMO_LAST_DOM_RENDER.items,
+        duration: window.CRMO_LAST_DOM_RENDER.duration
+      }]);
+    }catch(e){}
+    return window.CRMO_LAST_DOM_RENDER;
+  }
+  function batchRecover(storage, reason){
+    storage = storage || window.CRMO_LAST_CLOUD_LOADED_STORAGE || window.CRMO_CLOUD_STATE || window.CRMO_PAYLOAD || null;
+    if(!storage || typeof storage !== 'object'){
+      try{ window.CRMO_LAST_DOM_RENDER = { ok:false, at:new Date().toISOString(), reason:reason||'render-batch', error:'no-storage' }; }catch(e){}
+      return false;
+    }
+    storage = resolveStorageDeep(storage);
+    try{
+      window.CRMO_CLOUD_STATE = storage;
+      window.CRMO_LAST_CLOUD_LOADED_STORAGE = storage;
+      window.CRMO_PAYLOAD = storage;
+    }catch(e){}
+    var items = readItems(storage);
+    var index = 0;
+    var applied = 0;
+    var start = (window.performance && performance.now) ? performance.now() : Date.now();
+    var guardEl = null;
+    try{
+      guardEl = byId('crmo-temp-recovery-guard-v1852');
+      if(!guardEl){
+        guardEl = document.createElement('style');
+        guardEl.id = 'crmo-temp-recovery-guard-v1852';
+        guardEl.textContent = '*,*::before,*::after{transition:none !important;animation:none !important;scroll-behavior:auto !important;}';
+        (document.head || document.documentElement).appendChild(guardEl);
+      }
+    }catch(e){}
+    function kickUI(){
+      try{ if(window.CRMO_tilesManagerRefresh) window.CRMO_tilesManagerRefresh(); }catch(e){}
+      try{ if(window.CRMO_stampAllGalleryGrids) window.CRMO_stampAllGalleryGrids(); }catch(e){}
+      try{ if(window.CRMO_rebuildGalleriesAdmin) window.CRMO_rebuildGalleriesAdmin(); }catch(e){}
+      try{ if(window.CRMO_refreshBrandOptions) window.CRMO_refreshBrandOptions(); }catch(e){}
+      try{ if(window.CRMO_updateBrandDropdowns) window.CRMO_updateBrandDropdowns(); }catch(e){}
+    }
+    function finish(){
+      try{ if(guardEl && guardEl.parentNode) guardEl.parentNode.removeChild(guardEl); }catch(e){}
+      kickUI();
+      try{ window.dispatchEvent(new Event('resize')); }catch(e){}
+      var end = (window.performance && performance.now) ? performance.now() : Date.now();
+      var meta = { reason:reason||'render-batch', items:items.length, applied:applied, duration:Math.round(end-start) };
+      finalizeDomRender(meta);
+      try{ window.CRMO_LAST_RECOVERY = { ok:true, at:new Date().toISOString(), reason:meta.reason, items:meta.items, applied:meta.applied, duration:meta.duration }; }catch(e){}
+    }
+    function step(){
+      var maxPerFrame = 16;
+      var count = 0;
+      while(index < items.length && count < maxPerFrame){
+        try{ if(applyTileItemLite(items[index])) applied++; }catch(e){}
+        index++;
+        count++;
+      }
+      if(index < items.length){
+        requestAnimationFrame(step);
+      }else{
+        requestAnimationFrame(function(){ requestAnimationFrame(finish); });
+      }
+    }
+    requestAnimationFrame(step);
+    return true;
+  }
+  function localTilesCount(){
+    try{
+      var n = qsa('[data-tile-key]').length;
+      if(n) return n;
+    }catch(e){}
+    try{
+      var payload = window.CRMO_PAYLOAD || window.CRMO_LAST_CLOUD_LOADED_STORAGE || null;
+      var items = readItems(payload);
+      if(items && items.length) return items.length;
+    }catch(e){}
+    try{
+      var ds = byId('content-data');
+      var obj = ds ? JSON.parse(ds.textContent || ds.innerText || '{}') : {};
+      if(obj && Array.isArray(obj.projects)) return obj.projects.length || 0;
+    }catch(e){}
+    return 0;
+  }
+  function shouldRecoverFromCloud(){
+    var count = localTilesCount();
+    if(count >= 98) return false;
+    try{
+      if(window.CRMO_CLOUD_STATE && readItems(window.CRMO_CLOUD_STATE).length >= 98) return false;
+    }catch(e){}
+    return true;
+  }
+  function scheduleSave(reason, delay){
+    try{
+      if(window.CRMO_scheduleStructuredSave) return window.CRMO_scheduleStructuredSave(reason || 'v1852', typeof delay === 'number' ? delay : 900);
+      if(window.CRMO_flushStructuredSave){
+        clearTimeout(window.__CRMO_V1852_SAVE_TIMER);
+        window.__CRMO_V1852_SAVE_TIMER = setTimeout(function(){ try{ window.CRMO_flushStructuredSave(reason || 'v1852'); }catch(e){} }, typeof delay === 'number' ? delay : 900);
+        return true;
+      }
+    }catch(e){}
+    return false;
+  }
+  function installSilentSync(){
+    document.addEventListener('blur', function(ev){
+      var t = ev && ev.target;
+      if(!t || !t.matches) return;
+      if(!t.matches('input, textarea, select, [contenteditable="true"]')) return;
+      var inAdmin = !!(t.closest && (t.closest('#crmo-legacy-tile-modal') || t.closest('#crmo-brands-gallery-modal') || t.closest('#galleries-admin-panel') || t.closest('.crmo-admin-bar') || t.closest('#crmo-footer-editor-extras')));
+      if(inAdmin) scheduleSave('onBlur', 900);
+    }, true);
+    document.addEventListener('change', function(ev){
+      var t = ev && ev.target;
+      if(!t || !t.closest) return;
+      if(t.closest('#crmo-brands-gallery-modal')) scheduleSave('brandsPanel.change', 900);
+      else if(t.closest('#galleries-admin-panel')) scheduleSave('galleryMeta.change', 900);
+      else if(t.closest('#crmo-legacy-tile-modal')) scheduleSave('tileEditor.change', 900);
+    }, true);
+    document.addEventListener('click', function(ev){
+      var t = ev && ev.target;
+      var btn = t && t.closest ? t.closest('[data-close="1"], .modal-close, .crmo-editor-close, .crmo-close') : null;
+      if(btn) scheduleSave('closeModal', 900);
+    }, true);
+  }
+  async function cautiousAutoLoad(reason){
+    try{
+      if(!shouldRecoverFromCloud()) return false;
+      if(!(window.CRMO_cloudEnabled && window.CRMO_cloudEnabled())) return false;
+      if(!isFn(window.CRMO_loadAllFromCloud)) return false;
+      var res = await window.CRMO_loadAllFromCloud();
+      try{ console.info('[CRMO] Auto-pull activated - data fetched from cloud.'); }catch(e){}
+      setTimeout(function(){ batchRecover(window.CRMO_LAST_CLOUD_LOADED_STORAGE || (res && res.data && res.data.storage) || null, reason || 'auto-threshold'); }, 60);
+      return res;
+    }catch(e){
+      try{ window.CRMO_LAST_RECOVERY = { ok:false, at:new Date().toISOString(), reason:reason||'auto-threshold', error:String((e&&e.message)||e) }; }catch(_e){}
+      return false;
+    }
+  }
+
+  var origCollect = window.CRMO_collectStructuredPayload;
+  if(isFn(origCollect) && !origCollect.__crmoV1853Patched){
+    var wrappedCollect = function(data){
+      var payload = origCollect.apply(this, arguments);
+      try{ payload = resolveStorageDeep(payload); }catch(e){}
+      return payload;
+    };
+    wrappedCollect.__crmoV1853Patched = true;
+    window.CRMO_collectStructuredPayload = wrappedCollect;
+  }
+
+  var origApply = window.CRMO_applyLoadedStorage;
+  if(isFn(origApply) && !origApply.__crmoV1853Patched){
+    var wrappedApply = function(storage){
+      storage = resolveStorageDeep(storage);
+      var out = origApply.apply(this, [storage]);
+      setTimeout(function(){ batchRecover(storage, 'apply-wrapper-v1852'); }, 40);
+      return out;
+    };
+    wrappedApply.__crmoV1853Patched = true;
+    window.CRMO_applyLoadedStorage = wrappedApply;
+  }
+
+  var origLoad = window.CRMO_loadAllFromCloud;
+  if(isFn(origLoad) && !origLoad.__crmoV1853Patched){
+    var wrappedLoad = async function(){
+      var out = await origLoad.apply(this, arguments);
+      var storage = null;
+      try{ storage = window.CRMO_LAST_CLOUD_LOADED_STORAGE || (out && out.data && out.data.storage) || null; }catch(e){}
+      storage = resolveStorageDeep(storage);
+      try{
+        if(storage){
+          window.CRMO_LAST_CLOUD_LOADED_STORAGE = storage;
+          window.CRMO_CLOUD_STATE = storage;
+        }
+      }catch(e){}
+      setTimeout(function(){ batchRecover(storage, 'load-wrapper-v1853'); }, 50);
+      return out;
+    };
+    wrappedLoad.__crmoV1853Patched = true;
+    window.CRMO_loadAllFromCloud = wrappedLoad;
+    window.CRMO_loadServerConfig = wrappedLoad;
+  }
+
+  var origRenderAll = window.CRMO_renderAll;
+  window.CRMO_renderAll = function(){
+    var src = window.CRMO_PAYLOAD || window.CRMO_LAST_CLOUD_LOADED_STORAGE || window.CRMO_CLOUD_STATE || null;
+    if(src){
+      batchRecover(src, 'renderAll-v1853');
+      return { ok:true, delegated:true };
+    }
+    if(isFn(origRenderAll)) return origRenderAll.apply(this, arguments);
+    return { ok:false, error:'no-payload' };
+  };
+
+  function syncVersionUi(){
+    try{ document.title = VERSION_NAME; }catch(e){}
+    try{
+      var f = byId('crmo-footer-version');
+      if(f) f.textContent = 'CRMO System Version 1855';
+    }catch(e){}
+    try{
+      var badges = qsa('[data-crmo-version], .crmo-version-badge, #crmo-version-badge, #crmo-top-version');
+      badges.forEach(function(el){
+        if(!el) return;
+        if(/185[0-9]/.test(el.textContent || '')) el.textContent = (el.textContent || '').replace(/185[0-9]+/g, '1852');
+      });
+    }catch(e){}
+  }
+
+  function install(){
+    try{
+      var isLocalRuntime = (String(location.protocol||'') === 'file:' || /^(localhost|127\.0\.0\.1)$/i.test(String(location.hostname||'')));
+      if(isLocalRuntime){
+        document.documentElement.classList.add('crmo-owner','is-admin');
+        if(document.body) document.body.classList.add('crmo-owner','is-admin');
+      }
+    }catch(e){}
+    installSilentSync();
+    syncVersionUi();
+    scanImages(document);
+    setTimeout(function(){ cautiousAutoLoad('boot-threshold-1'); }, 250);
+    setTimeout(function(){ cautiousAutoLoad('boot-threshold-2'); }, 1500);
+    document.addEventListener('crmo:auth-changed', function(){ setTimeout(function(){ cautiousAutoLoad('auth-threshold'); }, 120); });
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once:true });
+  else install();
+})();
+</script>
+
+
+<script id="crmo_v1854_final_patch">
+(function(){
+  var VERSION = '1855';
+  var SEED_ROW = {"id": "main", "storage": {"site_config": {"version": "1854", "last_migration": "2024-03-20"}, "navigation": [{"label": "בית (לוגו)", "target": "top", "_logo": true, "visible": true}, {"label": "חנויות וחללי מסחר", "target": "stores", "visible": true}, {"label": "נקודות מכירה", "target": "stands", "visible": true}, {"label": "מיתוג עסקי", "target": "identity", "visible": true}, {"label": "עיצוב מוצר", "target": "product", "visible": true}, {"label": "תערוכות", "target": "exhibitions", "visible": true}, {"label": "המותגים שלנו", "target": "brands", "visible": true}, {"label": "על הסטודיו", "target": "about", "visible": true}, {"label": "צור קשר", "target": "contact", "visible": true}], "galleries": {"order": ["intro", "brands", "secondary-gallery", "stores", "stands", "identity", "product", "exhibitions", "packages", "small"], "states": {"intro": [{"client": "brand 1", "title": "פרויקט א", "imageSrc": "assets/drop/2026-02-15T19-25-42-939Z_c5a8326f88ebd8.jpg", "multi": false}, {"client": "brand 2", "title": "פרויקט ב", "imageSrc": "assets/drop/2026-02-15T06-04-44-321Z_61c41682b649f8.jpg", "multi": false}], "brands": {"meta": {"title": "brands shape decisions", "desc": "תיאור המותגים"}, "items": [{"id": "brand-01", "logo": "assets/brands/2026-02-15T19-27-41-224Z_4fb34f33cc98d8.jpg"}, {"id": "brand-02", "logo": "assets/brands/2026-02-15T19-27-41-845Z_d68a5f9bbc3c98.jpg"}]}}}}};
+  var EDITABLE_SESSION = false;
+
+  function safe(fn, fallback){ try{ var v = fn(); return typeof v === 'undefined' ? fallback : v; }catch(e){ return fallback; } }
+  function isObj(v){ return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function clone(v){ try{ return JSON.parse(JSON.stringify(v)); }catch(e){ return v; } }
+  function isLocalRuntime(){
+    try{ return String(location.protocol||'')==='file:' || /^(localhost|127\.0\.0\.1)$/i.test(String(location.hostname||'')); }catch(e){ return false; }
+  }
+  function addLocalAdminUi(){
+    try{
+      if(!isLocalRuntime()) return;
+      document.documentElement.classList.add('crmo-owner','is-admin');
+      if(document.body) document.body.classList.add('crmo-owner','is-admin');
+    }catch(e){}
+  }
+  function getBucketBase(){
+    try{
+      var url = String(window.CRMO_SUPABASE_URL || '').trim().replace(/\/$/, '');
+      var bucket = String(window.CRMO_SUPABASE_BUCKET || 'assets').trim() || 'assets';
+      if(!url) return '';
+      return url + '/storage/v1/object/public/' + bucket + '/';
+    }catch(e){ return ''; }
+  }
+  function normalizePath(v){
+    try{
+      if(typeof v !== 'string') return v;
+      var s = v.trim();
+      if(!s) return s;
+      if(/^(https?:|data:|blob:)/i.test(s)) return s;
+      var base = getBucketBase();
+      if(!base) return s;
+      if(/^assets\//i.test(s)) return base + s.replace(/^assets\//i,'');
+      if(/^(drop|tiles|brands)\//i.test(s)) return base + s.replace(/^\//,'');
+      return s;
+    }catch(e){ return v; }
+  }
+  function normalizeStorage(node){
+    if(Array.isArray(node)) return node.map(normalizeStorage);
+    if(!isObj(node)) return normalizePath(node);
+    var out = {};
+    Object.keys(node).forEach(function(k){
+      var val = node[k];
+      if(k === 'filesMeta' && Array.isArray(val)){
+        out[k] = val.map(function(item){
+          if(isObj(item)){
+            var cp = clone(item);
+            ['path','src','url','image','thumb','thumbnail','logo'].forEach(function(pk){
+              if(typeof cp[pk] === 'string') cp[pk] = normalizePath(cp[pk]);
+            });
+            return cp;
+          }
+          return normalizePath(item);
+        });
+      } else if(['image','imageSrc','src','url','thumb','thumbnail','logo','poster'].indexOf(k) >= 0 && typeof val === 'string'){
+        out[k] = normalizePath(val);
+      } else {
+        out[k] = normalizeStorage(val);
+      }
+    });
+    return out;
+  }
+  function hasMeaningful(v){
+    if(v === null || typeof v === 'undefined') return false;
+    if(typeof v === 'string') return v.trim() !== '';
+    if(typeof v === 'number' || typeof v === 'boolean') return true;
+    if(Array.isArray(v)) return v.length > 0;
+    if(isObj(v)) return Object.keys(v).length > 0;
+    return !!v;
+  }
+  function mergeCloudLocal(cloud, local){
+    if(Array.isArray(cloud) || Array.isArray(local)){
+      return hasMeaningful(local) ? clone(local) : clone(cloud);
+    }
+    if(isObj(cloud) || isObj(local)){
+      var out = {};
+      var keys = Object.keys(cloud || {}).concat(Object.keys(local || {}));
+      keys.forEach(function(k){
+        if(out.hasOwnProperty(k)) return;
+        var cv = cloud ? cloud[k] : undefined;
+        var lv = local ? local[k] : undefined;
+        out[k] = mergeCloudLocal(cv, lv);
+      });
+      return out;
+    }
+    return hasMeaningful(local) ? clone(local) : clone(cloud);
+  }
+  function getLegacyKeys(){
+    var out = [];
+    try{
+      for(var i=0;i<localStorage.length;i++) {
+        var k = localStorage.key(i);
+        if(!k) continue;
+        if(!/(?:^|_)(?:CRMO|crmo)/.test(k)) continue;
+        if(!/(galler|brand|tile|config|storage|content)/i.test(k)) continue;
+        out.push(k);
+      }
+    }catch(e){}
+    return out;
+  }
+  function parseJsonMaybe(v){
+    try{ return JSON.parse(v); }catch(e){ return v; }
+  }
+  function buildLegacyStorage(){
+    var legacyKeys = getLegacyKeys();
+    var built = clone(SEED_ROW.storage);
+    var legacy = {};
+    legacyKeys.forEach(function(k){
+      var raw = safe(function(){ return localStorage.getItem(k); }, null);
+      if(raw == null) return;
+      var val = parseJsonMaybe(raw);
+      legacy[k] = val;
+      if(/BRANDS/i.test(k)){
+        if(!built.brands && isObj(val)) built.brands = clone(val);
+        if(!built.galleries) built.galleries = {};
+        if(!built.galleries.states) built.galleries.states = {};
+        if(!built.galleries.states.brands && isObj(val)) built.galleries.states.brands = clone(val);
+      }
+      if(/gallery.*state|galleries/i.test(k) && !/brands/i.test(k)){
+        if(!built.galleries) built.galleries = {};
+        if(!built.galleries.states && isObj(val)) built.galleries.states = clone(val);
+      }
+      if(/config/i.test(k) && isObj(val)){
+        if(!built.legacy) built.legacy = {};
+        built.legacy[k] = clone(val);
+      }
+      if(/tiles/i.test(k) && isObj(val)){
+        if(!built.tiles) built.tiles = clone(val);
+      }
+      if(/content/i.test(k) && isObj(val)){
+        if(!built.contentData) built.contentData = clone(val);
+      }
+    });
+    built = normalizeStorage(built);
+    return { storage: built, legacyKeys: legacyKeys, legacyDump: legacy };
+  }
+  function getTilesCount(storage){
+    try{
+      var s = storage || window.CRMO_LAST_CLOUD_LOADED_STORAGE || null;
+      if(!s) return 0;
+      var states = s && s.galleries && s.galleries.states;
+      if(Array.isArray(states)) return states.length;
+      var count = 0;
+      if(isObj(states)){
+        Object.keys(states).forEach(function(k){
+          var v = states[k];
+          if(Array.isArray(v)) count += v.length;
+          else if(v && Array.isArray(v.items)) count += v.items.length;
+        });
+      }
+      if(s.tiles && isObj(s.tiles.items)) count += Object.keys(s.tiles.items).length;
+      return count;
+    }catch(e){ return 0; }
+  }
+  function applyStorageCompat(storage){
+    try{
+      var s = normalizeStorage(clone(storage));
+      window.CRMO_LAST_CLOUD_LOADED_STORAGE = s;
+      window.CRMO_CLOUD_STATE = s;
+      if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(s);
+      if(window.CRMO_PAYLOAD == null) window.CRMO_PAYLOAD = s;
+      if(window.batchRecover) {
+        try{ window.batchRecover(s, 'v1854-compat'); }catch(e){}
+      }
+      try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
+      try{ if(window.CRMO_refreshUiFromCloud) window.CRMO_refreshUiFromCloud(); }catch(e){}
+      return s;
+    }catch(e){ return storage; }
+  }
+  async function getSb(){
+    if(window.CRMO_getSB) return await window.CRMO_getSB();
+    throw new Error('CRMO_getSB missing');
+  }
+  async function getSessionState(){
+    try{
+      var sb = await getSb();
+      if(!sb || !sb.auth || !sb.auth.getSession) return { session:null, email:'', editable:false };
+      var res = await sb.auth.getSession();
+      var sess = res && res.data && res.data.session ? res.data.session : null;
+      var email = sess && sess.user && sess.user.email ? String(sess.user.email).toLowerCase() : '';
+      return { session:sess, email:email, editable:!!sess };
+    }catch(e){ return { session:null, email:'', editable:false }; }
+  }
+  async function cloudLoadPublic(){
+    var sb = await getSb();
+    var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
+    var id = (window.CRMO_getConfigId ? window.CRMO_getConfigId() : 'main') || 'main';
+    var r = await sb.from(table).select('id,storage,updated_at').eq('id', id).single();
+    if(r && r.error) throw r.error;
+    if(r && r.data && r.data.storage){
+      var st = normalizeStorage(r.data.storage);
+      window.CRMO_LAST_CLOUD_LOAD_META = { ok:true, mode:'guest-public', id:id, at:new Date().toISOString() };
+      return st;
+    }
+    return null;
+  }
+  async function cloudSaveSession(storage){
+    var state = await getSessionState();
+    if(!state.editable) throw new Error('No active session for cloud save');
+    var sb = await getSb();
+    var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
+    var id = (window.CRMO_getConfigId ? window.CRMO_getConfigId() : 'main') || 'main';
+    var payload = { id:id, storage: normalizeStorage(clone(storage)), updated_at:new Date().toISOString() };
+    var r = await sb.from(table).upsert(payload, { onConflict:'id' }).select('id,updated_at').single();
+    if(r && r.error) throw r.error;
+    return r;
+  }
+  async function migrateOnce(){
+    var legacy = buildLegacyStorage();
+    var cloud = null;
+    try{ cloud = await cloudLoadPublic(); }catch(e){ cloud = null; }
+    var merged = mergeCloudLocal(cloud || SEED_ROW.storage || {}, legacy.storage || {});
+    merged = normalizeStorage(merged);
+    var hasLegacy = legacy.legacyKeys && legacy.legacyKeys.length > 0;
+    var result = {
+      hasLegacy: !!hasLegacy,
+      legacyKeys: legacy.legacyKeys || [],
+      cloudLoaded: !!cloud,
+      localTiles: getTilesCount(legacy.storage),
+      cloudTiles: getTilesCount(cloud),
+      mergedTiles: getTilesCount(merged),
+      saved: false,
+      cleaned: false
+    };
+    window.CRMO_LAST_MIGRATION = {
+      at: new Date().toISOString(),
+      legacyKeys: result.legacyKeys,
+      mergedPreview: merged
+    };
+    window.CRMO_LAST_MIGRATION_KEYS = result.legacyKeys;
+    applyStorageCompat(merged);
+    if(hasLegacy){
+      try{
+        await cloudSaveSession(merged);
+        result.saved = true;
+        legacy.legacyKeys.forEach(function(k){
+          try{ localStorage.removeItem(k); }catch(e){}
+        });
+        result.cleaned = true;
+      }catch(e){
+        result.error = String((e && e.message) || e);
+      }
+    }
+    window.CRMO_LAST_MIGRATION_RESULT = result;
+    console.table([{
+      migratedKeys: result.legacyKeys.length,
+      removedKeys: result.cleaned ? result.legacyKeys.length : 0,
+      cloudLoaded: result.cloudLoaded,
+      tilesCount: result.mergedTiles,
+      galleriesCount: safe(function(){ return Object.keys((merged.galleries && merged.galleries.states) || {}).length; }, 0)
+    }]);
+    return result;
+  }
+  function patchExports(){
+    window.CRMO_loadServerConfig = async function(){
+      var st = await cloudLoadPublic();
+      if(st) applyStorageCompat(st);
+      return { data: st ? { storage: st } : null };
+    };
+    window.CRMO_loadAllFromCloud = window.CRMO_loadServerConfig;
+    window.CRMO_saveServerConfig = async function(data){
+      var storage = data && data.storage ? data.storage : (data || (window.CRMO_collectStructuredPayload ? window.CRMO_collectStructuredPayload() : null));
+      return await cloudSaveSession(storage);
+    };
+    window.CRMO_saveAllToCloud = window.CRMO_saveServerConfig;
+  }
+  function syncVersionUi(){
+    try{ document.title = 'CRMO_v' + VERSION; }catch(e){}
+    try{
+      var f = document.getElementById('crmo-footer-version');
+      if(f) f.textContent = 'CRMO System Version ' + VERSION;
+    }catch(e){}
+    try{
+      Array.prototype.forEach.call(document.querySelectorAll('[data-crmo-version], .crmo-version-badge, #crmo-version-badge, #crmo-top-version, #crmo-version-rolebar, #crmo-version-adminbar'), function(el){
+        if(!el) return;
+        var txt = String(el.textContent || '').trim();
+        el.textContent = txt ? txt.replace(/18\d{2}/g, VERSION) : ('v' + VERSION);
+      });
+    }catch(e){}
+  }
+  async function boot(){
+    addLocalAdminUi();
+    patchExports();
+    syncVersionUi();
+    var state = await getSessionState();
+    EDITABLE_SESSION = !!state.editable;
+    window.CRMO_SESSION_EDITABLE = EDITABLE_SESSION;
+    try{ await migrateOnce(); }catch(e){
+      window.CRMO_LAST_MIGRATION_RESULT = { ok:false, error:String((e && e.message) || e) };
+      try{
+        var cloud = await cloudLoadPublic();
+        if(cloud) applyStorageCompat(cloud);
+      }catch(e2){}
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ boot(); }, { once:true });
+  else boot();
+})();
+</script>
+
+
+<script id="crmo_v1855_patch">
+(function(){
+  var VERSION = '1855';
+  var VERSION_NAME = 'CRMO_v1855';
+  var VERSION_NUM = 1855;
+  function isObj(v){ return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function clone(v){ try{ return JSON.parse(JSON.stringify(v)); }catch(e){ return v; } }
+  function bucketBase(){
+    try{
+      var url = String(window.CRMO_SUPABASE_URL || '').replace(/\/+$/,'');
+      var bucket = String(window.CRMO_SUPABASE_BUCKET || 'assets').replace(/^\/+|\/+$/g,'') || 'assets';
+      if(!url) return '';
+      return url + '/storage/v1/object/public/' + bucket + '/';
+    }catch(e){ return ''; }
+  }
+  function toRenderPath(v){
+    try{
+      if(typeof v !== 'string') return v;
+      var s = v.trim();
+      if(!s) return s;
+      if(/^(https?:|data:|blob:)/i.test(s)) return s;
+      if(/^assets\//i.test(s)){
+        var base = bucketBase();
+        return base ? (base + s.replace(/^assets\//i,'')) : s;
+      }
+      return s;
+    }catch(e){ return v; }
+  }
+  function toStoragePath(v){
+    try{
+      if(typeof v !== 'string') return v;
+      var s = v.trim();
+      if(!s) return s;
+      var base = bucketBase();
+      if(base && s.indexOf(base) === 0) return 'assets/' + s.slice(base.length).replace(/^\/+/, '');
+      var m = s.match(/\/storage\/v1\/object\/public\/assets\/(.+)$/i);
+      if(m && m[1]) return 'assets/' + m[1].replace(/^\/+/, '');
+      return s;
+    }catch(e){ return v; }
+  }
+  function deepMap(node, mode){
+    if(Array.isArray(node)) return node.map(function(x){ return deepMap(x, mode); });
+    if(!isObj(node)){
+      return mode === 'save' ? toStoragePath(node) : toRenderPath(node);
+    }
+    var out = {};
+    Object.keys(node).forEach(function(k){
+      var val = node[k];
+      if(typeof val === 'string' || Array.isArray(val) || isObj(val)) out[k] = deepMap(val, mode);
+      else out[k] = val;
+    });
+    return out;
+  }
+  function hasMeaningfulStorage(s){
+    try{
+      if(!s || typeof s !== 'object') return false;
+      if(s.tiles && s.tiles.items && Object.keys(s.tiles.items || {}).length) return true;
+      if(Array.isArray(s.tilesSnapshot) && s.tilesSnapshot.length) return true;
+      if(s.contentData && Array.isArray(s.contentData.projects) && s.contentData.projects.length) return true;
+      if(s.galleries && s.galleries.items && Object.keys(s.galleries.items || {}).length) return true;
+    }catch(e){}
+    return false;
+  }
+  function notifyAtomicSaveFailure(msg){
+    try{
+      window.CRMO_LAST_ATOMIC_SAVE = { ok:false, at:new Date().toISOString(), error:msg };
+      alert('שגיאת הרשאה: הנתונים נשמרו מקומית אך לא סונכרנו לענן. וודא שאתה מחובר כמשתמש מורשה');
+    }catch(e){}
+  }
+  var origCollect = window.CRMO_collectStructuredPayload;
+  if(typeof origCollect === 'function' && !origCollect.__crmoV1855SavePatch){
+    var wrappedCollect = function(data){
+      var payload = origCollect.apply(this, arguments);
+      return deepMap(payload, 'save');
+    };
+    wrappedCollect.__crmoV1855SavePatch = true;
+    window.CRMO_collectStructuredPayload = wrappedCollect;
+  }
+  var origApply = window.CRMO_applyLoadedStorage;
+  if(typeof origApply === 'function' && !origApply.__crmoV1855RenderPatch){
+    var wrappedApply = function(storage){
+      return origApply.call(this, deepMap(storage, 'render'));
+    };
+    wrappedApply.__crmoV1855RenderPatch = true;
+    window.CRMO_applyLoadedStorage = wrappedApply;
+  }
+  var origLoad = window.CRMO_loadAllFromCloud || window.CRMO_loadServerConfig;
+  if(typeof origLoad === 'function' && !origLoad.__crmoV1855BootPatch){
+    var wrappedLoad = async function(){
+      var out = await origLoad.apply(this, arguments);
+      try{
+        var storage = window.CRMO_LAST_CLOUD_LOADED_STORAGE || (out && out.data && out.data.storage) || null;
+        storage = deepMap(storage, 'render');
+        if(hasMeaningfulStorage(storage)){
+          window.CRMO_LAST_CLOUD_LOADED_STORAGE = storage;
+          window.CRMO_CLOUD_STATE = storage;
+          if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(storage);
+          if(window.batchRecover) setTimeout(function(){ window.batchRecover(storage, 'v1855-load-immediate'); }, 0);
+        }
+      }catch(e){}
+      return out;
+    };
+    wrappedLoad.__crmoV1855BootPatch = true;
+    window.CRMO_loadAllFromCloud = wrappedLoad;
+    window.CRMO_loadServerConfig = wrappedLoad;
+  }
+  var origSave = window.CRMO_saveAllToCloud || window.CRMO_saveServerConfig;
+  if(typeof origSave === 'function' && !origSave.__crmoV1855AtomicPatch){
+    var wrappedSave = async function(data){
+      var source = (typeof data !== 'undefined') ? data : (window.CRMO_collectStructuredPayload ? window.CRMO_collectStructuredPayload() : null);
+      var payload = deepMap(clone(source), 'save');
+      try{
+        localStorage.setItem('crmo_pending_cloud_write_v1855', JSON.stringify({ at:new Date().toISOString(), storage: payload }));
+      }catch(e){}
+      try{
+        var res = await origSave.call(this, payload);
+        try{
+          localStorage.setItem('crmo_last_cloud_ok_v1855', JSON.stringify({ at:new Date().toISOString(), ok:true }));
+          localStorage.removeItem('crmo_pending_cloud_write_v1855');
+          window.CRMO_LAST_ATOMIC_SAVE = { ok:true, at:new Date().toISOString(), result:res || null };
+        }catch(e){}
+        return res;
+      }catch(e){
+        notifyAtomicSaveFailure(String((e && e.message) || e));
+        throw e;
+      }
+    };
+    wrappedSave.__crmoV1855AtomicPatch = true;
+    window.CRMO_saveAllToCloud = wrappedSave;
+    window.CRMO_saveServerConfig = wrappedSave;
+  }
+  function syncVersionUi(){
+    try{ document.title = VERSION_NAME; }catch(e){}
+    try{ window.CRMO_VERSION = VERSION_NAME; }catch(e){}
+    try{ window.CRMO_VERSION_NUMBER = VERSION_NUM; }catch(e){}
+    try{ window.CRMO_BUILD_VERSION = String(VERSION_NUM); }catch(e){}
+    try{ document.documentElement.setAttribute('data-crmo-version', VERSION); }catch(e){}
+    try{
+      var footer = document.getElementById('crmo-footer-version');
+      if(footer) footer.textContent = 'CRMO System Version ' + VERSION;
+    }catch(e){}
+    try{
+      document.querySelectorAll('[data-crmo-version], .crmo-version-badge, #crmo-version-badge, #crmo-top-version, #crmo-version-rolebar, #crmo-version-adminbar').forEach(function(el){
+        if(!el) return;
+        var txt = String(el.textContent || '').trim();
+        if(/^v?\d+$/i.test(txt)) el.textContent = 'V' + VERSION;
+        else el.textContent = txt.replace(/CRMO_v\d+/g, VERSION_NAME).replace(/\b18\d{2}\b/g, VERSION) || ('V' + VERSION);
+      });
+    }catch(e){}
+  }
+  syncVersionUi();
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', syncVersionUi, { once:true });
+  else setTimeout(syncVersionUi, 0);
 })();
 </script>
 
