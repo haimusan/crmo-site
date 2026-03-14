@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<!-- CRMO_v1838 -->
+<!-- CRMO_v1851 -->
 <html dir="rtl" lang="he">
 <head>
 <script id="crmo_storage_ns">
@@ -336,6 +336,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
         currentPath: location.pathname || '/',
         routeGallery: !!document.body.classList.contains('crmo-route-gallery')
       },
+      tiles: { items: {} },
       contentKeys: collectContentLocalStorage(),
       legacy: {
         CRMO_SITE_CONFIG: clone(window.CRMO_SITE_CONFIG || null),
@@ -417,7 +418,13 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
     var id = getConfigId();
     var r = await sb.from(table).select('id,storage,updated_at').eq('id', id).single();
     if(r && r.error) throw r.error;
-    try{ if(r && r.data && r.data.storage) applyLoadedStorage(r.data.storage); }catch(e){}
+    try{
+      if(r && r.data && r.data.storage){
+        window.CRMO_LAST_CLOUD_LOADED_STORAGE = r.data.storage;
+        window.CRMO_LAST_CLOUD_SIG = String((r.data.storage && (r.data.storage.savedAt || r.data.storage.schemaVersion)) || (r.data && r.data.updated_at) || '');
+        applyLoadedStorage(r.data.storage);
+      }
+    }catch(e){}
     return r;
   }
   window.CRMO_cloudEnabled = cloudEnabled;
@@ -434,7 +441,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
   window.CRMO_SYNC_MODE = 'structured';
 })();
 </script>
-<script id="crmo_structured_autosave_v1839">
+<script id="crmo_structured_autosave_v1845">
 (function(){
   function safe(fn){ try{ return fn(); }catch(e){ return null; } }
   function isFn(v){ return typeof v === 'function'; }
@@ -507,7 +514,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
   else install();
 })();
 </script>
-<script id="crmo_structured_autoload_v1839">
+<script id="crmo_structured_autoload_v1845">
 (function(){
   function isFn(v){ return typeof v === 'function'; }
   function canCloud(){
@@ -521,13 +528,36 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
       return !!(s && s.data && s.data.session);
     }catch(e){ return false; }
   }
+  function replayLoadedState(reason){
+    var s = null;
+    try{ s = window.CRMO_LAST_CLOUD_LOADED_STORAGE || window.CRMO_CLOUD_STATE || null; }catch(e){}
+    if(!s) return false;
+    [30, 180, 700, 1600].forEach(function(delay){
+      setTimeout(function(){
+        try{ if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(s); }catch(e){}
+        try{ if(window.CRMO_refreshUiFromCloud) window.CRMO_refreshUiFromCloud(); }catch(e){}
+      }, delay);
+    });
+    try{ window.CRMO_LAST_AUTOLOAD_REPLAY = { ok:true, reason:reason||'auto', at:new Date().toISOString() }; }catch(e){}
+    return true;
+  }
   async function tryLoad(reason){
     try{
-      if(!canCloud()) return false;
-      if(!isFn(window.CRMO_loadAllFromCloud)) return false;
-      if(!(await hasSession())) return false;
+      if(!canCloud()){
+        try{ window.CRMO_LAST_AUTOLOAD = { ok:false, skipped:true, reason:reason||'auto', at:new Date().toISOString(), error:'cloud-disabled' }; }catch(e){}
+        return false;
+      }
+      if(!isFn(window.CRMO_loadAllFromCloud)){
+        try{ window.CRMO_LAST_AUTOLOAD = { ok:false, skipped:true, reason:reason||'auto', at:new Date().toISOString(), error:'load-missing' }; }catch(e){}
+        return false;
+      }
+      if(!(await hasSession())){
+        try{ window.CRMO_LAST_AUTOLOAD = { ok:false, skipped:true, reason:reason||'auto', at:new Date().toISOString(), error:'no-session' }; }catch(e){}
+        return false;
+      }
       var r = await window.CRMO_loadAllFromCloud();
-      try{ window.CRMO_LAST_AUTOLOAD = { ok:true, reason:reason||'auto', at:new Date().toISOString(), result:r }; }catch(e){}
+      replayLoadedState(reason);
+      try{ window.CRMO_LAST_AUTOLOAD = { ok:true, reason:reason||'auto', at:new Date().toISOString(), reloaded:false, result:r }; }catch(e){}
       return r;
     }catch(e){
       try{ window.CRMO_LAST_AUTOLOAD = { ok:false, reason:reason||'auto', at:new Date().toISOString(), error:String((e && e.message)||e) }; }catch(_e){}
@@ -538,29 +568,551 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
     setTimeout(function(){ tryLoad(reason); }, typeof delay === 'number' ? delay : 200);
   }
   function install(){
-    schedule('boot:early', 250);
-    schedule('boot:late', 1200);
-    window.addEventListener('pageshow', function(){ schedule('pageshow', 120); });
-    document.addEventListener('visibilitychange', function(){
-      if(document.visibilityState === 'visible') schedule('visible', 120);
-    });
-    document.addEventListener('crmo:auth-changed', function(){ schedule('auth', 120); });
-    window.addEventListener('focus', function(){ schedule('focus', 120); });
+    [250, 1200, 2600, 5000].forEach(function(delay, idx){ schedule(idx === 0 ? 'boot:early' : ('boot:retry:' + idx), delay); });
+    document.addEventListener('crmo:auth-changed', function(){ schedule('auth', 120); schedule('auth:late', 1200); });
   }
   window.CRMO_tryAutoloadFromCloud = tryLoad;
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once:true });
   else install();
 })();
 </script>
-<script id="crmo_build_info_v1839">
-window.CRMO_BUILD_VERSION = "1839";
+
+<script id="crmo_structured_tiles_restore_v1845">
+(function(){
+  function clone(v){ try{ return JSON.parse(JSON.stringify(v)); }catch(e){ return v; } }
+  function txt(el){ return ((el && (el.textContent||''))||'').replace(/\s+/g,' ').trim(); }
+  function sectionForWrapper(w){
+    try{
+      var sec = w && w.closest ? w.closest('section[id]') : null;
+      if(sec && sec.id) return sec.id;
+    }catch(e){}
+    return '';
+  }
+  function getContentData(){
+    try{ if(window.CREAMO_CONTENT && typeof window.CREAMO_CONTENT === 'object') return clone(window.CREAMO_CONTENT); }catch(e){}
+    try{
+      var ds = document.getElementById('content-data');
+      if(ds) return JSON.parse(ds.textContent || ds.innerText || '{}') || {};
+    }catch(e){}
+    return {};
+  }
+  function getMetaStore(){
+    try{
+      var ds = document.getElementById('crmo-gallery-meta-store');
+      if(ds) return JSON.parse(ds.textContent || ds.innerText || '{}') || {};
+    }catch(e){}
+    return {};
+  }
+  function collectTilesSnapshot(){
+    var items = [];
+    function parseJson(v, fallback){ try{ return JSON.parse(v); }catch(e){ return fallback; } }
+    function firstNonEmpty(){
+      for(var i=0;i<arguments.length;i++){
+        var v = arguments[i];
+        if(v === undefined || v === null) continue;
+        if(typeof v === 'string'){
+          if(v.trim()) return v.trim();
+        } else if(v) return v;
+      }
+      return '';
+    }
+    function projectFromContent(content, sectionId, pos, projectId){
+      try{
+        var projects = (content && Array.isArray(content.projects)) ? content.projects : [];
+        for(var i=0;i<projects.length;i++){
+          var pr = projects[i];
+          if(!pr) continue;
+          if(projectId && String(pr.id||'') === String(projectId)) return pr;
+          var gs = Array.isArray(pr.galleries) ? pr.galleries : [];
+          for(var j=0;j<gs.length;j++){
+            var g = gs[j] || {};
+            if(String(g.galleryId||'') === String(sectionId||'') && Number(g.position||0) === Number(pos||0)) return pr;
+          }
+        }
+      }catch(e){}
+      return null;
+    }
+    var content = getContentData();
+    try{
+      var wrappers = document.querySelectorAll('.tile-edit-wrapper');
+      (wrappers.forEach || Array.prototype.forEach).call(wrappers, function(w, globalIndex){
+        try{
+          if(!w || !w.querySelector) return;
+          var grid = w.parentElement;
+          var sectionId = sectionForWrapper(w) || (grid && grid.closest && grid.closest('section[id]') && grid.closest('section[id]').id) || '';
+          var all = grid && grid.querySelectorAll ? grid.querySelectorAll('.tile-edit-wrapper') : [];
+          var pos = 0;
+          for(var i=0;i<all.length;i++){ if(all[i] === w){ pos = i+1; break; } }
+          var a = w.querySelector('a.ph') || w.querySelector('a');
+          var hover = w.querySelector('.hover-desc');
+          var strong = hover && hover.querySelector('strong');
+          var d = hover && hover.querySelector('div');
+          var ovTitle = w.querySelector('.crmo-ov h4');
+          var ovDesc = w.querySelector('.crmo-ov .desc');
+          var img = a && a.querySelector('img');
+          var bg = '';
+          try{ bg = a && a.style && a.style.backgroundImage ? a.style.backgroundImage : ''; }catch(e){}
+          if(bg && bg.indexOf('url(') === 0) bg = bg.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+          var imageSrc = (img && (img.getAttribute('src') || img.src) || bg || '').trim();
+          var projectId = (w.getAttribute('data-project-id') || '').trim();
+          var project = projectFromContent(content, sectionId, pos || globalIndex+1, projectId);
+          if(project && !projectId) projectId = String(project.id || '').trim();
+          var files = firstNonEmpty(
+            w.getAttribute('data-files'),
+            a && a.getAttribute('data-files'),
+            project && Array.isArray(project.assets) && project.assets.length > 1 ? project.assets.map(function(x){ return x && (x.src || x.file || ''); }).filter(Boolean).join(',') : ''
+          );
+          var filesMeta = firstNonEmpty(
+            w.getAttribute('data-files-meta'),
+            a && a.getAttribute('data-files-meta'),
+            project && Array.isArray(project.assets) && project.assets.length ? JSON.stringify(project.assets.map(function(x, idx){ return { src:(x&&x.src)||'', file:(x&&x.file)||'', title:(x&&x.title)||'', alt:(x&&x.alt)||'', sub:(x&&x.sub)||'', caption:(x&&x.caption)||'', index:idx }; })) : ''
+          );
+          var cover = firstNonEmpty(
+            imageSrc,
+            w.getAttribute('data-cover-src'),
+            a && a.getAttribute('data-cover-src'),
+            project && project.assets && project.assets[0] && (project.assets[0].src || project.assets[0].file)
+          );
+          var title = firstNonEmpty(
+            txt(strong),
+            txt(ovTitle),
+            w.getAttribute('data-title'),
+            a && a.getAttribute('data-title'),
+            project && project.title
+          );
+          var shortDescription = firstNonEmpty(
+            txt(d),
+            txt(ovDesc),
+            w.getAttribute('data-short-description'),
+            a && a.getAttribute('data-short-description'),
+            project && (project.shortDescription || project.description)
+          );
+          var contentData = project ? clone(project) : undefined;
+          var item = {
+            key: (sectionId||'ungrouped') + ':' + String(pos || globalIndex+1),
+            galleryId: sectionId || '',
+            position: pos || globalIndex+1,
+            projectId: projectId,
+            ownerKey: (w.getAttribute('data-crmo-owner-key') || '').trim(),
+            idx: (w.getAttribute('data-crmo-idx') || '').trim(),
+            client: firstNonEmpty(w.getAttribute('data-client'), project && project.brand),
+            title: title,
+            shortDescription: shortDescription,
+            link: firstNonEmpty(w.getAttribute('data-link'), a && a.getAttribute('href'), project && project.link),
+            linkNewTab: ((w.getAttribute('data-link-newtab') || '0') === '1') || (!!a && a.getAttribute('target') === '_blank'),
+            linkActive: !w.hasAttribute('data-link-disabled'),
+            imageSrc: cover,
+            cover: cover ? { src: cover, kind: 'image' } : undefined,
+            filename: firstNonEmpty(w.getAttribute('data-filename'), a && a.getAttribute('data-filename'), project && project.assets && project.assets[0] && project.assets[0].file),
+            files: files,
+            filesMeta: filesMeta,
+            subcaps: firstNonEmpty(w.getAttribute('data-subcaps'), a && a.getAttribute('data-subcaps')),
+            tags: ((w.getAttribute('data-tags') || '')+'').trim(),
+            multi: !!(files && (String(files).split(',').filter(Boolean).length > 1)),
+            contentData: contentData
+          };
+          if(item.title || item.shortDescription || item.imageSrc || item.files || item.filesMeta || item.projectId || item.galleryId){
+            items.push(item);
+          }
+        }catch(e){}
+      });
+    }catch(e){}
+    return items;
+  }
+  function mergeSnapshotIntoContent(content, items){
+    try{
+      if(!content || typeof content !== 'object') content = {};
+      if(!Array.isArray(content.projects)) content.projects = [];
+      var byId = {};
+      content.projects.forEach(function(p){ if(p && p.id) byId[String(p.id)] = p; });
+      (items || []).forEach(function(it){
+        if(!it || !it.projectId) return;
+        var p = byId[String(it.projectId)];
+        if(!p){
+          p = { id: String(it.projectId), title:'', shortDescription:'', galleries:[{ galleryId: it.galleryId || '', position: Number(it.position)||1 }], assets:[] };
+          content.projects.push(p);
+          byId[String(it.projectId)] = p;
+        }
+        p.title = it.title || p.title || '';
+        p.shortDescription = it.shortDescription || p.shortDescription || '';
+        if(it.client) p.brand = it.client;
+        if(!Array.isArray(p.galleries) || !p.galleries.length) p.galleries = [{ galleryId: it.galleryId || '', position: Number(it.position)||1 }];
+        else {
+          p.galleries[0].galleryId = it.galleryId || p.galleries[0].galleryId || '';
+          p.galleries[0].position = Number(it.position)||p.galleries[0].position||1;
+        }
+        if(it.imageSrc || it.filename){
+          if(!Array.isArray(p.assets)) p.assets = [];
+          if(!p.assets[0]) p.assets[0] = {};
+          if(it.imageSrc) p.assets[0].src = it.imageSrc;
+          if(it.filename) p.assets[0].file = it.filename;
+          p.type = p.type || 'image';
+        }
+      });
+    }catch(e){}
+    return content;
+  }
+  function writeContentData(content){
+    try{ window.CREAMO_CONTENT = content; }catch(e){}
+    try{
+      var ds = document.getElementById('content-data');
+      if(ds) ds.textContent = JSON.stringify(content || {}, null, 2);
+    }catch(e){}
+  }
+  function writeMetaStore(meta){
+    try{
+      var ds = document.getElementById('crmo-gallery-meta-store');
+      if(ds) ds.textContent = JSON.stringify(meta || {}, null, 2);
+    }catch(e){}
+  }
+  function applySingleTile(it){
+    try{
+      if(!it || !it.galleryId || !it.position) return;
+      var sec = document.getElementById(it.galleryId);
+      if(!sec) return;
+      var grid = sec.querySelector('.gallery-grid');
+      if(!grid) return;
+      var wrappers = grid.querySelectorAll('.tile-edit-wrapper');
+      var w = wrappers[it.position - 1];
+      if(!w) return;
+      var a = w.querySelector('a.ph') || w.querySelector('a');
+      var hover = w.querySelector('.hover-desc');
+      var strong = hover && hover.querySelector('strong');
+      var d = hover && hover.querySelector('div');
+      var ovTitle = w.querySelector('.crmo-ov h4');
+      var ovDesc = w.querySelector('.crmo-ov .desc');
+      if(it.projectId) w.setAttribute('data-project-id', String(it.projectId));
+      try{ w.setAttribute('data-tile-key', String(it.key || it.projectId || (it.galleryId + ':' + it.position))); }catch(e){}
+      if(typeof it.client === 'string') w.setAttribute('data-client', it.client);
+      if(typeof it.tags === 'string') w.setAttribute('data-tags', it.tags);
+      if(typeof it.title === 'string' && strong) strong.textContent = it.title || 'שם הפרויקט';
+      if(typeof it.shortDescription === 'string' && d) d.textContent = it.shortDescription || 'תיאור קצר על הפרויקט';
+      if(typeof it.title === 'string' && ovTitle) ovTitle.textContent = it.title || 'שם הפרויקט';
+      if(typeof it.shortDescription === 'string' && ovDesc) ovDesc.textContent = it.shortDescription || 'תיאור קצר על הפרויקט';
+      if(a){
+        if(typeof it.files === 'string' && it.files) a.setAttribute('data-files', it.files);
+        if(typeof it.filesMeta === 'string' && it.filesMeta) a.setAttribute('data-files-meta', it.filesMeta);
+        if(typeof it.subcaps === 'string' && it.subcaps) a.setAttribute('data-subcaps', it.subcaps);
+        if(typeof it.filename === 'string' && it.filename) a.setAttribute('data-filename', it.filename);
+        if(typeof it.link === 'string'){
+          if(it.link && it.link !== '#'){
+            a.setAttribute('href', it.link);
+            w.setAttribute('data-link', it.link);
+            if(it.linkActive === false) w.setAttribute('data-link-disabled','1'); else w.removeAttribute('data-link-disabled');
+            if(it.linkNewTab){ a.setAttribute('target','_blank'); a.setAttribute('rel','noopener'); w.setAttribute('data-link-newtab','1'); }
+            else { a.removeAttribute('target'); a.removeAttribute('rel'); w.removeAttribute('data-link-newtab'); }
+          }
+        }
+        if(((typeof it.imageSrc === 'string' && it.imageSrc) || (it.cover && it.cover.src))){
+          var src = (typeof it.imageSrc === 'string' && it.imageSrc) ? it.imageSrc : (it.cover && it.cover.src) || '';
+          var img = a.querySelector('img');
+          if(img) img.src = src;
+          else {
+            a.style.backgroundImage = 'url(' + src + ')';
+            a.style.backgroundSize = 'cover';
+            a.style.backgroundPosition = 'center center';
+          }
+        }
+      }
+      if(typeof it.filename === 'string' && it.filename) w.setAttribute('data-filename', it.filename);
+      if(typeof it.files === 'string' && it.files) w.setAttribute('data-files', it.files);
+      if(typeof it.filesMeta === 'string' && it.filesMeta) w.setAttribute('data-files-meta', it.filesMeta);
+      if(typeof it.subcaps === 'string' && it.subcaps) w.setAttribute('data-subcaps', it.subcaps);
+      try{ w.style.display = ''; w.hidden = false; }catch(e){}
+    }catch(e){}
+  }
+  function applyTilesSnapshot(items){
+    try{ (items || []).forEach(applySingleTile); }catch(e){}
+    try{ if(window.CRMO_tilesManagerRefresh) window.CRMO_tilesManagerRefresh(); }catch(e){}
+    try{ if(window.CRMO_stampAllGalleryGrids) window.CRMO_stampAllGalleryGrids(); }catch(e){}
+    return true;
+  }
+  var origCollect = window.CRMO_collectStructuredPayload;
+  var origApply = window.CRMO_applyLoadedStorage;
+  var origRefresh = window.CRMO_refreshUiFromCloud;
+  if(typeof origCollect === 'function'){
+    window.CRMO_collectStructuredPayload = function(data){
+      var payload = origCollect.call(this, data);
+      if(typeof data !== 'undefined') return payload;
+      try{
+        var content = getContentData();
+        var snap = collectTilesSnapshot();
+        var itemsMap = {};
+        (snap || []).forEach(function(it, idx){
+          if(!it) return;
+          var k = String(it.projectId || it.ownerKey || it.key || ('tile:' + (idx+1)));
+          itemsMap[k] = clone(it);
+        });
+        payload.tiles = { items: itemsMap };
+        payload.contentData = mergeSnapshotIntoContent(content, snap);
+        payload.tilesSnapshot = snap;
+        payload.galleryMetaStore = getMetaStore();
+      }catch(e){}
+      return payload;
+    };
+  }
+  window.CRMO_applyTilesSnapshot = applyTilesSnapshot;
+  window.CRMO_collectTilesSnapshot = collectTilesSnapshot;
+  window.CRMO_applyLoadedStorage = function(storage){
+    var out = (typeof origApply === 'function') ? origApply.call(this, storage) : storage;
+    try{
+      if(storage && storage.contentData) writeContentData(clone(storage.contentData));
+      if(storage && storage.galleryMetaStore) writeMetaStore(clone(storage.galleryMetaStore));
+      var snap = null;
+      if(storage && storage.tilesSnapshot && Array.isArray(storage.tilesSnapshot)) snap = storage.tilesSnapshot;
+      else if(storage && storage.tiles && storage.tiles.items && typeof storage.tiles.items === 'object') {
+        try{ snap = Object.values(storage.tiles.items || {}); }catch(e){ snap = null; }
+      }
+      if(snap && snap.length) setTimeout(function(){ applyTilesSnapshot(snap); }, 60);
+      else if(storage && storage.contentData) setTimeout(function(){ applyTilesSnapshot(collectTilesSnapshot()); }, 80);
+    }catch(e){}
+    return out;
+  };
+  window.CRMO_refreshUiFromCloud = function(){
+    var r = (typeof origRefresh === 'function') ? origRefresh.call(this) : true;
+    try{
+      var s = window.CRMO_CLOUD_STATE || window.CRMO_LAST_CLOUD_LOADED_STORAGE || null;
+      if(s && s.contentData) writeContentData(clone(s.contentData));
+      var snap = null;
+      if(s && s.tilesSnapshot && Array.isArray(s.tilesSnapshot)) snap = s.tilesSnapshot;
+      else if(s && s.tiles && s.tiles.items && typeof s.tiles.items === 'object') {
+        try{ snap = Object.values(s.tiles.items || {}); }catch(e){ snap = null; }
+      }
+      if(snap && snap.length) applyTilesSnapshot(snap);
+    }catch(e){}
+    return r;
+  };
+})();
+</script>
+
+<script id="crmo_cloud_recovery_v1849">
+(function(){
+  function clone(v){ try{ return JSON.parse(JSON.stringify(v)); }catch(e){ return v; } }
+  function asArray(storage){
+    try{
+      if(storage && Array.isArray(storage.tilesSnapshot) && storage.tilesSnapshot.length) return storage.tilesSnapshot;
+      if(storage && storage.tiles && storage.tiles.items && typeof storage.tiles.items === 'object') return Object.values(storage.tiles.items || {});
+    }catch(e){}
+    return [];
+  }
+  function normalizeStorage(storage){
+    try{
+      if(!storage || typeof storage !== 'object') return storage;
+      var out = clone(storage) || {};
+      var items = asArray(out);
+      var ids = [];
+      var seen = {};
+      function addId(id){ id = String(id || '').trim(); if(!id || seen[id]) return; seen[id] = true; ids.push(id); }
+      try{ items.forEach(function(it){ addId(it && it.galleryId); }); }catch(e){}
+      try{
+        var projs = out.contentData && Array.isArray(out.contentData.projects) ? out.contentData.projects : [];
+        projs.forEach(function(pr){
+          var gs = Array.isArray(pr && pr.galleries) ? pr.galleries : [];
+          gs.forEach(function(g){ addId(g && g.galleryId); });
+        });
+      }catch(e){}
+      try{
+        var metas = out.galleryMetaStore && typeof out.galleryMetaStore === 'object' ? Object.keys(out.galleryMetaStore) : [];
+        metas.forEach(addId);
+      }catch(e){}
+      if(!out.galleries || typeof out.galleries !== 'object') out.galleries = {};
+      if(!out.galleries.items || typeof out.galleries.items !== 'object') out.galleries.items = {};
+      if(!Array.isArray(out.galleries.order)) out.galleries.order = [];
+      ids.forEach(function(id){
+        if(!out.galleries.items[id]) out.galleries.items[id] = { id:id, title:id, visible:true, tileIds:[] };
+        if(out.galleries.order.indexOf(id) < 0) out.galleries.order.push(id);
+      });
+      items.forEach(function(it, idx){
+        var gid = String((it && it.galleryId) || '').trim();
+        if(!gid) gid = 'recovery_gallery';
+        if(!out.galleries.items[gid]) out.galleries.items[gid] = { id:gid, title:gid, visible:true, tileIds:[] };
+        var tid = String((it && (it.projectId || it.ownerKey || it.key)) || ('tile:' + (idx+1)));
+        if(out.galleries.items[gid].tileIds.indexOf(tid) < 0) out.galleries.items[gid].tileIds.push(tid);
+      });
+      if(items.length && !ids.length){
+        if(!out.galleries.items['recovery_gallery']) out.galleries.items['recovery_gallery'] = { id:'recovery_gallery', title:'שחזור אוטומטי', visible:true, tileIds:[] };
+        out.galleries.items['recovery_gallery'].tileIds = items.map(function(it, idx){ return String((it && (it.projectId || it.ownerKey || it.key)) || ('tile:' + (idx+1))); });
+        if(out.galleries.order.indexOf('recovery_gallery') < 0) out.galleries.order.unshift('recovery_gallery');
+      }
+      if(!out.contentData || typeof out.contentData !== 'object') out.contentData = {};
+      if(!Array.isArray(out.contentData.galleries)) out.contentData.galleries = [];
+      var byId = {};
+      out.contentData.galleries.forEach(function(g){ if(g && g.id) byId[String(g.id)] = g; });
+      Object.keys(out.galleries.items || {}).forEach(function(id){
+        if(byId[id]) return;
+        var meta = (out.galleryMetaStore && out.galleryMetaStore[id]) || {};
+        out.contentData.galleries.push({
+          id:id,
+          title: meta.title || {},
+          subtitle: meta.subtitle || {},
+          expandPageEnabled: !!meta.expandPageEnabled
+        });
+      });
+      return out;
+    }catch(e){ return storage; }
+  }
+  function buildContentFromItems(items){
+    var out = { projects: [] }, byId = {};
+    try{
+      (items || []).forEach(function(it, idx){
+        if(!it) return;
+        var id = String(it.projectId || it.ownerKey || it.key || ('tile:'+ (idx+1)));
+        var p = byId[id];
+        if(!p){ p = { id:id, title:'', shortDescription:'', galleries:[{ galleryId: it.galleryId || '', position: Number(it.position)||1 }], assets:[] }; byId[id] = p; out.projects.push(p); }
+        if(typeof it.title === 'string') p.title = it.title;
+        if(typeof it.shortDescription === 'string') p.shortDescription = it.shortDescription;
+        if(it.client) p.brand = it.client;
+        if(it.galleryId) p.galleries[0].galleryId = it.galleryId;
+        if(it.position) p.galleries[0].position = Number(it.position)||1;
+        var assets = [];
+        try{
+          if(Array.isArray(it.contentData && it.contentData.assets) && it.contentData.assets.length) assets = clone(it.contentData.assets);
+          else if(typeof it.filesMeta === 'string' && it.filesMeta.trim()) assets = JSON.parse(it.filesMeta).map(function(x){ return { src:(x&&x.src)||'', file:(x&&x.file)||'', title:(x&&x.title)||'', alt:(x&&x.alt)||'', sub:(x&&x.sub)||'', caption:(x&&x.caption)||'' }; });
+          else if(typeof it.files === 'string' && it.files.trim()) assets = it.files.split(',').map(function(s){ s=String(s||'').trim(); return s ? { src:s } : null; }).filter(Boolean);
+          else if((it.cover && it.cover.src) || it.imageSrc) assets = [{ src:(it.cover && it.cover.src) || it.imageSrc || '' }];
+        }catch(e){}
+        p.assets = assets; if(assets[0]) p.type = 'image';
+      });
+    }catch(e){}
+    return out;
+  }
+  function applyItem(it){
+    try{
+      if(!it || !it.galleryId || !it.position) return false;
+      var sec = document.getElementById(it.galleryId); if(!sec) return false;
+      var grid = sec.querySelector('.gallery-grid'); if(!grid) return false;
+      var wrappers = grid.querySelectorAll('.tile-edit-wrapper'); var w = wrappers[it.position - 1]; if(!w) return false;
+      var a = w.querySelector('a.ph') || w.querySelector('a');
+      var hover = w.querySelector('.hover-desc'); var strong = hover && hover.querySelector('strong'); var d = hover && hover.querySelector('div');
+      var ovTitle = w.querySelector('.crmo-ov h4'); var ovDesc = w.querySelector('.crmo-ov .desc');
+      if(it.projectId) w.setAttribute('data-project-id', String(it.projectId));
+      if(typeof it.title === 'string'){ w.setAttribute('data-title', it.title); if(strong) strong.textContent = it.title || 'שם הפרויקט'; if(ovTitle) ovTitle.textContent = it.title || 'שם הפרויקט'; }
+      if(typeof it.shortDescription === 'string'){ w.setAttribute('data-short-description', it.shortDescription); if(d) d.textContent = it.shortDescription || 'תיאור קצר על הפרויקט'; if(ovDesc) ovDesc.textContent = it.shortDescription || 'תיאור קצר על הפרויקט'; }
+      if(typeof it.files === 'string' && it.files) w.setAttribute('data-files', it.files);
+      if(typeof it.filesMeta === 'string' && it.filesMeta) w.setAttribute('data-files-meta', it.filesMeta);
+      if(typeof it.subcaps === 'string' && it.subcaps) w.setAttribute('data-subcaps', it.subcaps);
+      if(a){
+        if(typeof it.files === 'string' && it.files) a.setAttribute('data-files', it.files);
+        if(typeof it.filesMeta === 'string' && it.filesMeta) a.setAttribute('data-files-meta', it.filesMeta);
+        if(typeof it.subcaps === 'string' && it.subcaps) a.setAttribute('data-subcaps', it.subcaps);
+        var src = (it.cover && it.cover.src) || it.imageSrc || '';
+        if(src){ var img = a.querySelector('img'); if(img) img.src = src; else { a.style.backgroundImage = 'url(' + src + ')'; a.style.backgroundSize='cover'; a.style.backgroundPosition='center center'; } w.setAttribute('data-cover-src', src); }
+      }
+      try{ w.style.display = ''; w.hidden = false; }catch(e){}
+      return true;
+    }catch(e){ return false; }
+  }
+  function writeJsonScript(id, obj){ try{ var el = document.getElementById(id); if(el) el.textContent = JSON.stringify(obj || {}, null, 2); }catch(e){} }
+  function ensurePerfGuard(){
+    try{
+      var existing = document.getElementById('crmo-temp-recovery-guard');
+      if(existing) return existing;
+      var style = document.createElement('style');
+      style.id = 'crmo-temp-recovery-guard';
+      style.textContent = '*,*::before,*::after{transition:none !important;animation:none !important;scroll-behavior:auto !important;}';
+      (document.head || document.documentElement).appendChild(style);
+      return style;
+    }catch(e){ return null; }
+  }
+  function finalizeVisibleState(meta, guardEl){
+    try{
+      document.body.classList.remove('initializing', 'loading', 'auth-pending');
+      document.body.style.opacity = '1';
+      document.body.style.visibility = 'visible';
+      document.documentElement.classList.add('crmo-ready', 'is-ready', 'loaded');
+      document.querySelectorAll('.loading-overlay, #loading, .initial-loader').forEach(function(el){ try{ el.remove(); }catch(_e){} });
+    }catch(e){}
+    try{
+      if(guardEl && guardEl.parentNode) guardEl.parentNode.removeChild(guardEl);
+    }catch(e){}
+    try{
+      var grids = document.querySelectorAll('.gallery-grid');
+      var tiles = document.querySelectorAll('[data-tile-key]');
+      var visible = 0;
+      for(var i=0;i<tiles.length;i++){
+        try{
+          var cs = getComputedStyle(tiles[i]);
+          if(cs.display !== 'none' && cs.visibility !== 'hidden' && parseFloat(cs.opacity || '1') > 0) visible++;
+        }catch(_e){}
+      }
+      console.table([{
+        reason: (meta && meta.reason) || 'recover',
+        gridsCount: grids.length,
+        tilesInDom: tiles.length,
+        visibleTiles: visible,
+        applied: (meta && meta.applied) || 0,
+        items: (meta && meta.items) || 0,
+        galleries: (meta && meta.galleries) || 0
+      }]);
+    }catch(e){}
+  }
+  function afterRecovery(meta, guardEl){
+    try{
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
+          finalizeVisibleState(meta, guardEl);
+        });
+      });
+    }catch(e){
+      setTimeout(function(){ finalizeVisibleState(meta, guardEl); }, 0);
+    }
+  }
+  function recover(storage, reason){
+    try{
+      storage = storage || window.CRMO_LAST_CLOUD_LOADED_STORAGE || window.CRMO_CLOUD_STATE || null;
+      if(!storage || typeof storage !== 'object') return { ok:false, error:'no-storage' };
+      storage = normalizeStorage(storage);
+      window.CRMO_CLOUD_STATE = storage; window.CRMO_LAST_CLOUD_LOADED_STORAGE = storage; window.CRMO_PAYLOAD = storage;
+      var items = asArray(storage);
+      if((!storage.contentData || !Array.isArray(storage.contentData.projects)) && items.length){ storage = clone(storage); storage.contentData = buildContentFromItems(items); storage = normalizeStorage(storage); window.CRMO_CLOUD_STATE = storage; window.CRMO_LAST_CLOUD_LOADED_STORAGE = storage; window.CRMO_PAYLOAD = storage; }
+      if(storage.contentData) writeJsonScript('content-data', storage.contentData);
+      if(storage.galleryMetaStore) writeJsonScript('crmo-gallery-meta-store', storage.galleryMetaStore);
+      try{ localStorage.setItem('crmo_storage_' + (window.CRMO_VERSION || 'unknown'), JSON.stringify(storage)); }catch(e){}
+      try{ if(storage.contentKeys && typeof storage.contentKeys === 'object'){ Object.keys(storage.contentKeys).forEach(function(k){ try{ localStorage.setItem(k, typeof storage.contentKeys[k] === 'string' ? storage.contentKeys[k] : JSON.stringify(storage.contentKeys[k])); }catch(e){} }); } }catch(e){}
+      var guardEl = ensurePerfGuard();
+      var applied = 0;
+      for(var i=0;i<items.length;i++){
+        try{
+          if(applyItem(items[i])) applied++;
+        }catch(_tileErr){}
+      }
+      function kick(){ try{ if(window.CRMO_tilesManagerRefresh) window.CRMO_tilesManagerRefresh(); }catch(e){} try{ if(window.CRMO_stampAllGalleryGrids) window.CRMO_stampAllGalleryGrids(); }catch(e){} try{ if(window.CRMO_rebuildGalleriesAdmin) window.CRMO_rebuildGalleriesAdmin(); }catch(e){} try{ window.dispatchEvent(new Event('resize')); }catch(e){} }
+      kick(); setTimeout(kick,120); setTimeout(kick,600); setTimeout(kick,1800);
+      var result = { ok:true, reason:reason||'recover', items:items.length, applied:applied, galleries:Object.keys((storage && storage.galleries && storage.galleries.items) || {}).length };
+      afterRecovery(result, guardEl);
+      try{ window.CRMO_LAST_RECOVERY = { ok:true, reason:reason||'recover', at:new Date().toISOString(), items:items.length, applied:applied, galleries:Object.keys((storage && storage.galleries && storage.galleries.items) || {}).length }; }catch(e){}
+      return result;
+    }catch(e){ try{ window.CRMO_LAST_RECOVERY = { ok:false, reason:reason||'recover', at:new Date().toISOString(), error:String((e&&e.message)||e) }; }catch(_e){} return { ok:false, error:String((e&&e.message)||e) }; }
+  }
+  var origLoad = window.CRMO_loadAllFromCloud;
+  if(typeof origLoad === 'function'){
+    window.CRMO_loadAllFromCloud = async function(){ var r = await origLoad.apply(this, arguments); try{ recover(window.CRMO_LAST_CLOUD_LOADED_STORAGE || (r && r.data && r.data.storage) || null, 'load-wrapper'); }catch(e){} return r; };
+    window.CRMO_loadServerConfig = window.CRMO_loadAllFromCloud;
+  }
+  var origApply = window.CRMO_applyLoadedStorage;
+  if(typeof origApply === 'function'){
+    window.CRMO_applyLoadedStorage = function(storage){ var out = origApply.apply(this, arguments); try{ recover(storage, 'apply-wrapper'); }catch(e){} return out; };
+  }
+  var origCollect = window.CRMO_collectStructuredPayload;
+  if(typeof origCollect === 'function'){
+    window.CRMO_collectStructuredPayload = function(data){ var p = origCollect.apply(this, arguments); try{ var src = window.CRMO_LAST_CLOUD_LOADED_STORAGE || window.CRMO_CLOUD_STATE || null; var empty = !p || !p.tiles || !p.tiles.items || !Object.keys(p.tiles.items).length; if(src && empty){ if(src.tiles) p.tiles = clone(src.tiles); if(src.tilesSnapshot) p.tilesSnapshot = clone(src.tilesSnapshot); if(src.contentData && !p.contentData) p.contentData = clone(src.contentData); if(src.galleryMetaStore && !p.galleryMetaStore) p.galleryMetaStore = clone(src.galleryMetaStore); } }catch(e){} return p; };
+  }
+  window.CRMO_recoverFromCloud = recover;
+  window.CRMO_renderAll = function(){ try{ return recover(window.CRMO_PAYLOAD || window.CRMO_LAST_CLOUD_LOADED_STORAGE || window.CRMO_CLOUD_STATE || null, 'renderAll'); }catch(e){ return { ok:false, error:String((e&&e.message)||e) }; } };
+  setTimeout(function(){ try{ recover(null, 'boot-recover-1'); }catch(e){} }, 300);
+  setTimeout(function(){ try{ recover(null, 'boot-recover-2'); }catch(e){} }, 1400);
+  setTimeout(function(){ try{ recover(null, 'boot-recover-3'); }catch(e){} }, 3200);
+})();
+</script>
+<script id="crmo_build_info_v1845">
+window.CRMO_BUILD_VERSION = "1851";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = "CRMO_v1839";
-window.CRMO_VERSION_NUMBER = 1839;
+window.CRMO_VERSION = "CRMO_v1851";
+window.CRMO_VERSION_NUMBER = 1851;
 </script>
 <script id="crmo_topbars_status_v1804">
 (function(){
-  var VERSION = (window.CRMO_BUILD_VERSION || "1806");
+  var VERSION = (window.CRMO_BUILD_VERSION || "1851");
   function setText(id, txt){
     var el = document.getElementById(id);
     if(el) el.textContent = txt;
@@ -826,7 +1378,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 </style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1838</title>
+<title>CRMO_v1851</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -13419,7 +13971,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 </div>
 <div class="crmo-footer-bottom" dir="ltr">
 <img alt="Creative Monster favicon" class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg"/>
-<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1806</span>
+<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1851</span>
 </div>
 </div>
 </footer>
@@ -15086,7 +15638,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "intro-1",
+          "file": "",
           "caption": "חנות דגל לרשת אופנה – תכנון מסע לקוח, ויטרינה חכמה וקופה שמייצרת סגירת מכירה. טקסט דמה נוסף לשתי שורות נוספות, כדי לבדוק שהאוברליי מתנהג נכון גם כשיש תיאור ארוך יותר מהרגיל."
         }
       ],
@@ -15112,7 +15664,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "intro-2",
+          "file": "",
           "caption": "ביתן פתוח שמושך תנועה מהמעבר, עם מסר חד ותצוגת מוצר שמספרת סיפור."
         }
       ],
@@ -15138,7 +15690,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "intro-3",
+          "file": "",
           "caption": "סטנדים רצפתיים ודלפקיים שמבליטים את המוצר בנקודת המכירה ומגדילים שטח מדף אפקטיבי."
         }
       ],
@@ -15164,7 +15716,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "intro-4",
+          "file": "",
           "caption": "שפה גרפית אחידה – לוגו, צבעים, טיפוגרפיה ושילוט שמחברים את כל נקודות המגע."
         }
       ],
@@ -15190,7 +15742,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "intro-5",
+          "file": "",
           "caption": "אריזות מדף, קיטים ופתרונות מבניים שמתרגמים יתרון מוצר לבחירה מיידית."
         }
       ],
@@ -15216,7 +15768,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "intro-6",
+          "file": "",
           "caption": "חנות רחוב, קליניקה או בית קפה – פתרונות ממוקדים שעובדים גם בתקציב חכם."
         }
       ],
@@ -15242,7 +15794,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "secondary-gallery-1",
+          "file": "",
           "caption": "הקשבה, מחקר ודיוק חלום המותג. מגדירים מה הלקוח צריך להרגיש כשהוא פוגש את המותג."
         }
       ],
@@ -15268,7 +15820,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "secondary-gallery-2",
+          "file": "",
           "caption": "ממפים משימה, קהלים ומטרות מכירה. מגדירים מדדי הצלחה ברורים ויעדים מדידים."
         }
       ],
@@ -15294,7 +15846,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "secondary-gallery-3",
+          "file": "",
           "caption": "מתרגמים אסטרטגיה לשפה חזותית, חלל ומוצר. בוחנים חלופות עד לפתרון חד וברור."
         }
       ],
@@ -15320,7 +15872,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "secondary-gallery-4",
+          "file": "",
           "caption": "מכינים קבצי ביצוע, מפקחים על הייצור ומלווים עד התקנה בשטח."
         }
       ],
@@ -15346,62 +15898,62 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "img1",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 2,
-          "file": "img2",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 3,
-          "file": "img3",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 4,
-          "file": "img4",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 5,
-          "file": "img5",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 6,
-          "file": "img6",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 7,
-          "file": "img7",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 8,
-          "file": "img8",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 9,
-          "file": "img9",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 10,
-          "file": "img10",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 11,
-          "file": "img11",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         },
         {
           "index": 12,
-          "file": "img12",
+          "file": "",
           "caption": "תכנון חנות דגל לרשת אופנה – חלוקה לאזורים, מסלול תנועה וקופה חווייתית."
         }
       ],
@@ -15427,7 +15979,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stores-2",
+          "file": "",
           "caption": "אי מותג בתוך רשת פארם – קיר מדף, דלפק הדגמה ונקודת ריסוט חזקה."
         }
       ],
@@ -15453,7 +16005,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stores-3",
+          "file": "",
           "caption": "פופ-אפ בקניון לתקופת השקה – פתרון מודולרי לפירוק והרכבה מהירה."
         }
       ],
@@ -15479,7 +16031,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stores-4",
+          "file": "",
           "caption": "תצוגת חלון מתחלפת לעונות השנה, עם מסר קצר וברור מרחוק."
         }
       ],
@@ -15505,7 +16057,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stores-5",
+          "file": "",
           "caption": "סידור חלל עודפים בצורה נקייה שמדגישה מציאות במקום בלגן."
         }
       ],
@@ -15531,7 +16083,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stores-6",
+          "file": "",
           "caption": "קיוסק אי במעבר ראשי – שילוב של אחסון סגור ותצוגת מדף פתוחה."
         }
       ],
@@ -15557,7 +16109,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stores-7",
+          "file": "",
           "caption": "אזור קופה משודרג עם סטנד קו אחרון ושילוט מבצע נקודתי."
         }
       ],
@@ -15583,7 +16135,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stores-8",
+          "file": "",
           "caption": "אי הפעלה פתוח באמצע החלל – מקום להדגמות ולנוכחות מותג."
         }
       ],
@@ -15609,7 +16161,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stores-9",
+          "file": "",
           "caption": "אזור מדידה מתוכנן לנוחות הלקוח, כולל מראה, תלייה ותאורה מאירת פנים."
         }
       ],
@@ -15635,7 +16187,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "exhibitions-1",
+          "file": "",
           "caption": "ביתן שורה קומפקטי עם חזית בולטת, מקום לדלפק ורקע גרפי ברור מרחוק."
         }
       ],
@@ -15661,7 +16213,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "exhibitions-2",
+          "file": "",
           "caption": "ביתן אי פתוח מכל הכיוונים – מסלול כניסה טבעי ותצוגת מוצר מרכזית."
         }
       ],
@@ -15687,7 +16239,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "exhibitions-3",
+          "file": "",
           "caption": "עמדת הדגמה חיה עם מסך, משטח עבודה ואחסון לדגימות."
         }
       ],
@@ -15713,7 +16265,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "exhibitions-4",
+          "file": "",
           "caption": "פינת ישיבה פתוחה לשיחות מכירה, עם בידול עדין מהמעבר."
         }
       ],
@@ -15739,7 +16291,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "exhibitions-5",
+          "file": "",
           "caption": "סט גרפיקות חוזרות לכל הנראות בתערוכה, לשמירה על זיהוי מותג מיידי."
         }
       ],
@@ -15765,7 +16317,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "exhibitions-6",
+          "file": "",
           "caption": "מבנה מודולרי לשימוש חוזר בכמה תערוכות, עם חלקים שניתן להרכיב לפי הצורך."
         }
       ],
@@ -15791,7 +16343,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stands-1",
+          "file": "",
           "caption": "מתחם מכירה פתוח עם שילוב של סטנדים רצפתיים, מדף וקופה."
         }
       ],
@@ -15817,7 +16369,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stands-2",
+          "file": "",
           "caption": "סטנד רצפתי עצמאי שמייצר נוכחות במסדרון ומספר סיפור שלם."
         }
       ],
@@ -15843,7 +16395,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stands-3",
+          "file": "",
           "caption": "פתרון קומפקטי ליד הקופה לקניית אימפולס."
         }
       ],
@@ -15869,7 +16421,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stands-4",
+          "file": "",
           "caption": "אלמנט מדף שמושך את העין ומפנה מקום לפנייה ברורה למותג."
         }
       ],
@@ -15895,7 +16447,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stands-5",
+          "file": "",
           "caption": "עמדה ניידת לדגימות ופעילויות קד\"מ."
         }
       ],
@@ -15921,7 +16473,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "stands-6",
+          "file": "",
           "caption": "מבנה תצוגה לא שגרתי לבעיה לא שגרתית – תפירה אישית לצורך שיווקי."
         }
       ],
@@ -15947,7 +16499,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "identity-1",
+          "file": "",
           "caption": "לוגו, סמל וסלוגן בגירסאות מותאמות למדיה, לחנות ולדיגיטל."
         }
       ],
@@ -15973,7 +16525,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "identity-2",
+          "file": "",
           "caption": "הגדרת פלטת צבעים, פונטים והיררכיית כותרות ליישום בכל חומר."
         }
       ],
@@ -15999,7 +16551,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "identity-3",
+          "file": "",
           "caption": "משפחה של אריזות בגבהים ורוחבים שונים תחת שפה אחת אחידה."
         }
       ],
@@ -16025,7 +16577,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "identity-4",
+          "file": "",
           "caption": "מערכת אייקונים לזיהוי מהיר של קטגוריות, טעמים או יתרונות."
         }
       ],
@@ -16051,7 +16603,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "identity-5",
+          "file": "",
           "caption": "מסמך מסודר שמרכז חוקים, דוגמאות ומקרי מבחן ליישום נכון."
         }
       ],
@@ -16077,7 +16629,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "identity-6",
+          "file": "",
           "caption": "רול-אפים, מדבקות מדף, מוביילים ותלי מדף – כל מה שמשרת מכירה."
         }
       ],
@@ -16103,7 +16655,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "product-1",
+          "file": "",
           "caption": "עיצוב מוצר שנראה טוב גם מרחוק וגם כשהלקוח מחזיק אותו ביד."
         }
       ],
@@ -16129,7 +16681,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "product-2",
+          "file": "",
           "caption": "קיט מוצר להשקה – מארז, אינסרט והסבר שימוש."
         }
       ],
@@ -16155,7 +16707,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "product-3",
+          "file": "",
           "caption": "קבוצה של מוצרים תחת שפה אחת, עם הבדלה ברורה בין וריאנטים."
         }
       ],
@@ -16181,7 +16733,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "product-4",
+          "file": "",
           "caption": "שינוי צורה או פתיחה של המוצר כדי לשפר שימוש וחוויית פתיחה."
         }
       ],
@@ -16207,7 +16759,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "product-5",
+          "file": "",
           "caption": "מוצרים שמשלבים מסך, חיווי או ותאורה – תכנון חוויית שימוש."
         }
       ],
@@ -16233,7 +16785,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "product-6",
+          "file": "",
           "caption": "פתרונות צילום ונראות למדיה דיגיטלית ואיקומרס."
         }
       ],
@@ -16259,7 +16811,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "packages-1",
+          "file": "",
           "caption": "קופסה מרובדת עם אינסרט פנימי, לחוויה של 'פתיחת מתנה'."
         }
       ],
@@ -16285,7 +16837,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "packages-2",
+          "file": "",
           "caption": "אריזה שנבנית מהמוצר החוצה – מסר ברור באזור הכי נראה."
         }
       ],
@@ -16311,7 +16863,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "packages-3",
+          "file": "",
           "caption": "שלוש רמות מחיר באותה משפחת מוצרים, עם הבדלה ברורה על המדף."
         }
       ],
@@ -16337,7 +16889,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "packages-4",
+          "file": "",
           "caption": "פתרון מהיר לעדכון אריזה קיימת באמצעות שרוול או מדבקה חכמה."
         }
       ],
@@ -16363,7 +16915,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "packages-5",
+          "file": "",
           "caption": "מארז מהודר למכירה עונתית או כמתנה ממותגת."
         }
       ],
@@ -16389,7 +16941,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "packages-6",
+          "file": "",
           "caption": "אריזה שמתפקדת גם כסטנד מדף קטן בחנות."
         }
       ],
@@ -16415,7 +16967,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "small-1",
+          "file": "",
           "caption": "מיתוג, שילוט חוץ ופנים ותפריטים לקפה קטן עם אופי מקומי."
         }
       ],
@@ -16441,7 +16993,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "small-2",
+          "file": "",
           "caption": "עיצוב שקט ובטוח – שילוט, דלת כניסה וחומרי מידע."
         }
       ],
@@ -16467,7 +17019,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "small-3",
+          "file": "",
           "caption": "חנות קטנה במרכז העיר – חזית, מדפים ותצוגה לחלון."
         }
       ],
@@ -16493,7 +17045,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "small-4",
+          "file": "",
           "caption": "גרפיקה לרכב עבודה שממשיכה את סיפור המותג לרחוב."
         }
       ],
@@ -16519,7 +17071,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "small-5",
+          "file": "",
           "caption": "פתרונות דיגיטליים וחומרי הדפסה לעסק שפועל מהבית."
         }
       ],
@@ -16545,7 +17097,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "small-6",
+          "file": "",
           "caption": "סט פתיחה – לוגו, כרטיס ביקור, שלט וחומרי מדף בסיסיים."
         }
       ],
@@ -16824,27 +17376,27 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "b1-1",
+          "file": "",
           "caption": "5 עבודות לדוגמה למותג 1"
         },
         {
           "index": 2,
-          "file": "b1-2",
+          "file": "",
           "caption": "5 עבודות לדוגמה למותג 1"
         },
         {
           "index": 3,
-          "file": "b1-3",
+          "file": "",
           "caption": "5 עבודות לדוגמה למותג 1"
         },
         {
           "index": 4,
-          "file": "b1-4",
+          "file": "",
           "caption": "5 עבודות לדוגמה למותג 1"
         },
         {
           "index": 5,
-          "file": "b1-5",
+          "file": "",
           "caption": "5 עבודות לדוגמה למותג 1"
         }
       ]
@@ -16859,7 +17411,7 @@ const items = ensureDataset(tempGrid);
       "assets": [
         {
           "index": 1,
-          "file": "b2-1",
+          "file": "",
           "caption": "עבודה אחת לדוגמה למותג 2"
         }
       ]
@@ -29483,20 +30035,20 @@ async function refreshStatus(){
 })();
 </script>
 
-<script id="crmo-version-sync-v1838">
+<script id="crmo-version-sync-v1851">
 (function(){
   try{
-    var VNUM = 1838;
+    var VNUM = 1851;
     var VSTR = "V"+VNUM;
-    window.CRMO_VERSION = "CRMO_v1839";
-    window.CRMO_VERSION_NUMBER = 1839;
-    window.CRMO_BUILD_VERSION = "1839";
+    window.CRMO_VERSION = "CRMO_v1851";
+    window.CRMO_VERSION_NUMBER = 1851;
+    window.CRMO_BUILD_VERSION = "1851";
     var a = document.getElementById("crmo-version-rolebar");
     var b = document.getElementById("crmo-version-adminbar");
     if(a) a.textContent = VSTR;
     if(b) b.textContent = VSTR;
     var f = document.getElementById("crmo-footer-version");
-    if(f) f.textContent = "1838";
+    if(f) f.textContent = "CRMO System Version 1851";
   }catch(e){}
 })();
 </script>
@@ -29567,5 +30119,46 @@ window.CRMO_diagRender = function(){
   };
 };
 </script>
+
+<script id="crmo_invalid_local_media_guard_v1849">
+(function(){
+  var BLANK='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+  function invalidRef(v){
+    v = String(v||'').trim();
+    if(!v) return true;
+    if(/^(data:|blob:|https?:|file:)/i.test(v)) return false;
+    if(/^(assets\/|\.\/|\.\.\/|\/)/.test(v)) return false;
+    if(/[\/.]/.test(v)) return false;
+    return /^[a-z0-9_-]+$/i.test(v);
+  }
+  function cleanImg(img){
+    try{
+      var s = (img.getAttribute('src')||'').trim();
+      if(invalidRef(s)) img.setAttribute('src', BLANK);
+    }catch(e){}
+  }
+  function cleanTileMedia(root){
+    try{
+      (root||document).querySelectorAll('img').forEach(cleanImg);
+      (root||document).querySelectorAll('.tile-edit-wrapper, a.ph').forEach(function(el){
+        try{
+          var df = (el.getAttribute('data-files')||'').trim();
+          if(invalidRef(df) || /^([a-z0-9_-]+)(\s*,\s*[a-z0-9_-]+)*$/i.test(df)) el.setAttribute('data-files','');
+        }catch(e){}
+        try{
+          var bg = el.style && el.style.backgroundImage ? el.style.backgroundImage : '';
+          if(bg && /url\((["']?)([A-Za-z0-9_-]+)\)/i.test(bg)){ el.style.backgroundImage=''; }
+        }catch(e){}
+      });
+    }catch(e){}
+  }
+  window.CRMO_cleanInvalidLocalMedia = cleanTileMedia;
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', function(){ cleanTileMedia(document); }, {once:true});
+  else cleanTileMedia(document);
+  setTimeout(function(){ cleanTileMedia(document); }, 100);
+  setTimeout(function(){ cleanTileMedia(document); }, 1200);
+})();
+</script>
+
 </body>
 </html>
