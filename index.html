@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 
-<!-- CRMO_v1862 -->
+<!-- CRMO_v1863 -->
 <html dir="rtl" lang="he">
 <head>
 <script id="crmo_storage_ns">
 /* CRMO SYSTEM PERMANENT RULES (DO NOT REMOVE):
-  1. VERSIONING: Version must be a pure number (e.g. 1862). NO ADJECTIVES.
+  1. VERSIONING: Version must be a pure number (e.g. 1863). NO ADJECTIVES.
   2. SYNC: Version number MUST be identical in DOCTYPE, const VERSION, document.title, and Footer.
   3. ASSETS: Use SmartResolver. Relative paths (assets/...) get Supabase Prefix. Full URLs remain untouched.
   4. RENDERING: Render UI immediately from LocalStorage/DefaultJSON. Cloud fetch is background-only.
@@ -145,13 +145,13 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
           if(s && typeof s === 'object' && Object.keys(s).length){
             window.CRMO_EARLY_BOOT_STORAGE = deepNormalize(clone(s));
             window.CRMO_EARLY_BOOT_SOURCE = 'cloud';
-            try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(window.CRMO_EARLY_BOOT_STORAGE)); }catch(e){}
+            try{ localStorage.setItem('crmo_storage_CRMO_v1863', JSON.stringify(window.CRMO_EARLY_BOOT_STORAGE)); }catch(e){}
             return;
           }
         }catch(e){ window.CRMO_EARLY_BOOT_CLOUD_ERROR = String((e && e.message) || e); }
       }
       try{
-        var raw = localStorage.getItem('crmo_storage_CRMO_v1862') || localStorage.getItem('crmo_storage_CRMO_v1856') || localStorage.getItem('crmo_storage_CRMO_v1854');
+        var raw = localStorage.getItem('crmo_storage_CRMO_v1863') || localStorage.getItem('crmo_storage_CRMO_v1856') || localStorage.getItem('crmo_storage_CRMO_v1854');
         if(raw){
           var parsed = JSON.parse(raw);
           if(parsed && typeof parsed === 'object'){
@@ -1179,14 +1179,14 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
 })();
 </script>
 <script id="crmo_build_info_v1845">
-window.CRMO_BUILD_VERSION = "1862";
+window.CRMO_BUILD_VERSION = "1863";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = "CRMO_v1862";
-window.CRMO_VERSION_NUMBER = 1862;
+window.CRMO_VERSION = "CRMO_v1863";
+window.CRMO_VERSION_NUMBER = 1863;
 </script>
 <script id="crmo_topbars_status_v1804">
 (function(){
-  var VERSION = (window.CRMO_BUILD_VERSION || "1862");
+  var VERSION = (window.CRMO_BUILD_VERSION || "1863");
   function setText(id, txt){
     var el = document.getElementById(id);
     if(el) el.textContent = txt;
@@ -1450,7 +1450,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 </style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1862</title>
+<title>CRMO_v1863</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -3171,10 +3171,12 @@ a.ph, .ph { position: relative; }
 .crmo-lb-caption{font-size:clamp(13px,2.8vw,15px);color:#000000}
 .crmo-lb-filename{font-size:clamp(11px,2.4vw,13px);color:#9aa0a6;direction:ltr;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:36ch}
 .crmo-lb-counter{font-size:13px;color:#333333}
-.crmo-thumbs{padding:12px;background:#ffffff;border-top:1px solid #cccccc;overflow:auto;display:flex;gap:10px}
-.crmo-thumb{min-width:84px;width:84px;height:calc(84px * 9/16);background:#ffffff;border:1px solid #999;border-radius:10px;color:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;font:700 12px/1 Arial;padding:4px;text-align:center}
+.crmo-thumbs{padding:12px;background:#ffffff;border-top:1px solid #cccccc;overflow-y:auto;overflow-x:hidden;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:stretch}
+.crmo-thumb{min-width:0;width:100%;aspect-ratio:16/9;background:#ffffff;border:1px solid #999;border-radius:10px;color:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;font:700 12px/1 Arial;padding:4px;text-align:center;overflow:hidden}
+.crmo-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .crmo-thumb.active{outline:2px solid #000000}
-@media (max-width:560px){.crmo-lb-frame{width:100vw;border-radius:0;border:none;top:0}.crmo-thumbs{display:none}}
+@media (max-width:900px){.crmo-thumbs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.crmo-lb-frame{width:100vw;border-radius:0;border:none;top:0}.crmo-thumbs{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 <style id="crmo_hidden_extra_tiles_css">
 .gallery-grid.grid .tile-edit-wrapper.tile-hidden-extra{
@@ -5013,6 +5015,39 @@ section:not(#brands):not(#logos) .grid .ph:hover{
 (function(){
   var mpThumbs = {};
   window.CRMO_mpThumbs = mpThumbs;
+  function crmoPickThumbUrl(source, name, index){
+    try{
+      if (name && window.CRMO_mpThumbs && window.CRMO_mpThumbs[name]) return window.CRMO_mpThumbs[name];
+    }catch(e){}
+    var candidates = [];
+    try{
+      if (source && source.tileData) source = source.tileData;
+      if (source){
+        candidates.push(source);
+        if (Array.isArray(source.extraImages)){
+          if (typeof index === 'number' && index > 0 && source.extraImages[index-1]) candidates.push(source.extraImages[index-1]);
+          source.extraImages.forEach(function(it){
+            if (!it) return;
+            if (name){
+              var nm = String(it.name || it.id || it.file || '').trim();
+              if (nm && nm === String(name).trim()) candidates.push(it);
+            }
+          });
+        }
+      }
+    }catch(e){}
+    for (var i=0;i<candidates.length;i++){
+      var it = candidates[i];
+      if (!it || typeof it !== 'object') continue;
+      var keys = ['coverUrl','imageSrc','src','url','thumb','thumbnail','poster','logo'];
+      for (var j=0;j<keys.length;j++){
+        var val = it[keys[j]];
+        if (typeof val === 'string' && val.trim()) return val.trim();
+      }
+    }
+    return '';
+  }
+  window.CRMO_pickThumbUrl = crmoPickThumbUrl;
   function setupMultiProject(){
     var editor = document.getElementById('tile-editor');
     if(!editor || editor.querySelector('.mp-block')) return;
@@ -5424,8 +5459,14 @@ mpAdd.addEventListener('click', function(){
         thumb.alt = '';
         thumb.draggable = false;
         try{
-          if (window.CRMO_mpThumbs && typeof name !== 'undefined' && window.CRMO_mpThumbs[name]){
-            thumb.src = window.CRMO_mpThumbs[name];
+          var initialThumb = crmoPickThumbUrl({ tileData: { imageSrc: (parts[0]===name ? (anchor.getAttribute('data-image-src') || '') : ''), extraImages: [] } }, name, parts.indexOf(name));
+          if (!initialThumb && currentWrapper && currentWrapper.__tileData) initialThumb = crmoPickThumbUrl(currentWrapper.__tileData, name, parts.indexOf(name));
+          if (!initialThumb && currentAnchor && currentAnchor.__tileData) initialThumb = crmoPickThumbUrl(currentAnchor.__tileData, name, parts.indexOf(name));
+          if (!initialThumb && currentWrapper && currentWrapper.__crmoTileData) initialThumb = crmoPickThumbUrl(currentWrapper.__crmoTileData, name, parts.indexOf(name));
+          if (!initialThumb) initialThumb = crmoPickThumbUrl(null, name, parts.indexOf(name));
+          if (initialThumb){
+            try{ window.CRMO_mpThumbs[name] = initialThumb; }catch(e){}
+            thumb.src = initialThumb;
           }
         }catch(e){}
         row.appendChild(thumb);
@@ -5525,10 +5566,15 @@ if (mpRows){
       }
       var df = anchor.getAttribute('data-files') || wrapper.getAttribute('data-files') || '';
       var dv = anchor.getAttribute('data-files-visible') || wrapper.getAttribute('data-files-visible') || '';
+      var ds = anchor.getAttribute('data-subcaps') || wrapper.getAttribute('data-subcaps') || '0';
+      if (mpSubcaps){ mpSubcaps.checked = (ds === '1'); }
+      var dm = (anchor.getAttribute('data-files-meta') || wrapper.getAttribute('data-files-meta') || '');
+      var metaMap = {};
+      try{ metaMap = dm ? JSON.parse(dm) : {}; }catch(e){ metaMap = {}; }
       var visParts = (dv || '').split(',').map(function(s){ return (s||'').trim(); }).filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
       var hasVis = !!(visParts && visParts.length);
       var parts = (df || '').split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
-      parts.forEach(function(name){
+      parts.forEach(function(name, partIndex){
         var row = document.createElement('div');
         row.className = 'mp-row mp-row-fake';
         row.draggable = false;
@@ -5537,8 +5583,12 @@ if (mpRows){
         thumb.alt = '';
         thumb.draggable = false;
         try{
-          if (window.CRMO_mpThumbs && typeof name !== 'undefined' && window.CRMO_mpThumbs[name]){
-            thumb.src = window.CRMO_mpThumbs[name];
+          var initialThumb = crmoPickThumbUrl((wrapper && (wrapper.__tileData || wrapper.__crmoTileData)) || (anchor && (anchor.__tileData || anchor.__crmoTileData)) || null, name, partIndex);
+          if (!initialThumb && partIndex === 0) initialThumb = crmoPickThumbUrl({ imageSrc: anchor.getAttribute('data-image-src') || '' }, name, partIndex);
+          if (!initialThumb) initialThumb = crmoPickThumbUrl(null, name, partIndex);
+          if (initialThumb){
+            try{ window.CRMO_mpThumbs[name] = initialThumb; }catch(e){}
+            thumb.src = initialThumb;
           }
         }catch(e){}
         row.appendChild(thumb);
@@ -5546,6 +5596,26 @@ if (mpRows){
         label.className = 'mp-file-label';
         label.textContent = name;
         row.appendChild(label);
+        var meta = document.createElement('div');
+        meta.className = 'mp-meta';
+        if (ds !== '1') meta.style.display = 'none';
+        var tIn = document.createElement('input');
+        tIn.type = 'text';
+        tIn.className = 'mp-subtitle';
+        tIn.placeholder = 'שם פרויקט (לתת-תמונה)';
+        var dIn = document.createElement('input');
+        dIn.type = 'text';
+        dIn.className = 'mp-subdesc';
+        dIn.placeholder = 'תיאור פרויקט (לתת-תמונה)';
+        try{
+          if (metaMap && metaMap[name]){
+            if (metaMap[name].title) tIn.value = String(metaMap[name].title);
+            if (metaMap[name].desc) dIn.value = String(metaMap[name].desc);
+          }
+        }catch(e){}
+        meta.appendChild(tIn);
+        meta.appendChild(dIn);
+        row.appendChild(meta);
         var fake = document.createElement('input');
         fake.type = 'hidden';
         fake.className = 'mp-file mp-file-fake';
@@ -5565,15 +5635,15 @@ if (mpRows){
         cb.checked = (!hasVis) || (visParts.indexOf(name) !== -1);
         showWrap.appendChild(cb);
         row.insertBefore(showWrap, label);
-      var dragHandle = document.createElement('button');
-      dragHandle.type = 'button';
-      dragHandle.className = 'mp-drag-handle';
-      dragHandle.setAttribute('aria-label','גרירה לשינוי סדר');
-      dragHandle.setAttribute('title','גרירה לשינוי סדר');
-      dragHandle.setAttribute('draggable','true');
-      dragHandle.textContent = '';
-      row.insertBefore(dragHandle, label);
-mpRows.appendChild(row);
+        var dragHandle = document.createElement('button');
+        dragHandle.type = 'button';
+        dragHandle.className = 'mp-drag-handle';
+        dragHandle.setAttribute('aria-label','גרירה לשינוי סדר');
+        dragHandle.setAttribute('title','גרירה לשינוי סדר');
+        dragHandle.setAttribute('draggable','true');
+        dragHandle.textContent = '';
+        row.insertBefore(dragHandle, label);
+        mpRows.appendChild(row);
       });
       var multiAttr = anchor.getAttribute('data-multi') || wrapper.getAttribute('data-multi') || '';
       var visibleCount = (typeof hasVis !== 'undefined' && hasVis) ? (visParts ? visParts.length : 0) : (parts.length);
@@ -14043,7 +14113,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 </div>
 <div class="crmo-footer-bottom" dir="ltr">
 <img alt="Creative Monster favicon" class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg"/>
-<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1862</span>
+<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1863</span>
 </div>
 </div>
 </footer>
@@ -14946,9 +15016,7 @@ function normalizeBrandName(str){
         try{
           if (!thumbSrc && it && Array.isArray(it.files) && it.files.length){
             const f0 = (it.files[0]||'').trim();
-            if (f0 && window.CRMO_mpThumbs && window.CRMO_mpThumbs[f0]){
-              thumbSrc = window.CRMO_mpThumbs[f0];
-            }
+            thumbSrc = (window.CRMO_pickThumbUrl ? window.CRMO_pickThumbUrl(it, f0, 0) : (window.CRMO_mpThumbs && window.CRMO_mpThumbs[f0] ? window.CRMO_mpThumbs[f0] : ''));
           }
         }catch(e){}
         try{
@@ -14992,17 +15060,16 @@ function normalizeBrandName(str){
       const label = proj + '.' + (idx + 1);
       let thumbSrc = null;
       try{
-        if (window.CRMO_mpThumbs && _file && window.CRMO_mpThumbs[_file]){
-          thumbSrc = window.CRMO_mpThumbs[_file];
-        }
+        thumbSrc = (window.CRMO_pickThumbUrl ? window.CRMO_pickThumbUrl(item, _file, idx) : (window.CRMO_mpThumbs && _file && window.CRMO_mpThumbs[_file] ? window.CRMO_mpThumbs[_file] : ''));
       }catch(e){
         thumbSrc = null;
       }
       if (!thumbSrc && item && item.tileData){
         try{
-          if (idx === 0 && item.tileData.imageSrc) thumbSrc = item.tileData.imageSrc;
-          if (!thumbSrc && idx > 0 && item.tileData.extraImages && item.tileData.extraImages[idx-1] && item.tileData.extraImages[idx-1].src){
-            thumbSrc = item.tileData.extraImages[idx-1].src;
+          thumbSrc = (window.CRMO_pickThumbUrl ? window.CRMO_pickThumbUrl(item.tileData, _file, idx) : '');
+          if (!thumbSrc && idx === 0 && item.tileData.imageSrc) thumbSrc = item.tileData.imageSrc;
+          if (!thumbSrc && idx > 0 && item.tileData.extraImages && item.tileData.extraImages[idx-1]){
+            thumbSrc = item.tileData.extraImages[idx-1].src || item.tileData.extraImages[idx-1].url || item.tileData.extraImages[idx-1].imageSrc || item.tileData.extraImages[idx-1].coverUrl || '';
           }
         }catch(e){}
       }
@@ -15040,15 +15107,14 @@ function setImage(){
           if (item && Array.isArray(item.files) && item.files.length){
             const files = item.files;
             const fname = (filesCount > 1 && files[fileIdx]) ? files[fileIdx] : files[0];
-            if (fname && window.CRMO_mpThumbs && window.CRMO_mpThumbs[fname]){
-              src = window.CRMO_mpThumbs[fname];
-            }
+            src = (window.CRMO_pickThumbUrl ? window.CRMO_pickThumbUrl(item, fname, fileIdx) : (window.CRMO_mpThumbs && fname && window.CRMO_mpThumbs[fname] ? window.CRMO_mpThumbs[fname] : ''));
             if (!src && item && item.tileData){
               try{
                 if (filesCount > 1){
-                  if (fileIdx === 0 && item.tileData.imageSrc) src = item.tileData.imageSrc;
-                  if (!src && fileIdx > 0 && item.tileData.extraImages && item.tileData.extraImages[fileIdx-1] && item.tileData.extraImages[fileIdx-1].src){
-                    src = item.tileData.extraImages[fileIdx-1].src;
+                  if (!src) src = (window.CRMO_pickThumbUrl ? window.CRMO_pickThumbUrl(item.tileData, fname, fileIdx) : '');
+                  if (!src && fileIdx === 0 && item.tileData.imageSrc) src = item.tileData.imageSrc;
+                  if (!src && fileIdx > 0 && item.tileData.extraImages && item.tileData.extraImages[fileIdx-1]){
+                    src = item.tileData.extraImages[fileIdx-1].src || item.tileData.extraImages[fileIdx-1].url || item.tileData.extraImages[fileIdx-1].imageSrc || item.tileData.extraImages[fileIdx-1].coverUrl || '';
                   }
                 }else{
                   if (item.tileData.imageSrc) src = item.tileData.imageSrc;
@@ -30224,17 +30290,17 @@ async function refreshStatus(){
 <script id="crmo-version-sync-v1852">
 (function(){
   try{
-    var VNUM = 1862;
+    var VNUM = 1863;
     var VSTR = "V"+VNUM;
-    window.CRMO_VERSION = "CRMO_v1862";
-    window.CRMO_VERSION_NUMBER = 1862;
-    window.CRMO_BUILD_VERSION = "1862";
+    window.CRMO_VERSION = "CRMO_v1863";
+    window.CRMO_VERSION_NUMBER = 1863;
+    window.CRMO_BUILD_VERSION = "1863";
     var a = document.getElementById("crmo-version-rolebar");
     var b = document.getElementById("crmo-version-adminbar");
     if(a) a.textContent = VSTR;
     if(b) b.textContent = VSTR;
     var f = document.getElementById("crmo-footer-version");
-    if(f) f.textContent = "CRMO System Version 1862";
+    if(f) f.textContent = "CRMO System Version 1863";
   }catch(e){}
 })();
 </script>
@@ -30349,11 +30415,11 @@ window.CRMO_diagRender = function(){
 
 <script id="crmo_v1852_final_patch">
 (function(){
-  var VERSION_NUM = '1862';
-  var VERSION_NAME = 'CRMO_v1862';
+  var VERSION_NUM = '1863';
+  var VERSION_NAME = 'CRMO_v1863';
   window.CRMO_BUILD_VERSION = VERSION_NUM;
   window.CRMO_VERSION = VERSION_NAME;
-  window.CRMO_VERSION_NUMBER = 1862;
+  window.CRMO_VERSION_NUMBER = 1863;
   window.CRMO_STORAGE_NS_PATH = '/';
   window.CRMO_ASSET_PUBLIC_ROOT = 'https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/';
 
@@ -30610,10 +30676,10 @@ window.CRMO_diagRender = function(){
     var start = (window.performance && performance.now) ? performance.now() : Date.now();
     var guardEl = null;
     try{
-      guardEl = byId('crmo-temp-recovery-guard-v1862');
+      guardEl = byId('crmo-temp-recovery-guard-v1863');
       if(!guardEl){
         guardEl = document.createElement('style');
-        guardEl.id = 'crmo-temp-recovery-guard-v1862';
+        guardEl.id = 'crmo-temp-recovery-guard-v1863';
         guardEl.textContent = '*,*::before,*::after{transition:none !important;animation:none !important;scroll-behavior:auto !important;}';
         (document.head || document.documentElement).appendChild(guardEl);
       }
@@ -30678,10 +30744,10 @@ window.CRMO_diagRender = function(){
   }
   function scheduleSave(reason, delay){
     try{
-      if(window.CRMO_scheduleStructuredSave) return window.CRMO_scheduleStructuredSave(reason || 'v1862', typeof delay === 'number' ? delay : 900);
+      if(window.CRMO_scheduleStructuredSave) return window.CRMO_scheduleStructuredSave(reason || 'v1863', typeof delay === 'number' ? delay : 900);
       if(window.CRMO_flushStructuredSave){
-        clearTimeout(window.__CRMO_V1862_SAVE_TIMER);
-        window.__CRMO_V1862_SAVE_TIMER = setTimeout(function(){ try{ window.CRMO_flushStructuredSave(reason || 'v1862'); }catch(e){} }, typeof delay === 'number' ? delay : 900);
+        clearTimeout(window.__CRMO_V1863_SAVE_TIMER);
+        window.__CRMO_V1863_SAVE_TIMER = setTimeout(function(){ try{ window.CRMO_flushStructuredSave(reason || 'v1863'); }catch(e){} }, typeof delay === 'number' ? delay : 900);
         return true;
       }
     }catch(e){}
@@ -30738,7 +30804,7 @@ window.CRMO_diagRender = function(){
     var wrappedApply = function(storage){
       storage = resolveStorageDeep(storage);
       var out = origApply.apply(this, [storage]);
-      setTimeout(function(){ batchRecover(storage, 'apply-wrapper-v1862'); }, 40);
+      setTimeout(function(){ batchRecover(storage, 'apply-wrapper-v1863'); }, 40);
       return out;
     };
     wrappedApply.__crmoV1853Patched = true;
@@ -30781,13 +30847,13 @@ window.CRMO_diagRender = function(){
     try{ document.title = VERSION_NAME; }catch(e){}
     try{
       var f = byId('crmo-footer-version');
-      if(f) f.textContent = 'CRMO System Version 1862';
+      if(f) f.textContent = 'CRMO System Version 1863';
     }catch(e){}
     try{
       var badges = qsa('[data-crmo-version], .crmo-version-badge, #crmo-version-badge, #crmo-top-version');
       badges.forEach(function(el){
         if(!el) return;
-        if(/185[0-9]/.test(el.textContent || '')) el.textContent = (el.textContent || '').replace(/185[0-9]+/g, '1862');
+        if(/185[0-9]/.test(el.textContent || '')) el.textContent = (el.textContent || '').replace(/185[0-9]+/g, '1863');
       });
     }catch(e){}
   }
@@ -30816,8 +30882,8 @@ window.CRMO_diagRender = function(){
 
 <script id="crmo_v1854_final_patch">
 (function(){
-  var VERSION = '1862';
-  var SEED_ROW = {"id": "main", "storage": {"site_config": {"version": "1862", "last_migration": "2024-03-20"}, "navigation": [{"label": "בית (לוגו)", "target": "top", "_logo": true, "visible": true}, {"label": "חנויות וחללי מסחר", "target": "stores", "visible": true}, {"label": "נקודות מכירה", "target": "stands", "visible": true}, {"label": "מיתוג עסקי", "target": "identity", "visible": true}, {"label": "עיצוב מוצר", "target": "product", "visible": true}, {"label": "תערוכות", "target": "exhibitions", "visible": true}, {"label": "המותגים שלנו", "target": "brands", "visible": true}, {"label": "על הסטודיו", "target": "about", "visible": true}, {"label": "צור קשר", "target": "contact", "visible": true}], "galleries": {"order": ["intro", "brands", "secondary-gallery", "stores", "stands", "identity", "product", "exhibitions", "packages", "small"], "states": {"intro": [{"client": "brand 1", "title": "פרויקט א", "imageSrc": "assets/drop/2026-02-15T19-25-42-939Z_c5a8326f88ebd8.jpg", "multi": false}, {"client": "brand 2", "title": "פרויקט ב", "imageSrc": "assets/drop/2026-02-15T06-04-44-321Z_61c41682b649f8.jpg", "multi": false}], "brands": {"meta": {"title": "brands shape decisions", "desc": "תיאור המותגים"}, "items": [{"id": "brand-01", "logo": "assets/brands/2026-02-15T19-27-41-224Z_4fb34f33cc98d8.jpg"}, {"id": "brand-02", "logo": "assets/brands/2026-02-15T19-27-41-845Z_d68a5f9bbc3c98.jpg"}]}}}}};
+  var VERSION = '1863';
+  var SEED_ROW = {"id": "main", "storage": {"site_config": {"version": "1863", "last_migration": "2024-03-20"}, "navigation": [{"label": "בית (לוגו)", "target": "top", "_logo": true, "visible": true}, {"label": "חנויות וחללי מסחר", "target": "stores", "visible": true}, {"label": "נקודות מכירה", "target": "stands", "visible": true}, {"label": "מיתוג עסקי", "target": "identity", "visible": true}, {"label": "עיצוב מוצר", "target": "product", "visible": true}, {"label": "תערוכות", "target": "exhibitions", "visible": true}, {"label": "המותגים שלנו", "target": "brands", "visible": true}, {"label": "על הסטודיו", "target": "about", "visible": true}, {"label": "צור קשר", "target": "contact", "visible": true}], "galleries": {"order": ["intro", "brands", "secondary-gallery", "stores", "stands", "identity", "product", "exhibitions", "packages", "small"], "states": {"intro": [{"client": "brand 1", "title": "פרויקט א", "imageSrc": "assets/drop/2026-02-15T19-25-42-939Z_c5a8326f88ebd8.jpg", "multi": false}, {"client": "brand 2", "title": "פרויקט ב", "imageSrc": "assets/drop/2026-02-15T06-04-44-321Z_61c41682b649f8.jpg", "multi": false}], "brands": {"meta": {"title": "brands shape decisions", "desc": "תיאור המותגים"}, "items": [{"id": "brand-01", "logo": "assets/brands/2026-02-15T19-27-41-224Z_4fb34f33cc98d8.jpg"}, {"id": "brand-02", "logo": "assets/brands/2026-02-15T19-27-41-845Z_d68a5f9bbc3c98.jpg"}]}}}}};
   var EDITABLE_SESSION = false;
 
   function safe(fn, fallback){ try{ var v = fn(); return typeof v === 'undefined' ? fallback : v; }catch(e){ return fallback; } }
@@ -30979,7 +31045,7 @@ window.CRMO_diagRender = function(){
       if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(s);
       if(window.CRMO_PAYLOAD == null) window.CRMO_PAYLOAD = s;
       if(window.batchRecover) {
-        try{ window.batchRecover(s, 'v1862-compat'); }catch(e){}
+        try{ window.batchRecover(s, 'v1863-compat'); }catch(e){}
       }
       try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
       try{ if(window.CRMO_refreshUiFromCloud) window.CRMO_refreshUiFromCloud(); }catch(e){}
@@ -31040,10 +31106,10 @@ window.CRMO_diagRender = function(){
   async function cloudSaveSession(storage){
     var snapshot = normalizeStorage(clone(storage));
     var normalized = deepNormalizeAssetPaths(snapshot);
-    try{ localStorage.setItem('crmo_pending_cloud_save_v1862', JSON.stringify(normalized)); }catch(e){}
+    try{ localStorage.setItem('crmo_pending_cloud_save_v1863', JSON.stringify(normalized)); }catch(e){}
     var state = await getSessionState();
     if(!state.editable){
-      try{ localStorage.setItem('crmo_last_local_only_save_v1862', JSON.stringify({ at:new Date().toISOString(), reason:'no-session', storage: normalized })); }catch(e){}
+      try{ localStorage.setItem('crmo_last_local_only_save_v1863', JSON.stringify({ at:new Date().toISOString(), reason:'no-session', storage: normalized })); }catch(e){}
       throw new Error('שגיאת הרשאה: הנתונים נשמרו מקומית אך לא סונכרנו לענן. וודא שאתה מחובר כמשתמש מורשה');
     }
     var sb = await getSb();
@@ -31052,11 +31118,11 @@ window.CRMO_diagRender = function(){
     var payload = { id:id, storage: normalized, updated_at:new Date().toISOString() };
     var r = await sb.from(table).upsert(payload, { onConflict:'id' }).select('id,updated_at').single();
     if(r && r.error){
-      try{ localStorage.setItem('crmo_last_local_only_save_v1862', JSON.stringify({ at:new Date().toISOString(), reason:String((r.error && r.error.message) || r.error), storage: normalized })); }catch(e){}
+      try{ localStorage.setItem('crmo_last_local_only_save_v1863', JSON.stringify({ at:new Date().toISOString(), reason:String((r.error && r.error.message) || r.error), storage: normalized })); }catch(e){}
       throw new Error('שגיאת הרשאה: הנתונים נשמרו מקומית אך לא סונכרנו לענן. וודא שאתה מחובר כמשתמש מורשה');
     }
-    try{ localStorage.removeItem('crmo_pending_cloud_save_v1862'); }catch(e){}
-    try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(normalized)); }catch(e){}
+    try{ localStorage.removeItem('crmo_pending_cloud_save_v1863'); }catch(e){}
+    try{ localStorage.setItem('crmo_storage_CRMO_v1863', JSON.stringify(normalized)); }catch(e){}
     return r;
   }
   async function migrateOnce(){
@@ -31217,7 +31283,7 @@ window.CRMO_diagRender = function(){
   }
   function getLocalSnapshot(){
     var keys = [
-      'crmo_storage_CRMO_v1862',
+      'crmo_storage_CRMO_v1863',
       'crmo_storage_CRMO_v1856',
       'crmo_storage_CRMO_v1855',
       'crmo_storage_CRMO_v1854',
@@ -31273,17 +31339,17 @@ window.CRMO_diagRender = function(){
       window.CRMO_LAST_CLOUD_LOADED_STORAGE = s;
       window.CRMO_CLOUD_STATE = s;
       window.CRMO_PAYLOAD = s;
-      try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(s)); }catch(e){}
+      try{ localStorage.setItem('crmo_storage_CRMO_v1863', JSON.stringify(s)); }catch(e){}
       try{ if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(s); }catch(e){}
-      try{ if(window.batchRecover) window.batchRecover(s, reason || 'render-first-v1862'); }catch(e){}
+      try{ if(window.batchRecover) window.batchRecover(s, reason || 'render-first-v1863'); }catch(e){}
       try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
       try{ if(window.CRMO_refreshUiFromCloud) window.CRMO_refreshUiFromCloud(); }catch(e){}
       fixRelativeAssets(document);
       markReady();
-      window.CRMO_LAST_BOOT = { ok:true, stage:'render-first', reason:reason || 'render-first-v1862', at:new Date().toISOString() };
+      window.CRMO_LAST_BOOT = { ok:true, stage:'render-first', reason:reason || 'render-first-v1863', at:new Date().toISOString() };
       return true;
     }catch(e){
-      window.CRMO_LAST_BOOT = { ok:false, stage:'render-first', reason:reason || 'render-first-v1862', error:String((e && e.message) || e), at:new Date().toISOString() };
+      window.CRMO_LAST_BOOT = { ok:false, stage:'render-first', reason:reason || 'render-first-v1863', error:String((e && e.message) || e), at:new Date().toISOString() };
       markReady();
       return false;
     }
@@ -31305,7 +31371,7 @@ window.CRMO_diagRender = function(){
       var sb = null;
       try{ if(window.CRMO_getSB) sb = await window.CRMO_getSB(); }catch(e){}
       if(!sb && window.supabase && window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY){
-        sb = window.__CRMO_1862_SB || (window.__CRMO_1862_SB = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY));
+        sb = window.__CRMO_1863_SB || (window.__CRMO_1863_SB = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY));
       }
       if(!sb) return false;
       var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
@@ -31321,7 +31387,7 @@ window.CRMO_diagRender = function(){
         if(!current || current !== next){
           applyStorageNow(cloud, 'silent-cloud-hot-update');
         }
-        try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(cloud)); }catch(e){}
+        try{ localStorage.setItem('crmo_storage_CRMO_v1863', JSON.stringify(cloud)); }catch(e){}
       }
       return true;
     }catch(e){
@@ -31338,15 +31404,15 @@ window.CRMO_diagRender = function(){
       window.CRMO_saveServerConfig = async function(data){
         var payload = data && data.storage ? data.storage : (data || (window.CRMO_collectStructuredPayload ? window.CRMO_collectStructuredPayload() : null));
         if(payload){
-          try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){}
+          try{ localStorage.setItem('crmo_storage_CRMO_v1863', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){}
         }
         try{
           var res = await original.apply(this, arguments);
-          if(payload){ try{ localStorage.setItem('crmo_storage_CRMO_v1862', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){} }
+          if(payload){ try{ localStorage.setItem('crmo_storage_CRMO_v1863', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){} }
           return res;
         }catch(err){
           if(payload){
-            try{ localStorage.setItem('crmo_last_local_only_save_v1862', JSON.stringify({ at:new Date().toISOString(), reason:String((err && err.message) || err), storage: deepNormalize(clone(payload)) })); }catch(e){}
+            try{ localStorage.setItem('crmo_last_local_only_save_v1863', JSON.stringify({ at:new Date().toISOString(), reason:String((err && err.message) || err), storage: deepNormalize(clone(payload)) })); }catch(e){}
           }
           throw err;
         }
@@ -31369,7 +31435,7 @@ window.CRMO_diagRender = function(){
 </script>
 
 
-<script id="crmo_v1862_local_priority_patch">
+<script id="crmo_v1863_local_priority_patch">
 (function(){
   function isoMs(v){ try{ var n = Date.parse(v||''); return isNaN(n)?0:n; }catch(e){ return 0; } }
   function nowIso(){ try{ return new Date().toISOString(); }catch(e){ return ''; } }
@@ -31418,7 +31484,7 @@ window.CRMO_diagRender = function(){
   window.CRMO_markLocalEdit = markLocalEdit;
 
   var origApply = window.CRMO_applyLoadedStorage;
-  if(typeof origApply === 'function' && !origApply.__crmo1862patched){
+  if(typeof origApply === 'function' && !origApply.__crmo1863patched){
     var wrappedApply = function(storage){
       if(!shouldAcceptCloud(storage)){
         try{ window.CRMO_LAST_CLOUD_BLOCKED = { at: nowIso(), reason:'stale-cloud-over-local', cloudSavedAt:(storage&&storage.savedAt)||'', localEditedAt:(window.CRMO_LAST_LOCAL_EDIT_AT||localStorage.getItem('CRMO_LAST_LOCAL_EDIT_AT')||'') }; }catch(e){}
@@ -31426,12 +31492,12 @@ window.CRMO_diagRender = function(){
       }
       return origApply.apply(this, arguments);
     };
-    wrappedApply.__crmo1862patched = true;
+    wrappedApply.__crmo1863patched = true;
     window.CRMO_applyLoadedStorage = wrappedApply;
   }
 
   var origRecover = window.CRMO_recoverFromCloud;
-  if(typeof origRecover === 'function' && !origRecover.__crmo1862patched){
+  if(typeof origRecover === 'function' && !origRecover.__crmo1863patched){
     var wrappedRecover = function(storage, reason){
       if(storage && !shouldAcceptCloud(storage)){
         try{ window.CRMO_LAST_RECOVERY = { ok:false, skipped:true, reason:'stale-cloud-blocked', at: nowIso() }; }catch(e){}
@@ -31439,11 +31505,11 @@ window.CRMO_diagRender = function(){
       }
       return origRecover.apply(this, arguments);
     };
-    wrappedRecover.__crmo1862patched = true;
+    wrappedRecover.__crmo1863patched = true;
     window.CRMO_recoverFromCloud = wrappedRecover;
     window.CRMO_renderAll = function(){
       var src = window.CRMO_PAYLOAD || window.CRMO_LAST_CLOUD_LOADED_STORAGE || window.CRMO_CLOUD_STATE || null;
-      return wrappedRecover(src, 'renderAll-v1862');
+      return wrappedRecover(src, 'renderAll-v1863');
     };
   }
 
@@ -31463,6 +31529,52 @@ window.CRMO_diagRender = function(){
   window.addEventListener('beforeunload', function(){
     try{ markLocalEdit('beforeunload'); }catch(e){}
   });
+})();
+</script>
+
+<script id="crmo_v1863_multilayer_thumb_hydration">
+(function(){
+  function pick(it){
+    if (!it || typeof it !== 'object') return '';
+    var keys = ['coverUrl','imageSrc','src','url','thumb','thumbnail','poster','logo'];
+    for (var i=0;i<keys.length;i++){
+      var v = it[keys[i]];
+      if (typeof v === 'string' && v.trim()) return v.trim();
+    }
+    return '';
+  }
+  function hydrateFromGalleryState(){
+    try{
+      window.CRMO_mpThumbs = window.CRMO_mpThumbs || {};
+      var gs = window.galleryState || {};
+      Object.keys(gs).forEach(function(gk){
+        var arr = gs[gk];
+        if (!Array.isArray(arr)) return;
+        arr.forEach(function(item){
+          if (!item || typeof item !== 'object') return;
+          var files = Array.isArray(item.files) ? item.files : [];
+          if (files[0]){
+            var src0 = pick(item) || '';
+            if (src0) window.CRMO_mpThumbs[files[0]] = src0;
+          }
+          var extras = Array.isArray(item.extraImages) ? item.extraImages : [];
+          extras.forEach(function(ex, idx){
+            var nm = String((ex && (ex.name || ex.id || files[idx+1] || '')) || '').trim();
+            var src = pick(ex);
+            if (!src && files[idx+1]) src = pick({ imageSrc: window.CRMO_mpThumbs[files[idx+1]] || '' });
+            if (nm && src) window.CRMO_mpThumbs[nm] = src;
+          });
+        });
+      });
+    }catch(e){}
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', hydrateFromGalleryState, { once:true });
+  } else {
+    hydrateFromGalleryState();
+  }
+  document.addEventListener('crmo:tile-edited', hydrateFromGalleryState);
+  window.CRMO_hydrateMultiLayerThumbs = hydrateFromGalleryState;
 })();
 </script>
 </body>
