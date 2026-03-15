@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<!-- CRMO_v1883 -->
+<!-- CRMO_v1888 -->
 <html dir="rtl" lang="he">
 <head>
 <script id="crmo_storage_ns">
@@ -145,13 +145,13 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
           if(s && typeof s === 'object' && Object.keys(s).length){
             window.CRMO_EARLY_BOOT_STORAGE = deepNormalize(clone(s));
             window.CRMO_EARLY_BOOT_SOURCE = 'cloud';
-            try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(window.CRMO_EARLY_BOOT_STORAGE)); }catch(e){}
+            try{ localStorage.setItem('crmo_storage_CRMO_v1888', JSON.stringify(window.CRMO_EARLY_BOOT_STORAGE)); }catch(e){}
             return;
           }
         }catch(e){ window.CRMO_EARLY_BOOT_CLOUD_ERROR = String((e && e.message) || e); }
       }
       try{
-        var raw = localStorage.getItem('crmo_storage_CRMO_v1883') || localStorage.getItem('crmo_storage_CRMO_v1856') || localStorage.getItem('crmo_storage_CRMO_v1854');
+        var raw = localStorage.getItem('crmo_storage_CRMO_v1888') || localStorage.getItem('crmo_storage_CRMO_v1856') || localStorage.getItem('crmo_storage_CRMO_v1854');
         if(raw){
           var parsed = JSON.parse(raw);
           if(parsed && typeof parsed === 'object'){
@@ -1179,14 +1179,14 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
 })();
 </script>
 <script id="crmo_build_info_v1845">
-window.CRMO_BUILD_VERSION = "1883";
+window.CRMO_BUILD_VERSION = "1888";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = "CRMO_v1883";
-window.CRMO_VERSION_NUMBER = 1883;
+window.CRMO_VERSION = "CRMO_v1888";
+window.CRMO_VERSION_NUMBER = 1888;
 </script>
 <script id="crmo_topbars_status_v1804">
 (function(){
-  var VERSION = (window.CRMO_BUILD_VERSION || "1883");
+  var VERSION = (window.CRMO_BUILD_VERSION || "1888");
   function setText(id, txt){
     var el = document.getElementById(id);
     if(el) el.textContent = txt;
@@ -1450,7 +1450,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 </style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1883</title>
+<title>CRMO_v1888</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -9040,7 +9040,14 @@ body.role-admin header{
     padding:8px 10px;
   }
 }
-</style></head>
+</style>
+<style id="CRMO_v1888_icon_cleanup">
+.tile-admin-left, .tile-like-btn, .tile-like-count{ display:none !important; }
+.tile-admin-icons{ justify-content:flex-end !important; }
+.tile-admin-right{ margin-inline-start:auto !important; }
+.tile-edit-wrapper [draggable="true"].tile-like-btn{ display:none !important; }
+</style>
+</head>
 <body class="gallery-hover-ready role-guest">
 <div dir="rtl" id="crmo-role-toggle">
   <div class="wrap">
@@ -14225,7 +14232,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 </div>
 <div class="crmo-footer-bottom" dir="ltr">
 <img alt="Creative Monster favicon" class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg"/>
-<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1883</span>
+<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1888</span>
 </div>
 </div>
 </footer>
@@ -30420,9 +30427,9 @@ async function refreshStatus(){
   try{
     var VNUM = 1866;
     var VSTR = "V"+VNUM;
-    window.CRMO_VERSION = "CRMO_v1883";
-    window.CRMO_VERSION_NUMBER = 1883;
-    window.CRMO_BUILD_VERSION = "1883";
+    window.CRMO_VERSION = "CRMO_v1888";
+    window.CRMO_VERSION_NUMBER = 1888;
+    window.CRMO_BUILD_VERSION = "1888";
     var a = document.getElementById("crmo-version-rolebar");
     var b = document.getElementById("crmo-version-adminbar");
     if(a) a.textContent = VSTR;
@@ -30547,7 +30554,7 @@ window.CRMO_diagRender = function(){
   var VERSION_NAME = 'CRMO_v1880';
   window.CRMO_BUILD_VERSION = VERSION_NUM;
   window.CRMO_VERSION = VERSION_NAME;
-  window.CRMO_VERSION_NUMBER = 1883;
+  window.CRMO_VERSION_NUMBER = 1888;
   window.CRMO_STORAGE_NS_PATH = '/';
   window.CRMO_ASSET_PUBLIC_ROOT = 'https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/';
 
@@ -31266,7 +31273,7 @@ window.CRMO_diagRender = function(){
       throw new Error('שגיאת הרשאה: הנתונים נשמרו מקומית אך לא סונכרנו לענן. וודא שאתה מחובר כמשתמש מורשה');
     }
     try{ localStorage.removeItem('crmo_pending_cloud_save_v1866'); }catch(e){}
-    try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(normalized)); }catch(e){}
+    try{ localStorage.setItem('crmo_storage_CRMO_v1888', JSON.stringify(normalized)); }catch(e){}
     return r;
   }
   async function migrateOnce(){
@@ -31483,7 +31490,7 @@ window.CRMO_diagRender = function(){
       window.CRMO_LAST_CLOUD_LOADED_STORAGE = s;
       window.CRMO_CLOUD_STATE = s;
       window.CRMO_PAYLOAD = s;
-      try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(s)); }catch(e){}
+      try{ localStorage.setItem('crmo_storage_CRMO_v1888', JSON.stringify(s)); }catch(e){}
       try{ if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(s); }catch(e){}
       try{ if(window.batchRecover) window.batchRecover(s, reason || 'render-first-v1866'); }catch(e){}
       try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
@@ -31531,7 +31538,7 @@ window.CRMO_diagRender = function(){
         if(!current || current !== next){
           applyStorageNow(cloud, 'silent-cloud-hot-update');
         }
-        try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(cloud)); }catch(e){}
+        try{ localStorage.setItem('crmo_storage_CRMO_v1888', JSON.stringify(cloud)); }catch(e){}
       }
       return true;
     }catch(e){
@@ -31548,11 +31555,11 @@ window.CRMO_diagRender = function(){
       window.CRMO_saveServerConfig = async function(data){
         var payload = data && data.storage ? data.storage : (data || (window.CRMO_collectStructuredPayload ? window.CRMO_collectStructuredPayload() : null));
         if(payload){
-          try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){}
+          try{ localStorage.setItem('crmo_storage_CRMO_v1888', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){}
         }
         try{
           var res = await original.apply(this, arguments);
-          if(payload){ try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){} }
+          if(payload){ try{ localStorage.setItem('crmo_storage_CRMO_v1888', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){} }
           return res;
         }catch(err){
           if(payload){
@@ -32667,7 +32674,7 @@ window.CRMO_diagRender = function(){
 </script>
 
 
-<script id="crmo_v1883_title_index_fix">
+<script id="crmo_v1888_title_index_fix">
 (function(){
   try{
     var isIndex = /(^|\/)index\.html?(?:$|[?#])/i.test(String(location.pathname||''));
@@ -32677,9 +32684,9 @@ window.CRMO_diagRender = function(){
 </script>
 
 
-<script id="crmo_v1883_gallery_architecture_and_tile_stability_patch">
+<script id="crmo_v1888_gallery_architecture_and_tile_stability_patch">
 (function(){
-  var VERSION = '1883';
+  var VERSION = '1888';
   function trim(v){ return String(v == null ? '' : v).trim(); }
   function q(sel, root){ return (root || document).querySelector(sel); }
   function qa(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
@@ -32831,8 +32838,8 @@ window.CRMO_diagRender = function(){
       else if(t.id === 'te-multi-upload' || (t.classList && t.classList.contains('mp-file'))) window.__CRMO_PENDING_UPLOAD_KIND = 'layers';
     }, true);
     var __origFileToSrc = window.CRMO_fileToSrc;
-    if(typeof __origFileToSrc === 'function' && !window.__CRMO_1883_FILETOSRC_PATCHED){
-      window.__CRMO_1883_FILETOSRC_PATCHED = true;
+    if(typeof __origFileToSrc === 'function' && !window.__CRMO_1888_FILETOSRC_PATCHED){
+      window.__CRMO_1888_FILETOSRC_PATCHED = true;
       window.CRMO_fileToSrc = async function(file, folder){
         try{
           var w = currentEditingWrapper();
@@ -32918,7 +32925,7 @@ window.CRMO_diagRender = function(){
   };
   async function maybeResetOnce(){
     try{
-      var key = '__CRMO_GALLERIES_RESET_DONE_V1883';
+      var key = '__CRMO_GALLERIES_RESET_DONE_V1888';
       if(localStorage.getItem(key) === '1') return;
       if(!(await isSignedIn())) return;
       var res = await window.CRMO_resetGalleriesStorage({ silent:true });
@@ -32932,7 +32939,7 @@ window.CRMO_diagRender = function(){
 </script>
 
 
-<style id="CRMO_v1883_layer_icon_state_patch">
+<style id="CRMO_v1888_layer_icon_state_patch">
 .tile-edit-wrapper.tile-single .tile-layer-btn{ display:none !important; }
 body.role-admin .tile-edit-wrapper.tile-single .tile-admin-right::before{ content:'' !important; }
 body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
@@ -32970,7 +32977,7 @@ button[title*="שכפ"]{
   display:none !important;
 }
 </style>
-<script id="CRMO_v1883_layer_icon_and_copy_cleanup">
+<script id="CRMO_v1888_layer_icon_and_copy_cleanup">
 (function(){
   function qsa(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); }
   function parseFiles(v){
@@ -33012,7 +33019,7 @@ button[title*="שכפ"]{
 </script>
 
 
-<style id="crmo_v1883_hard_cache_button">
+<style id="crmo_v1888_hard_cache_button">
 #crmo-admin-bar .crmo-admin-bar-btn--danger{
   background:#b30000 !important;
   color:#fff !important;
@@ -33025,7 +33032,7 @@ button[title*="שכפ"]{
   color:#fff !important;
 }
 </style>
-<script id="crmo_v1883_hard_cache_reset">
+<script id="crmo_v1888_hard_cache_reset">
 (function(){
   async function expireCookies(){
     try{
@@ -33097,5 +33104,499 @@ button[title*="שכפ"]{
 })();
 </script>
 
+
+<style id="crmo_v1888_layer_icon_enforcement">
+.tile-admin-icons .tile-copy-btn,
+.tile-admin-icons .tile-duplicate-btn,
+.tile-admin-icons [data-crmo-action="copy"],
+.tile-admin-icons [data-crmo-action="duplicate"]{
+  display:none !important;
+}
+.tile-edit-wrapper[data-crmo-layer-state="off"] .tile-layer-btn,
+.tile-edit-wrapper[data-crmo-layer-state="single"] .tile-layer-btn{
+  display:none !important;
+}
+.tile-edit-wrapper[data-crmo-layer-state="half"] .tile-layer-btn,
+.tile-edit-wrapper[data-crmo-layer-state="on"] .tile-layer-btn{
+  display:inline-flex !important;
+}
+.tile-edit-wrapper[data-crmo-layer-state="half"] .tile-layer-btn{
+  background:rgba(255,255,255,.55) !important;
+  border:1px solid rgba(0,0,0,.45) !important;
+  border-radius:4px !important;
+  opacity:.78 !important;
+}
+.tile-edit-wrapper[data-crmo-layer-state="on"] .tile-layer-btn{
+  background:#fff !important;
+  border:1px solid #000 !important;
+  border-radius:4px !important;
+  opacity:1 !important;
+}
+.tile-edit-wrapper[data-crmo-layer-state="half"] .tile-layer-btn .icon-layer-off{ display:block !important; opacity:.6 !important; }
+.tile-edit-wrapper[data-crmo-layer-state="half"] .tile-layer-btn .icon-layer-on{ display:none !important; }
+.tile-edit-wrapper[data-crmo-layer-state="on"] .tile-layer-btn .icon-layer-on{ display:block !important; }
+.tile-edit-wrapper[data-crmo-layer-state="on"] .tile-layer-btn .icon-layer-off{ display:none !important; }
+</style>
+<script id="CRMO_v1888_layer_icon_enforcement">
+(function(){
+  function qsa(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function parseFiles(v){
+    try{
+      v = String(v || '').trim();
+      if(!v || v.toLowerCase()==='single') return [];
+      if(window.CRMO_parseMultiFiles) return window.CRMO_parseMultiFiles(v);
+      if(v[0] === '['){ var arr = JSON.parse(v); return Array.isArray(arr) ? arr.filter(Boolean) : []; }
+      return v.split(',').map(function(x){ return String(x||'').trim(); }).filter(Boolean);
+    }catch(e){ return []; }
+  }
+  function getAnchor(wrapper){ return wrapper && (wrapper.querySelector('a.ph') || wrapper); }
+  function getFiles(wrapper){
+    var a = getAnchor(wrapper);
+    var files = parseFiles((a && a.getAttribute('data-files')) || wrapper.getAttribute('data-files') || '');
+    if(files.length) return files;
+    var main = ((a && a.getAttribute('data-filename')) || wrapper.getAttribute('data-filename') || '').trim();
+    return main && main !== 'single' ? [main] : [];
+  }
+  function getExplicitMulti(wrapper){
+    var a = getAnchor(wrapper);
+    var raw = String((a && a.getAttribute('data-multi')) || wrapper.getAttribute('data-multi') || '').trim();
+    return raw === '1';
+  }
+  function removeCopyIcons(root){
+    qsa('.tile-copy-btn,.tile-duplicate-btn,[data-crmo-action="copy"],[data-crmo-action="duplicate"],button[aria-label*="העתק"],button[aria-label*="שכפ"],button[title*="העתק"],button[title*="שכפ"]', root || document).forEach(function(el){
+      try{ el.remove(); }catch(e){ try{ el.style.display='none'; }catch(_){} }
+    });
+  }
+  function stateFor(wrapper){
+    var count = getFiles(wrapper).length;
+    if(count <= 1) return 'single';
+    return getExplicitMulti(wrapper) ? 'on' : 'half';
+  }
+  function applyToWrapper(wrapper){
+    try{
+      if(!wrapper) return;
+      var state = stateFor(wrapper);
+      wrapper.setAttribute('data-crmo-layer-state', state);
+      wrapper.classList.remove('tile-single','tile-multi-on','tile-multi-off');
+      if(state === 'single') wrapper.classList.add('tile-single');
+      else if(state === 'on') wrapper.classList.add('tile-multi-on');
+      else wrapper.classList.add('tile-multi-off');
+    }catch(e){}
+  }
+  function syncEditorCheckboxFromCurrentTile(){
+    try{
+      var cb = document.getElementById('mp-enabled') || document.getElementById('te-multi-toggle');
+      var wrapper = document.querySelector('.tile-edit-wrapper.editing, .tile-edit-wrapper[data-editing="1"], .tile-edit-wrapper.is-editing');
+      if(!cb || !wrapper) return;
+      cb.checked = getExplicitMulti(wrapper);
+    }catch(e){}
+  }
+  function persistCurrentCheckbox(){
+    try{
+      var cb = document.getElementById('mp-enabled') || document.getElementById('te-multi-toggle');
+      var wrapper = document.querySelector('.tile-edit-wrapper.editing, .tile-edit-wrapper[data-editing="1"], .tile-edit-wrapper.is-editing');
+      if(!cb || !wrapper) return;
+      var a = getAnchor(wrapper);
+      var v = cb.checked ? '1' : '0';
+      wrapper.setAttribute('data-multi', v);
+      if(a) a.setAttribute('data-multi', v);
+      applyToWrapper(wrapper);
+    }catch(e){}
+  }
+  function syncAll(root){
+    qsa('.tile-edit-wrapper', root || document).forEach(applyToWrapper);
+    removeCopyIcons(root || document);
+  }
+  document.addEventListener('change', function(ev){
+    var t = ev.target;
+    if(t && (t.id === 'mp-enabled' || t.id === 'te-multi-toggle')){
+      persistCurrentCheckbox();
+      setTimeout(persistCurrentCheckbox, 0);
+      setTimeout(syncAll, 80);
+    }
+  }, true);
+  document.addEventListener('click', function(ev){
+    var btn = ev.target && ev.target.closest ? ev.target.closest('.tile-edit-btn,#te-save,#te-cancel,.te-close-x') : null;
+    if(!btn) return;
+    if(btn.matches('.tile-edit-btn')){
+      setTimeout(syncEditorCheckboxFromCurrentTile, 0);
+      setTimeout(syncAll, 120);
+    }else if(btn.matches('#te-save')){
+      persistCurrentCheckbox();
+      setTimeout(syncAll, 180);
+      setTimeout(syncAll, 420);
+    }else{
+      setTimeout(syncAll, 120);
+    }
+  }, true);
+  document.addEventListener('crmo:tile-edited', function(ev){
+    try{ persistCurrentCheckbox(); }catch(e){}
+    try{ applyToWrapper((ev.detail || {}).tile); }catch(e){}
+    setTimeout(syncAll, 0);
+    setTimeout(syncAll, 120);
+  });
+  document.addEventListener('DOMContentLoaded', function(){ syncAll(); syncEditorCheckboxFromCurrentTile(); }, {once:true});
+  window.CRMO_refreshLayerIcons = syncAll;
+  window.CRMO_syncLayerIconStates = syncAll;
+})();
+</script>
+
+
+<script id="crmo_v1888_stabilization_patch">
+(function(){
+  if(window.__CRMO_V1888_STABLE_SAVE) return;
+  window.__CRMO_V1888_STABLE_SAVE = true;
+
+  function nowIso(){ try{ return new Date().toISOString(); }catch(e){ return ''; } }
+  function markLocal(tag, msOverride){
+    try{
+      var ms = typeof msOverride === 'number' ? msOverride : Date.now();
+      var iso = new Date(ms).toISOString();
+      window.CRMO_LAST_LOCAL_EDIT_AT = iso;
+      window.CRMO_LAST_LOCAL_EDIT_MS = ms;
+      try{ localStorage.setItem('CRMO_LAST_LOCAL_EDIT_AT', iso); }catch(e){}
+      try{ localStorage.setItem('CRMO_LAST_LOCAL_EDIT_MS', String(ms)); }catch(e){}
+      try{ window.CRMO_LAST_SAVE_FLOW = { at: iso, tag: tag || 'local-edit', mode: 'local' }; }catch(e){}
+      return iso;
+    }catch(e){ return ''; }
+  }
+
+  var origSave = (typeof window.CRMO_saveServerConfig === 'function') ? window.CRMO_saveServerConfig : (typeof window.CRMO_saveAllToCloud === 'function' ? window.CRMO_saveAllToCloud : null);
+  var origLoad = (typeof window.CRMO_loadAllFromCloud === 'function') ? window.CRMO_loadAllFromCloud : (typeof window.CRMO_loadServerConfig === 'function' ? window.CRMO_loadServerConfig : null);
+
+  window.CRMO_scheduleStructuredSave = function(){
+    try{ window.CRMO_LAST_AUTOSAVE_BLOCKED = { at: nowIso(), reason: 'autosave-disabled-v1888' }; }catch(e){}
+    return false;
+  };
+  window.CRMO_flushStructuredSave = function(){
+    try{ window.CRMO_LAST_AUTOSAVE_BLOCKED = { at: nowIso(), reason: 'flush-disabled-v1888' }; }catch(e){}
+    return false;
+  };
+  window.CRMO_AUTOSAVE_DISABLED = true;
+
+  if(origSave){
+    var gate = function(payload){
+      if(window.__CRMO_EXPLICIT_SERVER_SAVE_IN_FLIGHT) return origSave.call(this, payload);
+      try{ window.CRMO_LAST_AUTOSAVE_BLOCKED = { at: nowIso(), reason: 'implicit-save-blocked-v1888' }; }catch(e){}
+      return Promise.resolve(false);
+    };
+    gate.__crmo1888gate = true;
+    window.CRMO_saveAllToCloud = gate;
+    window.CRMO_saveServerConfig = gate;
+
+    window.CRMO_saveToServerExplicit = async function(reason){
+      var payload = null;
+      try{ payload = window.CRMO_collectStructuredPayload ? window.CRMO_collectStructuredPayload() : null; }catch(e){}
+      markLocal(reason || 'explicit-server-save-pre', Date.now() + 2000);
+      window.__CRMO_EXPLICIT_SERVER_SAVE_IN_FLIGHT = true;
+      try{
+        var res = await origSave.call(this, payload);
+        markLocal(reason || 'explicit-server-save-post', Date.now() + 2000);
+        try{ window.CRMO_LAST_EXPLICIT_SERVER_SAVE = { ok:true, at: nowIso(), reason: reason || 'manual', result: res }; }catch(e){}
+        return res;
+      }catch(err){
+        try{ window.CRMO_LAST_EXPLICIT_SERVER_SAVE = { ok:false, at: nowIso(), reason: reason || 'manual', error: String((err && err.message) || err) }; }catch(e){}
+        throw err;
+      }finally{
+        window.__CRMO_EXPLICIT_SERVER_SAVE_IN_FLIGHT = false;
+      }
+    };
+  }
+
+  if(origLoad){
+    window.CRMO_loadFromCloudExplicit = async function(reason){
+      try{ window.CRMO_LAST_EXPLICIT_SERVER_LOAD = { ok:true, at: nowIso(), reason: reason || 'manual-load-start' }; }catch(e){}
+      return origLoad.call(this);
+    };
+  }
+
+  document.addEventListener('click', function(ev){
+    try{
+      var t = ev && ev.target;
+      if(!t || !t.closest) return;
+      var saveBtn = t.closest('#te-save, #tm-te-save');
+      if(saveBtn){
+        markLocal('tile-editor-save-click');
+        return;
+      }
+      var serverBtn = t.closest('#crmo-save-server-btn');
+      if(serverBtn){
+        ev.preventDefault();
+        if(!window.CRMO_saveToServerExplicit) return;
+        serverBtn.disabled = true;
+        var oldText = serverBtn.textContent;
+        serverBtn.textContent = 'שומר...';
+        Promise.resolve(window.CRMO_saveToServerExplicit('admin-bar-manual-save')).then(function(){
+          serverBtn.textContent = 'נשמר לשרת';
+          setTimeout(function(){ try{ serverBtn.textContent = oldText; serverBtn.disabled = false; }catch(e){} }, 1200);
+        }).catch(function(){
+          serverBtn.textContent = 'שגיאת שמירה';
+          setTimeout(function(){ try{ serverBtn.textContent = oldText; serverBtn.disabled = false; }catch(e){} }, 1600);
+        });
+      }
+    }catch(e){}
+  }, true);
+
+  function addAdminButton(){
+    try{
+      if(document.getElementById('crmo-save-server-btn')) return;
+      var bar = document.querySelector('.crmo-admin-bar, #galleries-admin-panel .admin-actions, #galleries-admin-panel, .admin-bar');
+      if(!bar) return;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'crmo-save-server-btn';
+      btn.className = 'crmo-btn crmo-btn-save-server';
+      btn.textContent = 'שמירה לשרת';
+      btn.style.cssText = 'background:#111;color:#fff;border:1px solid #111;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:700;margin-inline-start:8px;';
+      bar.appendChild(btn);
+    }catch(e){}
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', addAdminButton, { once:true });
+  else addAdminButton();
+})();
+</script>
+
+
+<style id="CRMO_v1888_tile_enforce_css">
+.tile-admin-icons [aria-label*="העתק"],
+.tile-admin-icons [aria-label*="שכפ"],
+.tile-admin-icons [title*="העתק"],
+.tile-admin-icons [title*="שכפ"],
+.tile-admin-icons .tile-copy-btn,
+.tile-admin-icons .tile-duplicate-btn,
+.tile-admin-icons .tile-clone-btn,
+.tile-admin-icons .tile-drag-btn,
+.tile-admin-icons .tile-sort-btn,
+.tile-admin-icons .drag-handle,
+.tile-admin-icons [aria-label*="גרירה"],
+.tile-admin-icons [title*="גרירה"]{ display:none !important; }
+
+.gallery-grid.grid > .tile-edit-wrapper,
+.gallery-grid.grid > .tile-edit-wrapper > a.ph,
+.gallery-grid.grid > .tile-edit-wrapper img,
+.gallery-grid.grid > .tile-edit-wrapper button{ -webkit-user-drag:none; user-select:none; }
+
+.tile-edit-wrapper .crmo-ov h4.crmo-placeholder-title,
+.tile-edit-wrapper .hover-desc strong.crmo-placeholder-title{ visibility:hidden !important; }
+
+body.role-admin .tile-edit-wrapper .tile-layer-btn.crmo-layer-hidden,
+.tile-edit-wrapper .tile-layer-btn.crmo-layer-hidden{ display:none !important; }
+
+body.role-admin .tile-edit-wrapper .tile-layer-btn.crmo-layer-half,
+.tile-edit-wrapper .tile-layer-btn.crmo-layer-half{
+  opacity:.6 !important;
+  filter: grayscale(.1) saturate(.9) !important;
+  background: rgba(255,255,255,.72) !important;
+}
+
+body.role-admin .tile-edit-wrapper .tile-layer-btn.crmo-layer-on,
+.tile-edit-wrapper .tile-layer-btn.crmo-layer-on{
+  opacity:1 !important;
+  background:#fff !important;
+  box-shadow:0 0 0 1px rgba(0,0,0,.18) inset !important;
+}
+
+body.role-admin .tile-edit-wrapper .tile-layer-btn.crmo-layer-half .icon-layer-on,
+.tile-edit-wrapper .tile-layer-btn.crmo-layer-half .icon-layer-on{ opacity:0 !important; }
+
+body.role-admin .tile-edit-wrapper .tile-layer-btn.crmo-layer-half .icon-layer-off,
+.tile-edit-wrapper .tile-layer-btn.crmo-layer-half .icon-layer-off{ opacity:1 !important; }
+
+body.role-admin .tile-edit-wrapper .tile-layer-btn.crmo-layer-on .icon-layer-on,
+.tile-edit-wrapper .tile-edit-wrapper .tile-layer-btn.crmo-layer-on .icon-layer-on,
+.tile-edit-wrapper .tile-layer-btn.crmo-layer-on .icon-layer-on{ opacity:1 !important; }
+
+body.role-admin .tile-edit-wrapper .tile-layer-btn.crmo-layer-on .icon-layer-off,
+.tile-edit-wrapper .tile-layer-btn.crmo-layer-on .icon-layer-off{ opacity:0 !important; }
+</style>
+<script id="CRMO_v1888_tile_enforce_js">
+(function(){
+  function parseFiles(raw){
+    try{
+      if(Array.isArray(raw)) return raw.filter(Boolean);
+      raw = String(raw || '').trim();
+      if(!raw || raw === 'single') return [];
+      if(raw[0] === '['){
+        var arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.filter(Boolean) : [];
+      }
+      return raw.split(',').map(function(s){ return String(s||'').trim(); }).filter(Boolean);
+    }catch(e){ return []; }
+  }
+  function parseMeta(raw){
+    try{ var o = JSON.parse(String(raw||'{}')); return o && typeof o === 'object' ? o : {}; }catch(e){ return {}; }
+  }
+  function visibleCount(wrapper, anchor){
+    var files = parseFiles((anchor && anchor.getAttribute('data-files')) || (wrapper && wrapper.getAttribute('data-files')) || '');
+    var visible = parseFiles((anchor && anchor.getAttribute('data-files-visible')) || (wrapper && wrapper.getAttribute('data-files-visible')) || '');
+    var meta = parseMeta((anchor && anchor.getAttribute('data-files-meta')) || (wrapper && wrapper.getAttribute('data-files-meta')) || '{}');
+    var count = files.length;
+    if(visible.length) count = visible.length;
+    if(!count){
+      count = Object.keys(meta).filter(function(k){ return meta[k] && (meta[k].src || meta[k].thumb || meta[k].url); }).length;
+    }
+    var cover = ((anchor && anchor.getAttribute('data-filename')) || (wrapper && wrapper.getAttribute('data-filename')) || '').trim();
+    if(count <= 0 && cover) count = 1;
+    return count;
+  }
+  function removeBadButtons(root){
+    (root || document).querySelectorAll('.tile-admin-icons button, .tile-admin-icons [role="button"]').forEach(function(btn){
+      var txt = ((btn.getAttribute('aria-label')||'') + ' ' + (btn.getAttribute('title')||'') + ' ' + (btn.className||'')).toLowerCase();
+      if(/copy|clone|duplicate|drag|sort/.test(txt) || /העתק|שכפ|גרירה/.test(txt)) btn.remove();
+    });
+  }
+  function clearPlaceholderTitles(root){
+    (root || document).querySelectorAll('.tile-edit-wrapper .crmo-ov h4, .tile-edit-wrapper .hover-desc strong').forEach(function(el){
+      if((el.textContent || '').trim() === 'שם הפרויקט'){
+        el.textContent = '';
+        el.classList.add('crmo-placeholder-title');
+      }
+    });
+  }
+  function applyLayerState(wrapper){
+    if(!wrapper) return;
+    var anchor = wrapper.querySelector('a.ph') || wrapper;
+    try{ wrapper.setAttribute('draggable','false'); }catch(e){}
+    try{ if(anchor) anchor.setAttribute('draggable','false'); }catch(e){}
+    var count = visibleCount(wrapper, anchor);
+    var multi = String((anchor && anchor.getAttribute('data-multi')) || wrapper.getAttribute('data-multi') || '0') === '1';
+    wrapper.classList.remove('tile-single','tile-multi-on','tile-multi-off');
+    var btn = wrapper.querySelector('.tile-layer-btn');
+    if(btn){ btn.classList.remove('crmo-layer-hidden','crmo-layer-half','crmo-layer-on'); }
+    if(count <= 1){
+      wrapper.classList.add('tile-single');
+      if(btn) btn.classList.add('crmo-layer-hidden');
+      return;
+    }
+    if(multi){
+      wrapper.classList.add('tile-multi-on');
+      if(btn) btn.classList.add('crmo-layer-on');
+    }else{
+      wrapper.classList.add('tile-multi-off');
+      if(btn) btn.classList.add('crmo-layer-half');
+    }
+  }
+  function syncEditorMulti(){
+    var editor = document.getElementById('tile-editor');
+    var cb = document.getElementById('mp-enabled') || document.getElementById('te-multi-toggle');
+    if(!editor || !cb || !editor.classList.contains('open')) return;
+    var wrapper = window.currentWrapper || editor.__currentWrapper || null;
+    var anchor = window.currentAnchor || editor.__currentAnchor || (wrapper && wrapper.querySelector ? wrapper.querySelector('a.ph') : null);
+    if(!wrapper && window.CRMO_ACTIVE_TILE_WRAPPER) wrapper = window.CRMO_ACTIVE_TILE_WRAPPER;
+    if(!anchor && wrapper) anchor = wrapper.querySelector('a.ph');
+    var v = cb.checked ? '1' : '0';
+    if(anchor) anchor.setAttribute('data-multi', v);
+    if(wrapper) wrapper.setAttribute('data-multi', v);
+    applyLayerState(wrapper);
+  }
+  function refreshAll(root){
+    removeBadButtons(root);
+    clearPlaceholderTitles(root);
+    (root || document).querySelectorAll('.gallery-grid.grid > .tile-edit-wrapper').forEach(applyLayerState);
+  }
+  document.addEventListener('change', function(ev){
+    var t = ev.target;
+    if(t && (t.id === 'mp-enabled' || t.id === 'te-multi-toggle')){
+      syncEditorMulti();
+    }
+  }, true);
+  document.addEventListener('click', function(ev){
+    var t = ev.target && ev.target.closest ? ev.target.closest('#te-save,.tm-te-save,.tile-edit-btn,.tile-layer-btn') : null;
+    if(t){ setTimeout(function(){ syncEditorMulti(); refreshAll(document); }, 0); setTimeout(function(){ refreshAll(document); }, 120); }
+  }, true);
+  document.addEventListener('crmo:tile-edited', function(){ setTimeout(function(){ refreshAll(document); }, 0); setTimeout(function(){ refreshAll(document); }, 120); }, true);
+  document.addEventListener('DOMContentLoaded', function(){ refreshAll(document); });
+  window.addEventListener('load', function(){ refreshAll(document); });
+  var mo = new MutationObserver(function(muts){
+    var should = false;
+    for(var i=0;i<muts.length;i++){
+      var m = muts[i];
+      if(m.type === 'childList' || (m.type === 'attributes' && /data-files|data-files-visible|data-files-meta|data-multi/.test(m.attributeName||''))){ should = true; break; }
+    }
+    if(should){ clearTimeout(window.__CRMO1888_RT); window.__CRMO1888_RT = setTimeout(function(){ refreshAll(document); }, 60); }
+  });
+  try{ mo.observe(document.documentElement, { subtree:true, childList:true, attributes:true, attributeFilter:['data-files','data-files-visible','data-files-meta','data-multi'] }); }catch(e){}
+  window.CRMO_refreshTileLogic = refreshAll;
+})();
+</script>
+
+
+<script id="CRMO_v1888_tile_icon_enforce">
+(function(){
+  function parseFiles(raw){
+    if(!raw) return [];
+    raw=String(raw||'').trim();
+    if(!raw || raw==='single') return [];
+    try{ var a=JSON.parse(raw); if(Array.isArray(a)) return a.filter(Boolean).map(String); }catch(e){}
+    return raw.split(',').map(function(s){ return String(s||'').trim(); }).filter(Boolean);
+  }
+  function parseVisible(raw, files){
+    if(!raw) return files.slice();
+    raw=String(raw||'').trim();
+    if(!raw) return files.slice();
+    try{ var a=JSON.parse(raw); if(Array.isArray(a)) return a.filter(Boolean).map(String); }catch(e){}
+    return raw.split(',').map(function(s){ return String(s||'').trim(); }).filter(Boolean);
+  }
+  function getCount(wrapper){
+    var anchor = wrapper && wrapper.querySelector(':scope > a.ph, :scope > a[data-files], :scope > a');
+    var raw = (anchor && anchor.getAttribute('data-files')) || wrapper.getAttribute('data-files') || '';
+    var files = parseFiles(raw);
+    var visibleRaw = (anchor && anchor.getAttribute('data-files-visible')) || wrapper.getAttribute('data-files-visible') || '';
+    var visible = parseVisible(visibleRaw, files);
+    var set = new Set(visible.length ? visible : files);
+    return Array.from(set).filter(Boolean).length;
+  }
+  function enforceWrapper(wrapper){
+    if(!wrapper) return;
+    wrapper.querySelectorAll('.tile-admin-left,.tile-like-btn,.tile-like-count,.tile-copy-btn,.tile-duplicate-btn,.tile-drag-btn,.tile-drag-handle').forEach(function(n){ n.remove(); });
+    wrapper.querySelectorAll('[title="גרירה לשינוי סדר"],[aria-label="גרירה לשינוי סדר"]').forEach(function(n){ n.remove(); });
+    var count = getCount(wrapper);
+    var anchor = wrapper.querySelector(':scope > a.ph, :scope > a[data-files], :scope > a');
+    var multi = String((anchor && anchor.getAttribute('data-multi')) || wrapper.getAttribute('data-multi') || '0') === '1';
+    wrapper.classList.remove('tile-multi-on','tile-multi-off','tile-single');
+    if(count <= 1){
+      wrapper.classList.add('tile-single');
+    }else if(multi){
+      wrapper.classList.add('tile-multi-on');
+    }else{
+      wrapper.classList.add('tile-multi-off');
+    }
+    var layerBtn = wrapper.querySelector('.tile-layer-btn');
+    if(layerBtn){
+      layerBtn.style.display = count > 1 ? '' : 'none';
+      layerBtn.classList.toggle('is-half', count > 1 && !multi);
+      layerBtn.classList.toggle('is-on', count > 1 && multi);
+      layerBtn.setAttribute('aria-hidden', count > 1 ? 'false' : 'true');
+    }
+    wrapper.querySelectorAll('.keyline,.tile-title,.ov-title,strong').forEach(function(el){
+      var txt=(el.textContent||'').trim();
+      if(txt==='שם הפרויקט') el.textContent='';
+    });
+  }
+  function enforceAll(){ document.querySelectorAll('.tile-edit-wrapper').forEach(enforceWrapper); }
+  window.CRMO_enforceTileIconLogic = enforceAll;
+  document.addEventListener('change', function(ev){
+    var t=ev.target;
+    if(!t) return;
+    if(t.id==='mp-enabled' || t.name==='mp-enabled' || t.matches('[data-role="multi-checkbox"], .mp-enabled, #te-multi, input[type="checkbox"][name*="multi"], input[type="checkbox"][id*="multi"]')){
+      setTimeout(enforceAll, 0); setTimeout(enforceAll, 120);
+    }
+  }, true);
+  document.addEventListener('click', function(ev){
+    var t=ev.target && ev.target.closest && ev.target.closest('#te-save,.te-save,[data-action="save-tile"],.tile-edit-btn,.tile-layer-btn');
+    if(t){ setTimeout(enforceAll, 0); setTimeout(enforceAll, 120); setTimeout(enforceAll, 400); }
+  }, true);
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(enforceAll, 0); setTimeout(enforceAll, 250); setTimeout(enforceAll, 1000); });
+  setTimeout(enforceAll, 1500);
+})();
+</script>
+<style id="CRMO_v1888_layer_logic_ui">
+.tile-layer-btn{ position:relative; }
+.tile-layer-btn.is-half{ opacity:.55 !important; filter:grayscale(0) !important; }
+.tile-edit-wrapper.tile-multi-on .tile-layer-btn, .tile-layer-btn.is-on{ background:#fff !important; border-radius:4px !important; }
+.tile-edit-wrapper.tile-single .tile-layer-btn{ display:none !important; }
+.tile-admin-right::before{ content:none !important; display:none !important; }
+</style>
 </body>
 </html>
