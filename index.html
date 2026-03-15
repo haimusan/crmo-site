@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 
-<!-- CRMO_v1867 -->
+<!-- CRMO_v1883 -->
 <html dir="rtl" lang="he">
 <head>
 <script id="crmo_storage_ns">
 /* CRMO SYSTEM PERMANENT RULES (DO NOT REMOVE):
-  1. VERSIONING: Version must be a pure number (e.g. 1867). NO ADJECTIVES.
+  1. VERSIONING: Version must be a pure number (e.g. 1866). NO ADJECTIVES.
   2. SYNC: Version number MUST be identical in DOCTYPE, const VERSION, document.title, and Footer.
   3. ASSETS: Use SmartResolver. Relative paths (assets/...) get Supabase Prefix. Full URLs remain untouched.
   4. RENDERING: Render UI immediately from LocalStorage/DefaultJSON. Cloud fetch is background-only.
@@ -145,13 +145,13 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
           if(s && typeof s === 'object' && Object.keys(s).length){
             window.CRMO_EARLY_BOOT_STORAGE = deepNormalize(clone(s));
             window.CRMO_EARLY_BOOT_SOURCE = 'cloud';
-            try{ localStorage.setItem('crmo_storage_CRMO_v1867', JSON.stringify(window.CRMO_EARLY_BOOT_STORAGE)); }catch(e){}
+            try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(window.CRMO_EARLY_BOOT_STORAGE)); }catch(e){}
             return;
           }
         }catch(e){ window.CRMO_EARLY_BOOT_CLOUD_ERROR = String((e && e.message) || e); }
       }
       try{
-        var raw = localStorage.getItem('crmo_storage_CRMO_v1867') || localStorage.getItem('crmo_storage_CRMO_v1856') || localStorage.getItem('crmo_storage_CRMO_v1854');
+        var raw = localStorage.getItem('crmo_storage_CRMO_v1883') || localStorage.getItem('crmo_storage_CRMO_v1856') || localStorage.getItem('crmo_storage_CRMO_v1854');
         if(raw){
           var parsed = JSON.parse(raw);
           if(parsed && typeof parsed === 'object'){
@@ -743,7 +743,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
           var files = firstNonEmpty(
             w.getAttribute('data-files'),
             a && a.getAttribute('data-files'),
-            project && Array.isArray(project.assets) && project.assets.length > 1 ? project.assets.map(function(x){ return x && (x.src || x.file || ''); }).filter(Boolean).join(',') : ''
+            project && Array.isArray(project.assets) && project.assets.length > 1 ? JSON.stringify(project.assets.map(function(x){ return x && (x.file || x.src || ''); }).filter(Boolean)) : ''
           );
           var filesMeta = firstNonEmpty(
             w.getAttribute('data-files-meta'),
@@ -791,7 +791,7 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
             filesMeta: filesMeta,
             subcaps: firstNonEmpty(w.getAttribute('data-subcaps'), a && a.getAttribute('data-subcaps')),
             tags: ((w.getAttribute('data-tags') || '')+'').trim(),
-            multi: !!(files && (String(files).split(',').filter(Boolean).length > 1)),
+            multi: !!(files && ((window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(String(files)) : String(files).split(',').filter(Boolean)).length > 1)),
             contentData: contentData
           };
           if(item.title || item.shortDescription || item.imageSrc || item.files || item.filesMeta || item.projectId || item.galleryId){
@@ -1050,8 +1050,8 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
         var assets = [];
         try{
           if(Array.isArray(it.contentData && it.contentData.assets) && it.contentData.assets.length) assets = clone(it.contentData.assets);
-          else if(typeof it.filesMeta === 'string' && it.filesMeta.trim()) assets = JSON.parse(it.filesMeta).map(function(x){ return { src:(x&&x.src)||'', file:(x&&x.file)||'', title:(x&&x.title)||'', alt:(x&&x.alt)||'', sub:(x&&x.sub)||'', caption:(x&&x.caption)||'' }; });
-          else if(typeof it.files === 'string' && it.files.trim()) assets = it.files.split(',').map(function(s){ s=String(s||'').trim(); return s ? { src:s } : null; }).filter(Boolean);
+          else if(typeof it.filesMeta === 'string' && it.filesMeta.trim()){ var __fm = (window.CRMO_parseFilesMetaMap ? window.CRMO_parseFilesMetaMap(it.filesMeta, window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(it.files || '') : []) : {}); assets = Object.keys(__fm).map(function(k){ var x = __fm[k] || {}; return { src:(x&& (x.src||x.url||x.imageSrc||x.coverUrl))||'', file:(x&&x.file)||k, title:(x&&x.title)||'', alt:(x&&x.alt)||'', sub:(x&&x.sub)||'', caption:(x&&x.caption)||'', desc:(x&&x.desc)||'' }; }); }
+          else if(typeof it.files === 'string' && it.files.trim()) assets = (window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(it.files) : it.files.split(',').map(function(s){ return String(s||'').trim(); }).filter(Boolean)).map(function(s){ return s ? { file:s, src:s } : null; }).filter(Boolean);
           else if((it.cover && it.cover.src) || it.imageSrc) assets = [{ src:(it.cover && it.cover.src) || it.imageSrc || '' }];
         }catch(e){}
         p.assets = assets; if(assets[0]) p.type = 'image';
@@ -1179,14 +1179,14 @@ window.CRMO_SUPABASE_ADMIN_EMAILS = ["boochin@gmail.com","boochin@walla.co.il"];
 })();
 </script>
 <script id="crmo_build_info_v1845">
-window.CRMO_BUILD_VERSION = "1867";
+window.CRMO_BUILD_VERSION = "1883";
 window.CRMO_BUILD_TYPE = "single";
-window.CRMO_VERSION = "CRMO_v1867";
-window.CRMO_VERSION_NUMBER = 1867;
+window.CRMO_VERSION = "CRMO_v1883";
+window.CRMO_VERSION_NUMBER = 1883;
 </script>
 <script id="crmo_topbars_status_v1804">
 (function(){
-  var VERSION = (window.CRMO_BUILD_VERSION || "1867");
+  var VERSION = (window.CRMO_BUILD_VERSION || "1883");
   function setText(id, txt){
     var el = document.getElementById(id);
     if(el) el.textContent = txt;
@@ -1450,7 +1450,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 </style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1867</title>
+<title>CRMO_v1883</title>
 <link href="assets/branding/logo/favicon.svg" rel="icon" type="image/svg+xml"/>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400&amp;display=swap&amp;display=swap" rel="stylesheet"/>
 <style>
@@ -5044,32 +5044,107 @@ section:not(#brands):not(#logos) .grid .ph:hover{
         var val = it[keys[j]];
         if (typeof val === 'string' && val.trim()) return val.trim();
       }
-      try{
-        var fm = it.filesMeta;
-        if (typeof fm === 'string' && fm.trim()) fm = JSON.parse(fm);
-        if (fm && typeof fm === 'object'){
-          if (name && fm[name]){
-            var m = fm[name];
-            var mk = ['src','imageSrc','coverUrl','url','thumb','thumbnail'];
-            for (var k=0;k<mk.length;k++){
-              var mv = m && m[mk[k]];
-              if (typeof mv === 'string' && mv.trim()) return mv.trim();
-            }
-          }
-          if (Array.isArray(fm)){
-            var m2 = (typeof index === 'number' && fm[index]) ? fm[index] : fm[0];
-            var mk2 = ['src','imageSrc','coverUrl','url','thumb','thumbnail'];
-            for (var k2=0;k2<mk2.length;k2++){
-              var mv2 = m2 && m2[mk2[k2]];
-              if (typeof mv2 === 'string' && mv2.trim()) return mv2.trim();
-            }
-          }
-        }
-      }catch(e){}
     }
     return '';
   }
   window.CRMO_pickThumbUrl = crmoPickThumbUrl;
+  window.CRMO_parseMultiFiles = function(raw){
+    try{
+      if (Array.isArray(raw)) return raw.map(function(x){ return String(x||'').trim(); }).filter(function(x){ return x && x.toLowerCase() !== 'single'; }).filter(function(x,i,a){ return a.indexOf(x)===i; });
+      raw = (raw == null) ? '' : String(raw).trim();
+      if (!raw || raw.toLowerCase() === 'single') return [];
+      if (raw.charAt(0) === '['){
+        try{
+          var arr = JSON.parse(raw);
+          if (Array.isArray(arr)) return arr.map(function(x){ return String(x||'').trim(); }).filter(function(x){ return x && x.toLowerCase() !== 'single'; }).filter(function(x,i,a){ return a.indexOf(x)===i; });
+        }catch(e){}
+      }
+      return raw.split(',').map(function(x){ return String(x||'').trim(); }).filter(function(x){ return x && x.toLowerCase() !== 'single'; }).filter(function(x,i,a){ return a.indexOf(x)===i; });
+    }catch(e){ return []; }
+  };
+  window.CRMO_serializeMultiFiles = function(list){
+    try{
+      var arr = window.CRMO_parseMultiFiles(Array.isArray(list) ? list : (list == null ? '' : String(list)));
+      return arr.length ? JSON.stringify(arr) : '';
+    }catch(e){ return ''; }
+  };
+  window.CRMO_parseFilesMetaMap = function(raw, files){
+    var map = {};
+    try{
+      var parsed = raw;
+      if (typeof raw === 'string'){
+        raw = raw.trim();
+        parsed = raw ? JSON.parse(raw) : null;
+      }
+      if (Array.isArray(parsed)){
+        parsed.forEach(function(it, idx){
+          if (!it) return;
+          var name = String((it.file || it.name || it.id || ((files&&files[idx])||'')) || '').trim();
+          if (!name) return;
+          map[name] = Object.assign({}, it);
+        });
+      } else if (parsed && typeof parsed === 'object'){
+        Object.keys(parsed).forEach(function(k){
+          if (!k) return;
+          var it = parsed[k];
+          map[k] = (it && typeof it === 'object') ? Object.assign({}, it) : { src: String(it||'') };
+        });
+      }
+    }catch(e){}
+    try{
+      (files||[]).forEach(function(name){ if(name && !map[name]) map[name] = { file:name }; });
+    }catch(e){}
+    return map;
+  };
+  window.CRMO_serializeFilesMetaMap = function(map, files){
+    try{
+      var out = {};
+      (files || Object.keys(map||{})).forEach(function(name){
+        if (!name) return;
+        var src = '';
+        var it = map && map[name] ? map[name] : {};
+        src = String((it && (it.src || it.url || it.imageSrc || it.coverUrl || '')) || '').trim();
+        out[name] = Object.assign({}, (it && typeof it === 'object') ? it : {}, { file:name, src:src, url:src, imageSrc:src, coverUrl:src });
+      });
+      return Object.keys(out).length ? JSON.stringify(out) : '';
+    }catch(e){ return ''; }
+  };
+  function crmoSanitizeFolderIdLocal(s){
+    s = (s == null) ? '' : String(s);
+    s = s.trim().toLowerCase().replace(/[^a-z0-9_\-]/g,'_');
+    return s || 'gallery';
+  }
+  window.CRMO_getTileGalleryKey = function(wrapper, anchor){
+    try{
+      var a = anchor || (wrapper && wrapper.querySelector ? wrapper.querySelector('a.ph') : null) || null;
+      var keys = [
+        wrapper && wrapper.getAttribute && wrapper.getAttribute('data-crmo-gkey'),
+        a && a.getAttribute && a.getAttribute('data-crmo-gkey')
+      ];
+      for (var i=0;i<keys.length;i++){
+        var k = String(keys[i] || '').trim();
+        if (k) return k;
+      }
+      var node = wrapper || a;
+      var grid = node && node.closest ? node.closest('[data-crmo-gkey]') : null;
+      var gk = grid && grid.getAttribute ? String(grid.getAttribute('data-crmo-gkey') || '').trim() : '';
+      if (gk) return gk;
+      if (window.GALLERIES && wrapper){
+        for (var kk in window.GALLERIES){
+          if (!Object.prototype.hasOwnProperty.call(window.GALLERIES, kk)) continue;
+          var cfg = window.GALLERIES[kk];
+          if (!cfg || !cfg.sectionId) continue;
+          var sec = document.getElementById(cfg.sectionId);
+          if (sec && sec.contains(wrapper)) return kk;
+        }
+      }
+    }catch(e){}
+    return '';
+  };
+  window.CRMO_getMultiUploadFolder = function(wrapper, anchor){
+    var gk = window.CRMO_getTileGalleryKey(wrapper, anchor);
+    return 'galleries/' + crmoSanitizeFolderIdLocal(gk || 'gallery') + '/layers';
+  };
   function setupMultiProject(){
     var editor = document.getElementById('tile-editor');
     if(!editor || editor.querySelector('.mp-block')) return;
@@ -5101,7 +5176,7 @@ section:not(#brands):not(#logos) .grid .ph:hover{
         mpUserTouched = true;
         try{
           var c = getCurrentFileCount();
-          var v = (mpEnabled.checked && c > 1) ? '1' : '0';
+          var v = mpEnabled.checked ? '1' : '0';
           if(currentAnchor){ currentAnchor.setAttribute('data-multi', v); }
           if(currentWrapper){ currentWrapper.setAttribute('data-multi', v); }
         }catch(e){}
@@ -5215,6 +5290,9 @@ try{ setMainImageVisible(false); }catch(e){}
 var mpDrop    = block.querySelector('.mp-dropzone');
     function handleMpFiles(files){
       if(!files || !files.length) return;
+      var targetWrapper = currentWrapper || null;
+      var targetAnchor = currentAnchor || null;
+      var targetFolder = (window.CRMO_getMultiUploadFolder ? window.CRMO_getMultiUploadFolder(targetWrapper, targetAnchor) : 'multi');
       var hadRowsBefore = !!(mpRows && mpRows.querySelector && mpRows.querySelector('.mp-row'));
       try{
         setMainImageVisible(false);
@@ -5296,7 +5374,7 @@ mpRows.appendChild(row);
           }
         }catch(e){}
         try{
-          (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, 'multi') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, 'multi') : Promise.reject(new Error('no-uploader'))))
+          (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, targetFolder) : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, targetFolder) : Promise.reject(new Error('no-uploader'))))
             .then(function(url2){
               if(url2){
                 mpThumbs[file.name] = url2;
@@ -5310,37 +5388,37 @@ mpRows.appendChild(row);
             });
         }catch(e){}
         try{
-          if (!hadRowsBefore && index === 0 && typeof currentWrapper !== 'undefined' && currentWrapper && typeof currentAnchor !== 'undefined' && currentAnchor){
-            currentWrapper.setAttribute('data-filename', file.name);
-            currentAnchor.setAttribute('data-filename', file.name);
+          if (!hadRowsBefore && index === 0 && targetWrapper && targetAnchor){
+            targetWrapper.setAttribute('data-filename', file.name);
+            targetAnchor.setAttribute('data-filename', file.name);
             try{
               if (typeof FileReader !== 'undefined'){
                 var readerMain = new FileReader();
                 readerMain.onload = function(ev){
                   var dataUrlMain = ev && ev.target && ev.target.result;
                   if (!dataUrlMain) return;
-                  var img0 = currentAnchor.querySelector('img');
+                  var img0 = targetAnchor.querySelector('img');
                   if (img0){
                     img0.src = dataUrlMain;
                   }else{
-                    currentAnchor.style.backgroundImage = 'url(' + dataUrlMain + ')';
-                    currentAnchor.style.backgroundSize = 'cover';
-                    currentAnchor.style.backgroundPosition = 'center center';
+                    targetAnchor.style.backgroundImage = 'url(' + dataUrlMain + ')';
+                    targetAnchor.style.backgroundSize = 'cover';
+                    targetAnchor.style.backgroundPosition = 'center center';
                   }
                 };
                 readerMain.readAsDataURL(file);
               }
             }catch(e){}
-            (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, 'multi') : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, 'multi') : Promise.reject(new Error('no-uploader'))))
+            (window.CRMO_fileToSrcCached ? window.CRMO_fileToSrcCached(file, targetFolder) : (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, targetFolder) : Promise.reject(new Error('no-uploader'))))
               .then(function(url){
                 if (!url) return;
-                var img = currentAnchor.querySelector('img');
+                var img = targetAnchor.querySelector('img');
                 if (img){
                   img.src = url;
                 }else{
-                  currentAnchor.style.backgroundImage = 'url(' + url + ')';
-                  currentAnchor.style.backgroundSize = 'cover';
-                  currentAnchor.style.backgroundPosition = 'center center';
+                  targetAnchor.style.backgroundImage = 'url(' + url + ')';
+                  targetAnchor.style.backgroundSize = 'cover';
+                  targetAnchor.style.backgroundPosition = 'center center';
                 }
               })
               .catch(function(err){
@@ -5355,7 +5433,7 @@ mpRows.appendChild(row);
       try{
         var c = getCurrentFileCount();
         if(!mpUserTouched && mpEnabled){
-          mpEnabled.checked = (c > 1);
+          mpEnabled.checked = (String((currentAnchor && currentAnchor.getAttribute('data-multi')) || (currentWrapper && currentWrapper.getAttribute('data-multi')) || '') === '1');
         }
       }catch(e){}
       try{ mpApplyMultiProjectChanges(); }catch(e){}
@@ -5461,7 +5539,7 @@ mpAdd.addEventListener('click', function(){
       if (mpSubcaps){ mpSubcaps.checked = (ds === '1'); }
       var dm = (anchor.getAttribute('data-files-meta') || wrapper.getAttribute('data-files-meta') || '');
       var metaMap = {};
-      try{ metaMap = dm ? JSON.parse(dm) : {}; }catch(e){ metaMap = {}; }
+      try{ metaMap = window.CRMO_parseFilesMetaMap ? window.CRMO_parseFilesMetaMap(dm, parts) : (dm ? JSON.parse(dm) : {}); }catch(e){ metaMap = {}; }
       if(!metaMap || typeof metaMap !== 'object'){ metaMap = {}; }
       try{
         var metas = mpRows ? mpRows.querySelectorAll('.mp-meta') : [];
@@ -5469,9 +5547,9 @@ mpAdd.addEventListener('click', function(){
           el.style.display = (ds === '1') ? '' : 'none';
         });
       }catch(e){}
-      var visParts = (dv || '').split(',').map(function(s){ return (s||'').trim(); }).filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
+      var visParts = window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(dv || '') : (dv || '').split(',').map(function(s){ return (s||'').trim(); }).filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
       var hasVis = !!(visParts && visParts.length);
-      var parts = (df || '').split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
+      var parts = window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(df || '') : (df || '').split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
       parts.forEach(function(name){
         var row = document.createElement('div');
         row.className = 'mp-row mp-row-fake';
@@ -5486,9 +5564,6 @@ mpAdd.addEventListener('click', function(){
           if (!initialThumb && currentAnchor && currentAnchor.__tileData) initialThumb = crmoPickThumbUrl(currentAnchor.__tileData, name, parts.indexOf(name));
           if (!initialThumb && currentWrapper && currentWrapper.__crmoTileData) initialThumb = crmoPickThumbUrl(currentWrapper.__crmoTileData, name, parts.indexOf(name));
           if (!initialThumb) initialThumb = crmoPickThumbUrl(null, name, parts.indexOf(name));
-          if ((!initialThumb || !String(initialThumb).trim()) && metaMap && metaMap[name]){
-            initialThumb = metaMap[name].src || metaMap[name].imageSrc || metaMap[name].coverUrl || metaMap[name].url || metaMap[name].thumb || metaMap[name].thumbnail || '';
-          }
           if (initialThumb){
             try{ window.CRMO_mpThumbs[name] = initialThumb; }catch(e){}
             thumb.src = initialThumb;
@@ -5555,7 +5630,7 @@ if (mpRows){
       if(multiAttr === '0'){
         isMultiOn = false;
       }else if(multiAttr === '1'){
-        isMultiOn = (visibleCount > 1);
+        isMultiOn = true;
       }else{
         isMultiOn = (visibleCount > 1);
       }
@@ -5594,11 +5669,11 @@ if (mpRows){
       var ds = anchor.getAttribute('data-subcaps') || wrapper.getAttribute('data-subcaps') || '0';
       if (mpSubcaps){ mpSubcaps.checked = (ds === '1'); }
       var dm = (anchor.getAttribute('data-files-meta') || wrapper.getAttribute('data-files-meta') || '');
+      var parts = window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(df || '') : (df || '').split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
       var metaMap = {};
-      try{ metaMap = dm ? JSON.parse(dm) : {}; }catch(e){ metaMap = {}; }
-      var visParts = (dv || '').split(',').map(function(s){ return (s||'').trim(); }).filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
+      try{ metaMap = window.CRMO_parseFilesMetaMap ? window.CRMO_parseFilesMetaMap(dm, parts) : (dm ? JSON.parse(dm) : {}); }catch(e){ metaMap = {}; }
+      var visParts = window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(dv || '') : (dv || '').split(',').map(function(s){ return (s||'').trim(); }).filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
       var hasVis = !!(visParts && visParts.length);
-      var parts = (df || '').split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
       parts.forEach(function(name, partIndex){
         var row = document.createElement('div');
         row.className = 'mp-row mp-row-fake';
@@ -5611,9 +5686,6 @@ if (mpRows){
           var initialThumb = crmoPickThumbUrl((wrapper && (wrapper.__tileData || wrapper.__crmoTileData)) || (anchor && (anchor.__tileData || anchor.__crmoTileData)) || null, name, partIndex);
           if (!initialThumb && partIndex === 0) initialThumb = crmoPickThumbUrl({ imageSrc: anchor.getAttribute('data-image-src') || '' }, name, partIndex);
           if (!initialThumb) initialThumb = crmoPickThumbUrl(null, name, partIndex);
-          if ((!initialThumb || !String(initialThumb).trim()) && metaMap && metaMap[name]){
-            initialThumb = metaMap[name].src || metaMap[name].imageSrc || metaMap[name].coverUrl || metaMap[name].url || metaMap[name].thumb || metaMap[name].thumbnail || '';
-          }
           if (initialThumb){
             try{ window.CRMO_mpThumbs[name] = initialThumb; }catch(e){}
             thumb.src = initialThumb;
@@ -5679,7 +5751,7 @@ if (mpRows){
       if(multiAttr === '0'){
         isMultiOn = false;
       }else if(multiAttr === '1'){
-        isMultiOn = (visibleCount > 1);
+        isMultiOn = true;
       }else{
         isMultiOn = (visibleCount > 1);
       }
@@ -5724,13 +5796,16 @@ if (mpRows){
             var tVal = (tIn && typeof tIn.value === 'string') ? tIn.value.trim() : '';
             var dVal = (dIn && typeof dIn.value === 'string') ? dIn.value.trim() : '';
             var srcVal = '';
-            try{ if (mpThumbs && mpThumbs[name]) srcVal = String(mpThumbs[name] || '').trim(); }catch(e){}
-            if ((!srcVal || !srcVal.trim()) && currentWrapper && currentWrapper.__tileData){
-              try{ srcVal = String(crmoPickThumbUrl(currentWrapper.__tileData, name, extraNames.length) || '').trim(); }catch(e){}
-            }
+            try{
+              srcVal = String((window.CRMO_mpThumbs && window.CRMO_mpThumbs[name]) || '').trim();
+              if((!srcVal || /^data:/i.test(srcVal)) && currentAnchor){
+                var rawMeta = currentAnchor.getAttribute('data-files-meta') || currentWrapper.getAttribute('data-files-meta') || '';
+                var prevMap = window.CRMO_parseFilesMetaMap ? window.CRMO_parseFilesMetaMap(rawMeta, [name]) : {};
+                srcVal = String((prevMap && prevMap[name] && (prevMap[name].src || prevMap[name].url || prevMap[name].imageSrc || prevMap[name].coverUrl)) || srcVal || '').trim();
+              }
+            }catch(e){}
             if (tVal || dVal || srcVal){
-              metaOut[name] = { title: tVal, desc: dVal };
-              if (srcVal){ metaOut[name].src = srcVal; metaOut[name].thumb = srcVal; }
+              metaOut[name] = { title: tVal, desc: dVal, src: srcVal, url: srcVal, imageSrc: srcVal, coverUrl: srcVal, file: name };
             }
           }catch(e){}
         }
@@ -5785,22 +5860,7 @@ if(!finalList.length){
         setMainImageVisible(false);
         return;
       }
-      try{
-        (finalList || []).forEach(function(n, idx){
-          if (!n) return;
-          var srcKeep = '';
-          try{ if (mpThumbs && mpThumbs[n]) srcKeep = String(mpThumbs[n] || '').trim(); }catch(e){}
-          if ((!srcKeep || !srcKeep.trim()) && currentWrapper && currentWrapper.__tileData){
-            try{ srcKeep = String(crmoPickThumbUrl(currentWrapper.__tileData, n, idx) || '').trim(); }catch(e){}
-          }
-          if (srcKeep){
-            if (!metaOut[n] || typeof metaOut[n] !== 'object') metaOut[n] = {};
-            if (!metaOut[n].src) metaOut[n].src = srcKeep;
-            if (!metaOut[n].thumb) metaOut[n].thumb = srcKeep;
-          }
-        });
-      }catch(e){}
-      var filesValue = finalList.join(',');
+      var filesValue = window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles(finalList) : finalList.join(',');
       var visibleFinal = [];
       try{
         var visList = (extraVisible && extraVisible.length) ? extraVisible : finalList;
@@ -5837,7 +5897,7 @@ if(!finalList.length){
         var enabled = !!(mpSubcaps && mpSubcaps.checked);
         var keys = metaOut ? Object.keys(metaOut) : [];
         if (keys && keys.length){
-          var json = JSON.stringify(metaOut);
+          var json = (window.CRMO_serializeFilesMetaMap ? window.CRMO_serializeFilesMetaMap(metaOut, finalList) : JSON.stringify(metaOut));
           currentAnchor.setAttribute('data-files-meta', json);
           currentWrapper.setAttribute('data-files-meta', json);
         }else{
@@ -5845,21 +5905,20 @@ if(!finalList.length){
           currentWrapper.removeAttribute('data-files-meta');
         }
       }catch(e){}
-      if(coverName && mpThumbs && mpThumbs[coverName]){
+      if(coverName){
         try{
-          var thumbUrl = mpThumbs[coverName];
+          var thumbUrl = ((metaOut && metaOut[coverName] && (metaOut[coverName].src || metaOut[coverName].url || metaOut[coverName].imageSrc || metaOut[coverName].coverUrl)) || (mpThumbs && mpThumbs[coverName]) || ''); if(!thumbUrl) return;
           var imgEl = currentAnchor.querySelector('img');
           if(imgEl){
             imgEl.src = thumbUrl;
           }else{
             currentAnchor.style.backgroundImage = 'url(' + thumbUrl + ')';
-            currentAnchor.style.backgroundSize = 'cover';
-            currentAnchor.style.backgroundPosition = 'center center';
+            targetAnchor.style.backgroundSize = 'cover';
+            targetAnchor.style.backgroundPosition = 'center center';
           }
         }catch(e){}
       }
-      if (mpEnabled && (!visibleFinal || visibleFinal.length <= 1)){ mpEnabled.checked = false; }
-      var multiValue = (mpEnabled && mpEnabled.checked && visibleFinal && visibleFinal.length > 1) ? '1' : '0';
+      var multiValue = (mpEnabled && mpEnabled.checked) ? '1' : '0';
       currentAnchor.setAttribute('data-multi', multiValue);
       currentWrapper.setAttribute('data-multi', multiValue);
       try{
@@ -5895,30 +5954,43 @@ editor.addEventListener('click', function(ev){
 </script>
 <style id="crmo_thumbs_rtl_fix">
 #crmoThumbs{
-  display:grid !important;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  display:flex !important;
+  flex-wrap:nowrap;
   width:100% !important;
   gap:0.75rem;
   padding-inline:0.75rem;
   direction:rtl;
-  justify-content:stretch !important;
+  justify-content:flex-start !important;
 }
 #crmoThumbs .crmo-thumb{
   display:flex;
   align-items:center;
   justify-content:center;
   box-sizing:border-box;
-  width:100%;
-  max-width:none;
+}
+@media (min-width: 1200px){
+  #crmoThumbs .crmo-thumb{
+    flex:0 0 calc(25% - 0.75rem);
+    max-width:calc(25% - 0.75rem);
+  }
 }
 @media (max-width:1199px) and (min-width:901px){
-  #crmoThumbs{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+  #crmoThumbs .crmo-thumb{
+    flex:0 0 calc(33.333% - 0.75rem);
+    max-width:calc(33.333% - 0.75rem);
+  }
 }
 @media (max-width:900px) and (min-width:641px){
-  #crmoThumbs{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #crmoThumbs .crmo-thumb{
+    flex:0 0 calc(50% - 0.75rem);
+    max-width:calc(50% - 0.75rem);
+  }
 }
 @media (max-width:640px){
-  #crmoThumbs{ grid-template-columns:repeat(1,minmax(0,1fr)); }
+  #crmoThumbs .crmo-thumb{
+    flex:0 0 100%;
+    max-width:100%;
+  }
 }
 </style>
 <style id="crmo_whatsapp_float">
@@ -9015,6 +9087,10 @@ body.role-admin header{
 <button aria-controls="crmo-system-selector" aria-expanded="false" class="crmo-admin-bar-btn" id="crmo-adminbar-system" type="button">
 <span aria-hidden="true" class="crmo-admin-bar-icon">+</span>
         מערכת
+      </button>
+<button class="crmo-admin-bar-btn crmo-admin-bar-btn--danger" id="crmo-adminbar-hardcache" type="button">
+<span aria-hidden="true" class="crmo-admin-bar-icon">✕</span>
+        ניקוי CACHE
       </button>
 </div>
 <div aria-label="תפריט משנה" class="crmo-admin-bar-row crmo-admin-subbar is-hidden" dir="rtl" id="crmo-admin-subbar"></div>
@@ -14149,7 +14225,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
 </div>
 <div class="crmo-footer-bottom" dir="ltr">
 <img alt="Creative Monster favicon" class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg"/>
-<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1867</span>
+<span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span> | </span><span class="crmo-footer-version" id="crmo-footer-version">CRMO System Version 1883</span>
 </div>
 </div>
 </footer>
@@ -14973,13 +15049,12 @@ function normalizeBrandName(str){
         for (var i = 0; i < logicalTotal; i++){
           var el = tiles[i];
           var caption = getCaptionFor(el);
-          var filesAttr = (
-            el.getAttribute('data-files') || '').split(',')
+          var filesAttr = (window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(el.getAttribute('data-files') || '') : (el.getAttribute('data-files') || '').split(',')
             .map(function(s){ return s.trim(); })
-            .filter(function(s){ return s.length; });
-          var visibleAttr = (el.getAttribute('data-files-visible') || '').split(',')
+            .filter(function(s){ return s.length; }));
+          var visibleAttr = (window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(el.getAttribute('data-files-visible') || '') : (el.getAttribute('data-files-visible') || '').split(',')
             .map(function(s){ return s.trim(); })
-            .filter(function(s){ return s.length && s.toLowerCase() !== 'single'; });
+            .filter(function(s){ return s.length && s.toLowerCase() !== 'single'; }));
           if (visibleAttr && visibleAttr.length){
             var visSet = {};
             visibleAttr.forEach(function(n){ visSet[n] = true; });
@@ -15006,6 +15081,8 @@ function normalizeBrandName(str){
             gKey: (grid && (grid.getAttribute('data-crmo-gkey') || grid.getAttribute('data-crmo-idx'))) ? grid.getAttribute('data-crmo-gkey') : null,
             filesMeta: (function(){
               try{
+                var ds = (el && el.getAttribute) ? (el.getAttribute('data-subcaps') || '0') : '0';
+                if (ds !== '1') return null;
                 var dm = (el && el.getAttribute) ? (el.getAttribute('data-files-meta') || '') : '';
                 dm = (dm || '').trim();
                 if (!dm) return null;
@@ -15097,12 +15174,6 @@ function normalizeBrandName(str){
         thumbSrc = (window.CRMO_pickThumbUrl ? window.CRMO_pickThumbUrl(item, _file, idx) : (window.CRMO_mpThumbs && _file && window.CRMO_mpThumbs[_file] ? window.CRMO_mpThumbs[_file] : ''));
       }catch(e){
         thumbSrc = null;
-      }
-      if (!thumbSrc && item && item.filesMeta){
-        try{
-          var mm = item.filesMeta[_file] || (Array.isArray(item.filesMeta) ? item.filesMeta[idx] : null);
-          thumbSrc = (mm && (mm.src || mm.imageSrc || mm.coverUrl || mm.url || mm.thumb || mm.thumbnail)) || thumbSrc;
-        }catch(e){}
       }
       if (!thumbSrc && item && item.tileData){
         try{
@@ -18239,7 +18310,7 @@ if (currentProject) {
           df = (df||'').trim();
           var files = [];
           if (df && df !== 'single'){
-            files = df.split(',').map(function(x){ return (x||'').trim(); }).filter(function(x){ return x && x !== 'single'; });
+            files = (window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(df) : df.split(',').map(function(x){ return (x||'').trim(); }).filter(function(x){ return x && x !== 'single'; }));
           }
           var multi = files.length > 1;
           var filesMeta = {};
@@ -18247,7 +18318,7 @@ if (currentProject) {
             var ds = a ? (a.getAttribute('data-subcaps') || '0') : (currentTile.getAttribute('data-subcaps') || '0');
             var dm = (ds === '1') ? (a ? (a.getAttribute('data-files-meta') || '') : (currentTile.getAttribute('data-files-meta') || '')) : '';
             dm = (dm||'').trim();
-            if (dm){ filesMeta = JSON.parse(dm) || {}; }
+            if (dm){ filesMeta = (window.CRMO_parseFilesMetaMap ? window.CRMO_parseFilesMetaMap(dm, files) : (JSON.parse(dm) || {})); }
           }catch(e){ filesMeta = {}; }
           var imgSrc = '';
           if (a){
@@ -18319,10 +18390,10 @@ window.CRMO_tilesManagerSyncFromDom(currentTile);
     if (filename) {
       var baseAnchor = currentTile.querySelector('a.ph');
       currentTile.setAttribute('data-filename', filename);
-      currentTile.setAttribute('data-files', filename);
+      currentTile.setAttribute('data-files', (window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles([filename]) : filename));
       if (baseAnchor) {
         baseAnchor.setAttribute('data-filename', filename);
-        baseAnchor.setAttribute('data-files', filename);
+        baseAnchor.setAttribute('data-files', (window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles([filename]) : filename));
       }
     }
     var existingAnchor3 = currentTile.querySelector('a.ph');
@@ -18422,10 +18493,10 @@ document.addEventListener('DOMContentLoaded', function(){
     wrappers.forEach(function(wrapper){
       var anchor = wrapper.querySelector('a.ph');
       if(!anchor) return;
-      var filesAttr = (anchor.getAttribute('data-files') || wrapper.getAttribute('data-files') || '')
+      var filesAttr = (window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(anchor.getAttribute('data-files') || wrapper.getAttribute('data-files') || '') : (anchor.getAttribute('data-files') || wrapper.getAttribute('data-files') || '')
         .split(',')
         .map(function(s){ return s.trim(); })
-        .filter(function(s){ return s.length; });
+        .filter(function(s){ return s.length; }));
       var multiAttr = anchor.getAttribute('data-multi') || wrapper.getAttribute('data-multi') || '';
       var isMultiOn;
       if(multiAttr === '0'){
@@ -22254,7 +22325,7 @@ function syncTileToDom(gKey, idx){
           var cover = '';
           try{
             var dv2 = ((a2 && a2.getAttribute('data-files-visible')) || w.getAttribute('data-files-visible') || '').trim();
-            if (dv2){ cover = (dv2.split(',')[0] || '').trim(); }
+            if (dv2){ cover = ((window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(dv2) : dv2.split(',').map(function(s){ return (s||'').trim(); }).filter(Boolean))[0] || '').trim(); }
           }catch(e2){}
           if (!cover && data && Array.isArray(data.files) && data.files.length){
             cover = String(data.files[0] || '').trim();
@@ -22336,8 +22407,8 @@ function syncTileToDom(gKey, idx){
         if (anchor){
           if (filesArr.length){
             var joined = filesArr.join(',');
-            anchor.setAttribute('data-files', joined);
-            w.setAttribute('data-files', joined);
+            anchor.setAttribute('data-files', (window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles(filesArr) : joined));
+            w.setAttribute('data-files', (window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles(filesArr) : joined));
             anchor.setAttribute('data-multi', multiValue);
             try{
               if (data && data.filesMeta && typeof data.filesMeta === 'object' && Object.keys(data.filesMeta).length){
@@ -22353,7 +22424,7 @@ function syncTileToDom(gKey, idx){
             try{
               var dv = (anchor.getAttribute('data-files-visible') || w.getAttribute('data-files-visible') || '').trim();
               if (dv){
-                var vis = dv.split(',').map(function(s){ return (s||'').trim(); }).filter(function(s){ return s && s.toLowerCase() !== 'single'; });
+                var vis = (window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(dv) : dv.split(',').map(function(s){ return (s||'').trim(); }).filter(function(s){ return s && s.toLowerCase() !== 'single'; }));
                 if (vis && vis.length){
                   for (var vi=0; vi<vis.length; vi++){
                     if (filesArr.indexOf(vis[vi]) !== -1){ coverName = vis[vi]; break; }
@@ -23409,7 +23480,7 @@ function openOverlayForSection(section){
           var fn = (anchor.getAttribute('data-filename') || '').trim();
           var dm = (anchor.getAttribute('data-multi') || '').trim();
           if (df && df !== 'single'){
-            filesArr = df.split(',').map(function(x){ return (x||'').trim(); }).filter(function(x){ return x && x !== 'single'; });
+            filesArr = (window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(df) : df.split(',').map(function(x){ return (x||'').trim(); }).filter(function(x){ return x && x !== 'single'; }));
           } else if (fn && fn !== 'single'){
             filesArr = [fn];
           }
@@ -23422,6 +23493,8 @@ function openOverlayForSection(section){
         }
       }catch(e){}
       var data = arr[idx] || {};
+      var filesMetaMap = {};
+      try{ filesMetaMap = window.CRMO_parseFilesMetaMap ? window.CRMO_parseFilesMetaMap((anchor && anchor.getAttribute('data-files-meta')) || (w && w.getAttribute('data-files-meta')) || '', filesArr) : {}; }catch(e){ filesMetaMap = {}; }
       data.client = client || data.client || "";
       if (title){
         data.title = title;
@@ -23437,10 +23510,12 @@ function openOverlayForSection(section){
         data.files = filesArr.slice();
         data.multi = !!isMulti;
         data.extraImages = (filesArr.length > 1) ? filesArr.slice(1).map(function(f){
-          return { id: f, url: (window.CRMO_mpThumbs && window.CRMO_mpThumbs[f]) ? window.CRMO_mpThumbs[f] : "" };
+          return { id: f, file:f, url: ((filesMetaMap && filesMetaMap[f] && (filesMetaMap[f].src || filesMetaMap[f].url || filesMetaMap[f].imageSrc || filesMetaMap[f].coverUrl)) || ((window.CRMO_mpThumbs && window.CRMO_mpThumbs[f]) ? window.CRMO_mpThumbs[f] : '')) };
         }) : [];
-        if (window.CRMO_mpThumbs && window.CRMO_mpThumbs[filesArr[0]]){
-          data.imageSrc = window.CRMO_mpThumbs[filesArr[0]];
+        if (filesArr[0]){
+          var mainSrcFromMeta = (filesMetaMap && filesMetaMap[filesArr[0]] && (filesMetaMap[filesArr[0]].src || filesMetaMap[filesArr[0]].url || filesMetaMap[filesArr[0]].imageSrc || filesMetaMap[filesArr[0]].coverUrl)) || ((window.CRMO_mpThumbs && window.CRMO_mpThumbs[filesArr[0]]) ? window.CRMO_mpThumbs[filesArr[0]] : '');
+          if (mainSrcFromMeta) data.imageSrc = mainSrcFromMeta;
+          data.filesMeta = filesMetaMap;
         }
       } else {
         data.files = [];
@@ -29100,9 +29175,22 @@ try{
   });
   window.CRMO_fileToSrcCached = function(file, folder){
     try{
-      if (_cache && file && _cache.has(file)) return _cache.get(file);
+      var fold = String(folder || '').trim();
+      if (_cache && file && _cache.has(file)){
+        var slot = _cache.get(file);
+        if (slot && typeof slot === 'object' && slot.__byFolder){
+          if (slot[fold]) return slot[fold];
+        }else if(slot && !fold){
+          return slot;
+        }
+      }
       var p = window.CRMO_fileToSrc(file, folder);
-      if (_cache && file) _cache.set(file, p);
+      if (_cache && file){
+        var box = _cache.get(file);
+        if (!box || typeof box !== 'object' || !box.__byFolder){ box = { __byFolder:true }; }
+        box[fold] = p;
+        _cache.set(file, box);
+      }
       return p;
     }catch(e){
       return Promise.reject(e);
@@ -30330,17 +30418,17 @@ async function refreshStatus(){
 <script id="crmo-version-sync-v1852">
 (function(){
   try{
-    var VNUM = 1867;
+    var VNUM = 1866;
     var VSTR = "V"+VNUM;
-    window.CRMO_VERSION = "CRMO_v1867";
-    window.CRMO_VERSION_NUMBER = 1867;
-    window.CRMO_BUILD_VERSION = "1867";
+    window.CRMO_VERSION = "CRMO_v1883";
+    window.CRMO_VERSION_NUMBER = 1883;
+    window.CRMO_BUILD_VERSION = "1883";
     var a = document.getElementById("crmo-version-rolebar");
     var b = document.getElementById("crmo-version-adminbar");
     if(a) a.textContent = VSTR;
     if(b) b.textContent = VSTR;
     var f = document.getElementById("crmo-footer-version");
-    if(f) f.textContent = "CRMO System Version 1867";
+    if(f) f.textContent = "CRMO System Version 1866";
   }catch(e){}
 })();
 </script>
@@ -30435,7 +30523,7 @@ window.CRMO_diagRender = function(){
       (root||document).querySelectorAll('.tile-edit-wrapper, a.ph').forEach(function(el){
         try{
           var df = (el.getAttribute('data-files')||'').trim();
-          if(invalidRef(df) || /^([a-z0-9_-]+)(\s*,\s*[a-z0-9_-]+)*$/i.test(df)) el.setAttribute('data-files','');
+          if(invalidRef(df) && !(window.CRMO_parseMultiFiles && window.CRMO_parseMultiFiles(df).length)) el.setAttribute('data-files','');
         }catch(e){}
         try{
           var bg = el.style && el.style.backgroundImage ? el.style.backgroundImage : '';
@@ -30455,11 +30543,11 @@ window.CRMO_diagRender = function(){
 
 <script id="crmo_v1852_final_patch">
 (function(){
-  var VERSION_NUM = '1867';
-  var VERSION_NAME = 'CRMO_v1867';
+  var VERSION_NUM = '1866';
+  var VERSION_NAME = 'CRMO_v1880';
   window.CRMO_BUILD_VERSION = VERSION_NUM;
   window.CRMO_VERSION = VERSION_NAME;
-  window.CRMO_VERSION_NUMBER = 1867;
+  window.CRMO_VERSION_NUMBER = 1883;
   window.CRMO_STORAGE_NS_PATH = '/';
   window.CRMO_ASSET_PUBLIC_ROOT = 'https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/';
 
@@ -30505,9 +30593,25 @@ window.CRMO_diagRender = function(){
         entry = clone(entry) || {};
         if(typeof entry === 'string') return { src: resolveAssetPath(entry, 'image') };
         if(entry.src) entry.src = resolveAssetPath(entry.src, entry.type || 'image');
+        if(entry.url) entry.url = resolveAssetPath(entry.url, entry.type || 'image');
+        if(entry.imageSrc) entry.imageSrc = resolveAssetPath(entry.imageSrc, entry.type || 'image');
+        if(entry.coverUrl) entry.coverUrl = resolveAssetPath(entry.coverUrl, entry.type || 'image');
         if(entry.file && /^assets\//i.test(String(entry.file))) entry.file = String(entry.file).replace(/^assets\//i,'');
         if(Array.isArray(entry.files)) entry.files = entry.files.map(function(x){ return resolveAssetPath(x, entry.type || 'image'); });
         return entry;
+      });
+      try{ return JSON.stringify(data); }catch(e){ return val; }
+    }
+    if(data && typeof data === 'object'){
+      Object.keys(data).forEach(function(k){
+        var entry = clone(data[k]) || {};
+        if(typeof entry === 'string') entry = { src: resolveAssetPath(entry, 'image') };
+        if(entry.src) entry.src = resolveAssetPath(entry.src, entry.type || 'image');
+        if(entry.url) entry.url = resolveAssetPath(entry.url, entry.type || 'image');
+        if(entry.imageSrc) entry.imageSrc = resolveAssetPath(entry.imageSrc, entry.type || 'image');
+        if(entry.coverUrl) entry.coverUrl = resolveAssetPath(entry.coverUrl, entry.type || 'image');
+        if(entry.file && /^assets\//i.test(String(entry.file))) entry.file = String(entry.file).replace(/^assets\//i,'');
+        data[k] = entry;
       });
       try{ return JSON.stringify(data); }catch(e){ return val; }
     }
@@ -30529,7 +30633,7 @@ window.CRMO_diagRender = function(){
           }
           if(lower === 'files'){
             if(typeof val === 'string'){
-              node[k] = val.split(',').map(function(s){ return resolveAssetPath(String(s).trim(), 'image'); }).filter(Boolean).join(',');
+              var __files = (window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(val) : String(val||'').split(',').map(function(s){ return String(s).trim(); }).filter(Boolean)); node[k] = (window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles(__files.map(function(s){ return resolveAssetPath(s, 'image'); })) : __files.map(function(s){ return resolveAssetPath(s, 'image'); }).filter(Boolean).join(','));
             }else if(Array.isArray(val)){
               node[k] = val.map(function(x){ return resolveAssetPath(x, 'image'); });
             }else{
@@ -30611,7 +30715,7 @@ window.CRMO_diagRender = function(){
       if(ovDesc) ovDesc.textContent = it.shortDescription || 'תיאור קצר על הפרויקט';
     }
     if(typeof it.files === 'string' && it.files){
-      var resolvedFiles = it.files.split(',').map(function(s){ return resolveAssetPath(String(s).trim(), 'image'); }).filter(Boolean).join(',');
+      var resolvedFiles = (window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles((window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(it.files) : String(it.files||'').split(',').map(function(s){ return String(s).trim(); }).filter(Boolean)).map(function(s){ return resolveAssetPath(s, 'image'); })) : it.files.split(',').map(function(s){ return resolveAssetPath(String(s).trim(), 'image'); }).filter(Boolean).join(','));
       w.setAttribute('data-files', resolvedFiles);
       if(a) a.setAttribute('data-files', resolvedFiles);
     }
@@ -30716,10 +30820,10 @@ window.CRMO_diagRender = function(){
     var start = (window.performance && performance.now) ? performance.now() : Date.now();
     var guardEl = null;
     try{
-      guardEl = byId('crmo-temp-recovery-guard-v1867');
+      guardEl = byId('crmo-temp-recovery-guard-v1866');
       if(!guardEl){
         guardEl = document.createElement('style');
-        guardEl.id = 'crmo-temp-recovery-guard-v1867';
+        guardEl.id = 'crmo-temp-recovery-guard-v1866';
         guardEl.textContent = '*,*::before,*::after{transition:none !important;animation:none !important;scroll-behavior:auto !important;}';
         (document.head || document.documentElement).appendChild(guardEl);
       }
@@ -30784,10 +30888,10 @@ window.CRMO_diagRender = function(){
   }
   function scheduleSave(reason, delay){
     try{
-      if(window.CRMO_scheduleStructuredSave) return window.CRMO_scheduleStructuredSave(reason || 'v1867', typeof delay === 'number' ? delay : 900);
+      if(window.CRMO_scheduleStructuredSave) return window.CRMO_scheduleStructuredSave(reason || 'v1866', typeof delay === 'number' ? delay : 900);
       if(window.CRMO_flushStructuredSave){
-        clearTimeout(window.__CRMO_V1867_SAVE_TIMER);
-        window.__CRMO_V1867_SAVE_TIMER = setTimeout(function(){ try{ window.CRMO_flushStructuredSave(reason || 'v1867'); }catch(e){} }, typeof delay === 'number' ? delay : 900);
+        clearTimeout(window.__CRMO_V1866_SAVE_TIMER);
+        window.__CRMO_V1866_SAVE_TIMER = setTimeout(function(){ try{ window.CRMO_flushStructuredSave(reason || 'v1866'); }catch(e){} }, typeof delay === 'number' ? delay : 900);
         return true;
       }
     }catch(e){}
@@ -30844,7 +30948,7 @@ window.CRMO_diagRender = function(){
     var wrappedApply = function(storage){
       storage = resolveStorageDeep(storage);
       var out = origApply.apply(this, [storage]);
-      setTimeout(function(){ batchRecover(storage, 'apply-wrapper-v1867'); }, 40);
+      setTimeout(function(){ batchRecover(storage, 'apply-wrapper-v1866'); }, 40);
       return out;
     };
     wrappedApply.__crmoV1853Patched = true;
@@ -30887,13 +30991,13 @@ window.CRMO_diagRender = function(){
     try{ document.title = VERSION_NAME; }catch(e){}
     try{
       var f = byId('crmo-footer-version');
-      if(f) f.textContent = 'CRMO System Version 1867';
+      if(f) f.textContent = 'CRMO System Version 1866';
     }catch(e){}
     try{
       var badges = qsa('[data-crmo-version], .crmo-version-badge, #crmo-version-badge, #crmo-top-version');
       badges.forEach(function(el){
         if(!el) return;
-        if(/185[0-9]/.test(el.textContent || '')) el.textContent = (el.textContent || '').replace(/185[0-9]+/g, '1867');
+        if(/185[0-9]/.test(el.textContent || '')) el.textContent = (el.textContent || '').replace(/185[0-9]+/g, '1866');
       });
     }catch(e){}
   }
@@ -30922,8 +31026,8 @@ window.CRMO_diagRender = function(){
 
 <script id="crmo_v1854_final_patch">
 (function(){
-  var VERSION = '1867';
-  var SEED_ROW = {"id": "main", "storage": {"site_config": {"version": "1867", "last_migration": "2024-03-20"}, "navigation": [{"label": "בית (לוגו)", "target": "top", "_logo": true, "visible": true}, {"label": "חנויות וחללי מסחר", "target": "stores", "visible": true}, {"label": "נקודות מכירה", "target": "stands", "visible": true}, {"label": "מיתוג עסקי", "target": "identity", "visible": true}, {"label": "עיצוב מוצר", "target": "product", "visible": true}, {"label": "תערוכות", "target": "exhibitions", "visible": true}, {"label": "המותגים שלנו", "target": "brands", "visible": true}, {"label": "על הסטודיו", "target": "about", "visible": true}, {"label": "צור קשר", "target": "contact", "visible": true}], "galleries": {"order": ["intro", "brands", "secondary-gallery", "stores", "stands", "identity", "product", "exhibitions", "packages", "small"], "states": {"intro": [{"client": "brand 1", "title": "פרויקט א", "imageSrc": "assets/drop/2026-02-15T19-25-42-939Z_c5a8326f88ebd8.jpg", "multi": false}, {"client": "brand 2", "title": "פרויקט ב", "imageSrc": "assets/drop/2026-02-15T06-04-44-321Z_61c41682b649f8.jpg", "multi": false}], "brands": {"meta": {"title": "brands shape decisions", "desc": "תיאור המותגים"}, "items": [{"id": "brand-01", "logo": "assets/brands/2026-02-15T19-27-41-224Z_4fb34f33cc98d8.jpg"}, {"id": "brand-02", "logo": "assets/brands/2026-02-15T19-27-41-845Z_d68a5f9bbc3c98.jpg"}]}}}}};
+  var VERSION = '1866';
+  var SEED_ROW = {"id": "main", "storage": {"site_config": {"version": "1866", "last_migration": "2024-03-20"}, "navigation": [{"label": "בית (לוגו)", "target": "top", "_logo": true, "visible": true}, {"label": "חנויות וחללי מסחר", "target": "stores", "visible": true}, {"label": "נקודות מכירה", "target": "stands", "visible": true}, {"label": "מיתוג עסקי", "target": "identity", "visible": true}, {"label": "עיצוב מוצר", "target": "product", "visible": true}, {"label": "תערוכות", "target": "exhibitions", "visible": true}, {"label": "המותגים שלנו", "target": "brands", "visible": true}, {"label": "על הסטודיו", "target": "about", "visible": true}, {"label": "צור קשר", "target": "contact", "visible": true}], "galleries": {"order": ["intro", "brands", "secondary-gallery", "stores", "stands", "identity", "product", "exhibitions", "packages", "small"], "states": {"intro": [{"client": "brand 1", "title": "פרויקט א", "imageSrc": "assets/drop/2026-02-15T19-25-42-939Z_c5a8326f88ebd8.jpg", "multi": false}, {"client": "brand 2", "title": "פרויקט ב", "imageSrc": "assets/drop/2026-02-15T06-04-44-321Z_61c41682b649f8.jpg", "multi": false}], "brands": {"meta": {"title": "brands shape decisions", "desc": "תיאור המותגים"}, "items": [{"id": "brand-01", "logo": "assets/brands/2026-02-15T19-27-41-224Z_4fb34f33cc98d8.jpg"}, {"id": "brand-02", "logo": "assets/brands/2026-02-15T19-27-41-845Z_d68a5f9bbc3c98.jpg"}]}}}}};
   var EDITABLE_SESSION = false;
 
   function safe(fn, fallback){ try{ var v = fn(); return typeof v === 'undefined' ? fallback : v; }catch(e){ return fallback; } }
@@ -31085,7 +31189,7 @@ window.CRMO_diagRender = function(){
       if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(s);
       if(window.CRMO_PAYLOAD == null) window.CRMO_PAYLOAD = s;
       if(window.batchRecover) {
-        try{ window.batchRecover(s, 'v1867-compat'); }catch(e){}
+        try{ window.batchRecover(s, 'v1866-compat'); }catch(e){}
       }
       try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
       try{ if(window.CRMO_refreshUiFromCloud) window.CRMO_refreshUiFromCloud(); }catch(e){}
@@ -31146,10 +31250,10 @@ window.CRMO_diagRender = function(){
   async function cloudSaveSession(storage){
     var snapshot = normalizeStorage(clone(storage));
     var normalized = deepNormalizeAssetPaths(snapshot);
-    try{ localStorage.setItem('crmo_pending_cloud_save_v1867', JSON.stringify(normalized)); }catch(e){}
+    try{ localStorage.setItem('crmo_pending_cloud_save_v1866', JSON.stringify(normalized)); }catch(e){}
     var state = await getSessionState();
     if(!state.editable){
-      try{ localStorage.setItem('crmo_last_local_only_save_v1867', JSON.stringify({ at:new Date().toISOString(), reason:'no-session', storage: normalized })); }catch(e){}
+      try{ localStorage.setItem('crmo_last_local_only_save_v1866', JSON.stringify({ at:new Date().toISOString(), reason:'no-session', storage: normalized })); }catch(e){}
       throw new Error('שגיאת הרשאה: הנתונים נשמרו מקומית אך לא סונכרנו לענן. וודא שאתה מחובר כמשתמש מורשה');
     }
     var sb = await getSb();
@@ -31158,11 +31262,11 @@ window.CRMO_diagRender = function(){
     var payload = { id:id, storage: normalized, updated_at:new Date().toISOString() };
     var r = await sb.from(table).upsert(payload, { onConflict:'id' }).select('id,updated_at').single();
     if(r && r.error){
-      try{ localStorage.setItem('crmo_last_local_only_save_v1867', JSON.stringify({ at:new Date().toISOString(), reason:String((r.error && r.error.message) || r.error), storage: normalized })); }catch(e){}
+      try{ localStorage.setItem('crmo_last_local_only_save_v1866', JSON.stringify({ at:new Date().toISOString(), reason:String((r.error && r.error.message) || r.error), storage: normalized })); }catch(e){}
       throw new Error('שגיאת הרשאה: הנתונים נשמרו מקומית אך לא סונכרנו לענן. וודא שאתה מחובר כמשתמש מורשה');
     }
-    try{ localStorage.removeItem('crmo_pending_cloud_save_v1867'); }catch(e){}
-    try{ localStorage.setItem('crmo_storage_CRMO_v1867', JSON.stringify(normalized)); }catch(e){}
+    try{ localStorage.removeItem('crmo_pending_cloud_save_v1866'); }catch(e){}
+    try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(normalized)); }catch(e){}
     return r;
   }
   async function migrateOnce(){
@@ -31323,7 +31427,7 @@ window.CRMO_diagRender = function(){
   }
   function getLocalSnapshot(){
     var keys = [
-      'crmo_storage_CRMO_v1867',
+      'crmo_storage_CRMO_v1880',
       'crmo_storage_CRMO_v1856',
       'crmo_storage_CRMO_v1855',
       'crmo_storage_CRMO_v1854',
@@ -31379,17 +31483,17 @@ window.CRMO_diagRender = function(){
       window.CRMO_LAST_CLOUD_LOADED_STORAGE = s;
       window.CRMO_CLOUD_STATE = s;
       window.CRMO_PAYLOAD = s;
-      try{ localStorage.setItem('crmo_storage_CRMO_v1867', JSON.stringify(s)); }catch(e){}
+      try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(s)); }catch(e){}
       try{ if(window.CRMO_applyLoadedStorage) window.CRMO_applyLoadedStorage(s); }catch(e){}
-      try{ if(window.batchRecover) window.batchRecover(s, reason || 'render-first-v1867'); }catch(e){}
+      try{ if(window.batchRecover) window.batchRecover(s, reason || 'render-first-v1866'); }catch(e){}
       try{ if(window.CRMO_renderAll) window.CRMO_renderAll(); }catch(e){}
       try{ if(window.CRMO_refreshUiFromCloud) window.CRMO_refreshUiFromCloud(); }catch(e){}
       fixRelativeAssets(document);
       markReady();
-      window.CRMO_LAST_BOOT = { ok:true, stage:'render-first', reason:reason || 'render-first-v1867', at:new Date().toISOString() };
+      window.CRMO_LAST_BOOT = { ok:true, stage:'render-first', reason:reason || 'render-first-v1866', at:new Date().toISOString() };
       return true;
     }catch(e){
-      window.CRMO_LAST_BOOT = { ok:false, stage:'render-first', reason:reason || 'render-first-v1867', error:String((e && e.message) || e), at:new Date().toISOString() };
+      window.CRMO_LAST_BOOT = { ok:false, stage:'render-first', reason:reason || 'render-first-v1866', error:String((e && e.message) || e), at:new Date().toISOString() };
       markReady();
       return false;
     }
@@ -31411,7 +31515,7 @@ window.CRMO_diagRender = function(){
       var sb = null;
       try{ if(window.CRMO_getSB) sb = await window.CRMO_getSB(); }catch(e){}
       if(!sb && window.supabase && window.CRMO_SUPABASE_URL && window.CRMO_SUPABASE_ANON_KEY){
-        sb = window.__CRMO_1867_SB || (window.__CRMO_1867_SB = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY));
+        sb = window.__CRMO_1866_SB || (window.__CRMO_1866_SB = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY));
       }
       if(!sb) return false;
       var table = window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config';
@@ -31427,7 +31531,7 @@ window.CRMO_diagRender = function(){
         if(!current || current !== next){
           applyStorageNow(cloud, 'silent-cloud-hot-update');
         }
-        try{ localStorage.setItem('crmo_storage_CRMO_v1867', JSON.stringify(cloud)); }catch(e){}
+        try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(cloud)); }catch(e){}
       }
       return true;
     }catch(e){
@@ -31444,15 +31548,15 @@ window.CRMO_diagRender = function(){
       window.CRMO_saveServerConfig = async function(data){
         var payload = data && data.storage ? data.storage : (data || (window.CRMO_collectStructuredPayload ? window.CRMO_collectStructuredPayload() : null));
         if(payload){
-          try{ localStorage.setItem('crmo_storage_CRMO_v1867', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){}
+          try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){}
         }
         try{
           var res = await original.apply(this, arguments);
-          if(payload){ try{ localStorage.setItem('crmo_storage_CRMO_v1867', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){} }
+          if(payload){ try{ localStorage.setItem('crmo_storage_CRMO_v1883', JSON.stringify(deepNormalize(clone(payload)))); }catch(e){} }
           return res;
         }catch(err){
           if(payload){
-            try{ localStorage.setItem('crmo_last_local_only_save_v1867', JSON.stringify({ at:new Date().toISOString(), reason:String((err && err.message) || err), storage: deepNormalize(clone(payload)) })); }catch(e){}
+            try{ localStorage.setItem('crmo_last_local_only_save_v1866', JSON.stringify({ at:new Date().toISOString(), reason:String((err && err.message) || err), storage: deepNormalize(clone(payload)) })); }catch(e){}
           }
           throw err;
         }
@@ -31475,7 +31579,7 @@ window.CRMO_diagRender = function(){
 </script>
 
 
-<script id="crmo_v1867_local_priority_patch">
+<script id="crmo_v1866_local_priority_patch">
 (function(){
   function isoMs(v){ try{ var n = Date.parse(v||''); return isNaN(n)?0:n; }catch(e){ return 0; } }
   function nowIso(){ try{ return new Date().toISOString(); }catch(e){ return ''; } }
@@ -31524,7 +31628,7 @@ window.CRMO_diagRender = function(){
   window.CRMO_markLocalEdit = markLocalEdit;
 
   var origApply = window.CRMO_applyLoadedStorage;
-  if(typeof origApply === 'function' && !origApply.__crmo1867patched){
+  if(typeof origApply === 'function' && !origApply.__crmo1866patched){
     var wrappedApply = function(storage){
       if(!shouldAcceptCloud(storage)){
         try{ window.CRMO_LAST_CLOUD_BLOCKED = { at: nowIso(), reason:'stale-cloud-over-local', cloudSavedAt:(storage&&storage.savedAt)||'', localEditedAt:(window.CRMO_LAST_LOCAL_EDIT_AT||localStorage.getItem('CRMO_LAST_LOCAL_EDIT_AT')||'') }; }catch(e){}
@@ -31532,12 +31636,12 @@ window.CRMO_diagRender = function(){
       }
       return origApply.apply(this, arguments);
     };
-    wrappedApply.__crmo1867patched = true;
+    wrappedApply.__crmo1866patched = true;
     window.CRMO_applyLoadedStorage = wrappedApply;
   }
 
   var origRecover = window.CRMO_recoverFromCloud;
-  if(typeof origRecover === 'function' && !origRecover.__crmo1867patched){
+  if(typeof origRecover === 'function' && !origRecover.__crmo1866patched){
     var wrappedRecover = function(storage, reason){
       if(storage && !shouldAcceptCloud(storage)){
         try{ window.CRMO_LAST_RECOVERY = { ok:false, skipped:true, reason:'stale-cloud-blocked', at: nowIso() }; }catch(e){}
@@ -31545,11 +31649,11 @@ window.CRMO_diagRender = function(){
       }
       return origRecover.apply(this, arguments);
     };
-    wrappedRecover.__crmo1867patched = true;
+    wrappedRecover.__crmo1866patched = true;
     window.CRMO_recoverFromCloud = wrappedRecover;
     window.CRMO_renderAll = function(){
       var src = window.CRMO_PAYLOAD || window.CRMO_LAST_CLOUD_LOADED_STORAGE || window.CRMO_CLOUD_STATE || null;
-      return wrappedRecover(src, 'renderAll-v1867');
+      return wrappedRecover(src, 'renderAll-v1866');
     };
   }
 
@@ -31572,7 +31676,7 @@ window.CRMO_diagRender = function(){
 })();
 </script>
 
-<script id="crmo_v1867_multilayer_thumb_hydration">
+<script id="crmo_v1866_multilayer_thumb_hydration">
 (function(){
   function pick(it){
     if (!it || typeof it !== 'object') return '';
@@ -31618,7 +31722,7 @@ window.CRMO_diagRender = function(){
 })();
 </script>
 
-<style id="crmo_v1867_thumb_grid_fix">
+<style id="crmo_v1866_thumb_grid_fix">
 #crmoThumbs{
   display:grid !important;
   grid-template-columns:repeat(4,minmax(0,1fr)) !important;
@@ -31653,7 +31757,7 @@ window.CRMO_diagRender = function(){
   background:#ddd !important;
 }
 </style>
-<script id="crmo_v1867_multilayer_thumb_fix">
+<script id="crmo_v1866_multilayer_thumb_fix">
 (function(){
   function trim(v){ return (typeof v === 'string') ? v.trim() : ''; }
   function looksUrl(v){ return /^(?:https?:|data:image\/|blob:|\/)/i.test(trim(v)); }
@@ -31793,7 +31897,7 @@ window.CRMO_diagRender = function(){
           hydrateStoreFromData({
             imageSrc: a.getAttribute('data-image-src') || w.getAttribute('data-image-src') || '',
             filesMeta: a.getAttribute('data-files-meta') || w.getAttribute('data-files-meta') || '',
-            files: (a.getAttribute('data-files') || w.getAttribute('data-files') || '').split(',').map(function(s){ return trim(s); }).filter(Boolean)
+            files: (window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(a.getAttribute('data-files') || w.getAttribute('data-files') || '') : (a.getAttribute('data-files') || w.getAttribute('data-files') || '').split(',').map(function(s){ return trim(s); }).filter(Boolean))
           });
         }
       });
@@ -31833,7 +31937,7 @@ window.CRMO_diagRender = function(){
 </script>
 
 
-<script id="crmo_v1867_cloud_multilayer_hydration_and_title_rule">
+<script id="crmo_v1866_cloud_multilayer_hydration_and_title_rule">
 (function(){
   function trim(v){ return typeof v === 'string' ? v.trim() : ''; }
   function isObj(v){ return !!v && typeof v === 'object' && !Array.isArray(v); }
@@ -31850,8 +31954,8 @@ window.CRMO_diagRender = function(){
       if (!bn || /^index(?:\.[a-z0-9]+)?$/i.test(bn)) return 'CRMO | Sales Oriented Design';
       var m = bn.match(/^(CRMO_v\d+)(?:\.[a-z0-9]+)?$/i);
       if (m && m[1]) return m[1];
-      return 'CRMO_v1867';
-    }catch(e){ return 'CRMO_v1867'; }
+      return 'CRMO_v1880';
+    }catch(e){ return 'CRMO_v1880'; }
   }
   function syncTitleRule(){
     try{ document.title = desiredTitle(); }catch(e){}
@@ -32035,7 +32139,7 @@ window.CRMO_diagRender = function(){
 </script>
 
 
-<script id="crmo_v1867_multilayer_cloud_dom_fix">
+<script id="crmo_v1866_multilayer_cloud_dom_fix">
 (function(){
   function trim(v){ return typeof v === 'string' ? v.trim() : ''; }
   function isObj(v){ return !!v && typeof v === 'object' && !Array.isArray(v); }
@@ -32058,7 +32162,7 @@ window.CRMO_diagRender = function(){
     try{
       var src = data.files;
       if(typeof src === 'string'){
-        out = src.split(',').map(function(s){ return trim(s); }).filter(function(s){ return s && s.toLowerCase() !== 'single'; });
+        out = (window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(src) : src.split(',').map(function(s){ return trim(s); }).filter(function(s){ return s && s.toLowerCase() !== 'single'; }));
       }else if(Array.isArray(src)){
         out = src.map(function(s){ return trim(String(s||'')); }).filter(function(s){ return s && s.toLowerCase() !== 'single'; });
       }
@@ -32180,7 +32284,7 @@ window.CRMO_diagRender = function(){
     var coverName = '';
     try{
       var vis = trim(a.getAttribute('data-files-visible') || w.getAttribute('data-files-visible') || '');
-      if(vis) coverName = trim(vis.split(',')[0] || '');
+      if(vis) coverName = trim(((window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(vis) : vis.split(',').map(function(s){ return trim(s); }).filter(Boolean))[0]) || '');
     }catch(e){}
     if(!coverName) coverName = files[0] || '';
     var src = coverName ? pick(metaMap[coverName]) : '';
@@ -32204,7 +32308,7 @@ window.CRMO_diagRender = function(){
     var files = fileList(data);
     var metaMap = buildMetaMap(data, files);
     rememberThumbs(files, metaMap);
-    var filesStr = files.length ? files.join(',') : '';
+    var filesStr = files.length ? (window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles(files) : files.join(',')) : '';
     var metaStr = Object.keys(metaMap).length ? JSON.stringify(metaMap) : '';
     try{
       w.__tileData = data;
@@ -32247,7 +32351,7 @@ window.CRMO_diagRender = function(){
       p = p.split('?')[0].split('#')[0];
       if(!p) p = 'index.html';
       var base = String(p).toLowerCase();
-      var title = (/^index(?:\.[a-z0-9]+)?$/i.test(base)) ? 'CRMO | sales oriented design' : p.replace(/\.[a-z0-9]+$/i,'');
+      var title = (/^index(?:\.[a-z0-9]+)?$/i.test(base)) ? 'CRMO | Sales Oriented Design' : p.replace(/\.[a-z0-9]+$/i,'');
       document.title = title;
       var t = document.querySelector('head>title');
       if(t) t.textContent = title;
@@ -32257,7 +32361,7 @@ window.CRMO_diagRender = function(){
   wrapFns.forEach(function(name){
     try{
       var orig = window[name];
-      if(typeof orig !== 'function' || orig.__crmo1867wrapped) return;
+      if(typeof orig !== 'function' || orig.__crmo1879wrapped) return;
       var wrapped = function(){
         var out = orig.apply(this, arguments);
         Promise.resolve(out).finally(function(){
@@ -32268,7 +32372,7 @@ window.CRMO_diagRender = function(){
         });
         return out;
       };
-      wrapped.__crmo1867wrapped = true;
+      wrapped.__crmo1879wrapped = true;
       window[name] = wrapped;
     }catch(e){}
   });
@@ -32293,6 +32397,703 @@ window.CRMO_diagRender = function(){
     setTimeout(syncAll, 220);
   }, true);
   window.CRMO_syncMultiLayerCloudDom = syncAll;
+})();
+</script>
+
+
+<script id="crmo_v1879_multilayer_stability_guard">
+(function(){
+  function parse(raw){
+    try{ return window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(raw||'') : []; }catch(e){ return []; }
+  }
+  function meta(raw, files){
+    try{ return window.CRMO_parseFilesMetaMap ? window.CRMO_parseFilesMetaMap(raw||'', files||[]) : {}; }catch(e){ return {}; }
+  }
+  function pick(it){
+    try{ return String((it && (it.src || it.url || it.imageSrc || it.coverUrl)) || '').trim(); }catch(e){ return ''; }
+  }
+  function syncOne(w){
+    try{
+      if(!w) return;
+      var a = w.querySelector('a.ph') || w.querySelector('a');
+      if(!a) return;
+      var files = parse(a.getAttribute('data-files') || w.getAttribute('data-files') || '');
+      if(!files.length) return;
+      var mm = meta(a.getAttribute('data-files-meta') || w.getAttribute('data-files-meta') || '', files);
+      var changed = false;
+      files.forEach(function(name, idx){
+        if(!name) return;
+        var src = pick(mm[name]);
+        if(!src && window.CRMO_mpThumbs && window.CRMO_mpThumbs[name] && !/^data:/i.test(window.CRMO_mpThumbs[name])){
+          src = String(window.CRMO_mpThumbs[name]).trim();
+        }
+        if(src){
+          mm[name] = Object.assign({}, mm[name] || {}, { file:name, src:src, url:src, imageSrc:src, coverUrl:src });
+          changed = true;
+        }
+      });
+      if(changed && window.CRMO_serializeFilesMetaMap){
+        var ser = window.CRMO_serializeFilesMetaMap(mm, files);
+        if(ser){ a.setAttribute('data-files-meta', ser); w.setAttribute('data-files-meta', ser); }
+      }
+      var fs = window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles(files) : JSON.stringify(files);
+      a.setAttribute('data-files', fs); w.setAttribute('data-files', fs);
+      var vis = parse(a.getAttribute('data-files-visible') || w.getAttribute('data-files-visible') || '');
+      var cover = (vis && vis.length ? vis[0] : files[0]) || '';
+      var coverSrc = pick(mm[cover]) || pick(mm[files[0]]) || '';
+      if(cover){ a.setAttribute('data-filename', cover); w.setAttribute('data-filename', cover); }
+      if(coverSrc){
+        var img = a.querySelector('img');
+        if(!img){ img = document.createElement('img'); a.appendChild(img); }
+        img.src = coverSrc;
+        a.setAttribute('data-image-src', coverSrc);
+        w.setAttribute('data-image-src', coverSrc);
+      }
+    }catch(e){}
+  }
+  function run(){
+    try{ document.querySelectorAll('.tile-edit-wrapper').forEach(syncOne); }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', run, {once:true}); else run();
+  document.addEventListener('crmo:tile-edited', function(){ setTimeout(run, 0); setTimeout(run, 120); });
+  document.addEventListener('click', function(ev){
+    var t = ev.target && ev.target.closest ? ev.target.closest('.tile-edit-btn,.tile-layer-btn,.crmo-thumb,.crmo-lb-prev,.crmo-lb-next') : null;
+    if(!t) return;
+    setTimeout(run,0); setTimeout(run,120);
+  }, true);
+  window.CRMO_run1879MultiStabilityGuard = run;
+})();
+</script>
+
+
+<script id="crmo_v1880_gallery_architecture">
+(function(){
+  function trim(v){ return String(v == null ? '' : v).trim(); }
+  function pad2(n){ n = parseInt(n,10); if(!isFinite(n) || n < 0) n = 0; return String(n).padStart(2,'0'); }
+  function sanitize(s){
+    s = trim(s).toLowerCase().replace(/[^a-z0-9_\-]/g,'_');
+    return s || 'gallery';
+  }
+  function getGalleryMap(){
+    return window.CRMO_GALLERIES_MAP || window.GALLERIES || {};
+  }
+  function maxTilesFor(gk){
+    try{
+      var m = getGalleryMap();
+      var cfg = m && m[gk];
+      var n = parseInt(cfg && cfg.maxTiles, 10);
+      return isFinite(n) && n > 0 ? n : 18;
+    }catch(e){ return 18; }
+  }
+  function getGalleryKey(wrapper, anchor){
+    try{
+      if(window.CRMO_getTileGalleryKey){
+        var out = trim(window.CRMO_getTileGalleryKey(wrapper, anchor));
+        if(out) return out;
+      }
+    }catch(e){}
+    var node = wrapper || anchor;
+    var grid = node && node.closest ? node.closest('[data-crmo-gkey]') : null;
+    return trim(grid && grid.getAttribute ? grid.getAttribute('data-crmo-gkey') : '');
+  }
+  function getTileIndex(wrapper, anchor){
+    var candidates = [
+      wrapper && wrapper.getAttribute && wrapper.getAttribute('data-crmo-idx'),
+      anchor && anchor.getAttribute && anchor.getAttribute('data-crmo-idx')
+    ];
+    for(var i=0;i<candidates.length;i++){
+      var raw = trim(candidates[i]);
+      if(raw !== ''){
+        var n = parseInt(raw,10);
+        if(isFinite(n) && n >= 0) return n;
+      }
+    }
+    try{
+      var grid = (wrapper || anchor) && (wrapper || anchor).closest ? (wrapper || anchor).closest('[data-crmo-gkey]') : null;
+      if(grid && wrapper){
+        var tiles = Array.prototype.slice.call(grid.querySelectorAll('.tile-edit-wrapper'));
+        var idx = tiles.indexOf(wrapper);
+        if(idx >= 0) return idx;
+      }
+    }catch(e){}
+    return 0;
+  }
+  function tileSlug(idx){ return 'tile-' + pad2((parseInt(idx,10) || 0) + 1); }
+  function tileBase(gk, idx){ return 'galleries/' + sanitize(gk) + '/' + tileSlug(idx); }
+  function buildTilePaths(gk, idx){
+    var base = tileBase(gk, idx);
+    return {
+      gallery: sanitize(gk),
+      index: parseInt(idx,10) || 0,
+      tile: tileSlug(idx),
+      base: base,
+      cover: base + '/cover',
+      layers: base + '/layers'
+    };
+  }
+  function buildArchitecture(){
+    var map = getGalleryMap();
+    var out = {};
+    Object.keys(map || {}).forEach(function(gk){
+      var cfg = map[gk] || {};
+      var max = maxTilesFor(gk);
+      var tiles = [];
+      for(var i=0;i<max;i++){
+        tiles.push(buildTilePaths(gk, i));
+      }
+      out[gk] = {
+        key: gk,
+        sectionId: cfg.sectionId || gk,
+        label: cfg.label || gk,
+        maxTiles: max,
+        base: 'galleries/' + sanitize(gk),
+        tiles: tiles
+      };
+    });
+    return out;
+  }
+  function refreshArchitecture(){
+    try{ window.CRMO_GALLERY_ARCHITECTURE = buildArchitecture(); }catch(e){}
+    return window.CRMO_GALLERY_ARCHITECTURE;
+  }
+  window.CRMO_getTileIndex = getTileIndex;
+  window.CRMO_tileSlug = tileSlug;
+  window.CRMO_buildTilePaths = buildTilePaths;
+  window.CRMO_getTileAssetFolders = function(wrapper, anchor){
+    var gk = getGalleryKey(wrapper, anchor);
+    return buildTilePaths(gk || 'gallery', getTileIndex(wrapper, anchor));
+  };
+  window.CRMO_getCoverUploadFolder = function(wrapper, anchor){
+    return window.CRMO_getTileAssetFolders(wrapper, anchor).cover;
+  };
+  window.CRMO_getMultiUploadFolder = function(wrapper, anchor){
+    return window.CRMO_getTileAssetFolders(wrapper, anchor).layers;
+  };
+  window.CRMO_getGalleryArchitecture = function(gk){
+    var arch = refreshArchitecture() || {};
+    return gk ? (arch[gk] || null) : arch;
+  };
+  window.CRMO_describeTileArchitecture = function(gk, idx){
+    try{
+      var arch = refreshArchitecture() || {};
+      var gal = arch[gk];
+      if(!gal) return null;
+      return gal.tiles[Math.max(0, Math.min(gal.tiles.length - 1, parseInt(idx,10) || 0))] || null;
+    }catch(e){ return null; }
+  };
+  window.CRMO_syncGalleryFolders = async function(opts){
+    opts = opts || {};
+    var createKeep = opts.createKeep === true;
+    var planOnly = opts.planOnly !== false;
+    var arch = refreshArchitecture() || {};
+    var plan = [];
+    Object.keys(arch).forEach(function(gk){
+      var gal = arch[gk];
+      plan.push(gal.base + '/');
+      (gal.tiles || []).forEach(function(t){
+        plan.push(t.base + '/');
+        plan.push(t.cover + '/');
+        plan.push(t.layers + '/');
+      });
+    });
+    if(planOnly || !createKeep) return { ok:true, planned: plan.length, plan: plan, created: 0, mode: 'plan' };
+    if(!window.CRMO_getSB) return { ok:false, reason:'no-supabase-client', plan:plan };
+    var sb = await window.CRMO_getSB();
+    if(!sb || !sb.storage) return { ok:false, reason:'no-storage', plan:plan };
+    var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
+    var created = 0;
+    for(var i=0;i<plan.length;i++){
+      var folder = String(plan[i] || '').replace(/\/$/, '');
+      var keepPath = folder + '/.keep';
+      try{
+        var blob = new Blob(['keep'], { type:'text/plain' });
+        var res = await sb.storage.from(bucket).upload(keepPath, blob, { upsert:false, contentType:'text/plain' });
+        if(!(res && res.error)) created++;
+      }catch(e){}
+    }
+    return { ok:true, planned: plan.length, created: created, plan: plan, mode: 'create' };
+  };
+  function enforceSingleView(wrapper){
+    try{
+      if(!wrapper) return;
+      var a = wrapper.querySelector('a.ph') || wrapper.querySelector('a');
+      if(!a) return;
+      var multi = trim(a.getAttribute('data-multi') || wrapper.getAttribute('data-multi')) === '1';
+      if(multi) return;
+      var raw = trim(a.getAttribute('data-files') || wrapper.getAttribute('data-files'));
+      var files = [];
+      try{ files = window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(raw) : []; }catch(e){}
+      if(files && files.length){
+        var first = files[0];
+        var ser = window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles([first]) : JSON.stringify([first]);
+        a.setAttribute('data-files-visible', ser);
+        wrapper.setAttribute('data-files-visible', ser);
+      } else {
+        a.removeAttribute('data-files-visible');
+        wrapper.removeAttribute('data-files-visible');
+      }
+    }catch(e){}
+  }
+  function stampArchitecture(){
+    try{
+      document.querySelectorAll('.tile-edit-wrapper').forEach(function(w){
+        var a = w.querySelector('a.ph') || w.querySelector('a');
+        var gk = getGalleryKey(w, a);
+        var idx = getTileIndex(w, a);
+        var p = buildTilePaths(gk || 'gallery', idx);
+        w.setAttribute('data-crmo-tile-slot', p.tile);
+        w.setAttribute('data-crmo-cover-folder', p.cover);
+        w.setAttribute('data-crmo-layers-folder', p.layers);
+        if(a){
+          a.setAttribute('data-crmo-tile-slot', p.tile);
+          a.setAttribute('data-crmo-cover-folder', p.cover);
+          a.setAttribute('data-crmo-layers-folder', p.layers);
+        }
+        enforceSingleView(w);
+      });
+    }catch(e){}
+  }
+  refreshArchitecture();
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', stampArchitecture, { once:true });
+  else stampArchitecture();
+  document.addEventListener('crmo:tile-edited', function(){ setTimeout(stampArchitecture, 0); setTimeout(stampArchitecture, 120); });
+  document.addEventListener('click', function(ev){
+    var t = ev.target && ev.target.closest ? ev.target.closest('.tile-edit-btn,.tile-layer-btn,.crmo-thumb,.crmo-lb-prev,.crmo-lb-next,#te-save') : null;
+    if(!t) return;
+    setTimeout(stampArchitecture, 0);
+    setTimeout(stampArchitecture, 120);
+  }, true);
+})();
+</script>
+
+
+<script id="crmo_v1883_title_index_fix">
+(function(){
+  try{
+    var isIndex = /(^|\/)index\.html?(?:$|[?#])/i.test(String(location.pathname||''));
+    if(isIndex) document.title = 'CRMO | Sales Oriented Design';
+  }catch(e){}
+})();
+</script>
+
+
+<script id="crmo_v1883_gallery_architecture_and_tile_stability_patch">
+(function(){
+  var VERSION = '1883';
+  function trim(v){ return String(v == null ? '' : v).trim(); }
+  function q(sel, root){ return (root || document).querySelector(sel); }
+  function qa(sel, root){ return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function currentEditingWrapper(){
+    return q('.tile-edit-wrapper.editing') || q('.tile-edit-wrapper[data-editing="1"]') || null;
+  }
+  function getAnchor(wrapper){
+    return wrapper ? (wrapper.querySelector('a.ph') || wrapper.querySelector('a')) : null;
+  }
+  function getFolders(wrapper){
+    try{
+      if(window.CRMO_getTileAssetFolders) return window.CRMO_getTileAssetFolders(wrapper, getAnchor(wrapper));
+    }catch(e){}
+    return { cover:'galleries/gallery/tile-01/cover', layers:'galleries/gallery/tile-01/layers', tile:'tile-01' };
+  }
+  function parseFiles(raw){
+    try{ return window.CRMO_parseMultiFiles ? window.CRMO_parseMultiFiles(raw || '') : []; }catch(e){ return []; }
+  }
+  function serFiles(arr){
+    try{ return window.CRMO_serializeMultiFiles ? window.CRMO_serializeMultiFiles(arr || []) : JSON.stringify(arr || []); }catch(e){ return ''; }
+  }
+  function parseMeta(raw, files){
+    try{ return window.CRMO_parseFilesMetaMap ? window.CRMO_parseFilesMetaMap(raw || '', files || []) : {}; }catch(e){ return {}; }
+  }
+  function serMeta(map, files){
+    try{ return window.CRMO_serializeFilesMetaMap ? window.CRMO_serializeFilesMetaMap(map || {}, files || []) : JSON.stringify(map || {}); }catch(e){ return ''; }
+  }
+  function stampVersion(){
+    try{ window.CRMO_BUILD_VERSION = VERSION; }catch(e){}
+    try{ window.CRMO_VERSION = 'CRMO_v' + VERSION; }catch(e){}
+    try{ window.CRMO_VERSION_NUMBER = parseInt(VERSION,10); }catch(e){}
+    try{ var f = document.getElementById('crmo-footer-version'); if(f) f.textContent = 'CRMO System Version ' + VERSION; }catch(e){}
+    try{ var rb = document.getElementById('crmo-version-rolebar'); if(rb) rb.textContent = 'V' + VERSION; }catch(e){}
+    try{ var ab = document.getElementById('crmo-version-adminbar'); if(ab) ab.textContent = 'V' + VERSION; }catch(e){}
+    try{
+      var isIndex = /(^|\/)index\.html?(?:$|[?#])/i.test(String(location.pathname||''));
+      document.title = isIndex ? 'CRMO | Sales Oriented Design' : ('CRMO_v' + VERSION);
+    }catch(e){}
+  }
+  function ensureTileFolders(wrapper){
+    try{
+      var a = getAnchor(wrapper); if(!wrapper || !a) return;
+      var f = getFolders(wrapper);
+      wrapper.setAttribute('data-crmo-tile-slot', trim(f.tile));
+      wrapper.setAttribute('data-crmo-cover-folder', trim(f.cover));
+      wrapper.setAttribute('data-crmo-layers-folder', trim(f.layers));
+      a.setAttribute('data-crmo-tile-slot', trim(f.tile));
+      a.setAttribute('data-crmo-cover-folder', trim(f.cover));
+      a.setAttribute('data-crmo-layers-folder', trim(f.layers));
+    }catch(e){}
+  }
+  function setTileImage(wrapper, coverName, metaMap){
+    try{
+      if(!wrapper) return;
+      var a = getAnchor(wrapper); if(!a) return;
+      var img = a.querySelector('img');
+      var src = '';
+      if(coverName){
+        var it = metaMap && metaMap[coverName] ? metaMap[coverName] : null;
+        src = trim((it && (it.src || it.url || it.imageSrc || it.coverUrl)) || (window.CRMO_mpThumbs && window.CRMO_mpThumbs[coverName]) || '');
+      }
+      if(!src && img && img.getAttribute('src')) src = trim(img.getAttribute('src'));
+      if(src){
+        if(img) img.src = src;
+        else{
+          a.style.backgroundImage = 'url(' + src + ')';
+          a.style.backgroundSize = 'cover';
+          a.style.backgroundPosition = 'center center';
+        }
+      }
+    }catch(e){}
+  }
+  function updateThumbRowsFromTile(wrapper){
+    try{
+      var editor = document.getElementById('tile-editor');
+      if(!editor || !editor.classList.contains('open')) return;
+      if(wrapper !== currentEditingWrapper()) return;
+      var a = getAnchor(wrapper); if(!a) return;
+      var files = parseFiles(a.getAttribute('data-files') || wrapper.getAttribute('data-files') || '');
+      var meta = parseMeta(a.getAttribute('data-files-meta') || wrapper.getAttribute('data-files-meta') || '', files);
+      qa('.mp-row', editor).forEach(function(row){
+        var lbl = q('.mp-file-label', row);
+        var name = trim((lbl && lbl.textContent) || (((q('.mp-file', row) || {}).getAttribute || function(){return '';}).call(q('.mp-file', row),'data-fakename')) || '');
+        if(!name) return;
+        var thumb = q('.mp-thumb', row);
+        var src = trim(((meta[name]||{}).src || (meta[name]||{}).url || (meta[name]||{}).imageSrc || (meta[name]||{}).coverUrl || (window.CRMO_mpThumbs && window.CRMO_mpThumbs[name]) || ''));
+        if(thumb && src) thumb.src = src;
+      });
+    }catch(e){}
+  }
+  function reconcileTile(wrapper){
+    try{
+      if(!wrapper) return;
+      ensureTileFolders(wrapper);
+      var a = getAnchor(wrapper); if(!a) return;
+      var files = parseFiles(a.getAttribute('data-files') || wrapper.getAttribute('data-files') || '');
+      var multi = trim(a.getAttribute('data-multi') || wrapper.getAttribute('data-multi')) === '1';
+      var vis = parseFiles(a.getAttribute('data-files-visible') || wrapper.getAttribute('data-files-visible') || '');
+      var meta = parseMeta(a.getAttribute('data-files-meta') || wrapper.getAttribute('data-files-meta') || '', files);
+      var img = a.querySelector('img');
+      if(img && files.length){
+        var first = files[0];
+        if(!meta[first]) meta[first] = { file:first };
+        if(!trim(meta[first].src) && trim(img.getAttribute('src'))) {
+          meta[first].src = trim(img.getAttribute('src')); meta[first].url = meta[first].src; meta[first].imageSrc = meta[first].src; meta[first].coverUrl = meta[first].src;
+        }
+      }
+      files.forEach(function(name){
+        if(!meta[name]) meta[name] = { file:name };
+        var src = trim((meta[name].src || meta[name].url || meta[name].imageSrc || meta[name].coverUrl || (window.CRMO_mpThumbs && window.CRMO_mpThumbs[name]) || ''));
+        if(src){ meta[name].src = src; meta[name].url = src; meta[name].imageSrc = src; meta[name].coverUrl = src; }
+      });
+      if(!multi){ vis = files.length ? [files[0]] : []; }
+      else {
+        vis = vis.filter(function(n){ return files.indexOf(n) >= 0; });
+        if(!vis.length) vis = files.slice();
+      }
+      var cover = vis[0] || files[0] || '';
+      if(cover){ a.setAttribute('data-filename', cover); wrapper.setAttribute('data-filename', cover); }
+      else { a.removeAttribute('data-filename'); wrapper.removeAttribute('data-filename'); }
+      var fs = serFiles(files);
+      if(fs){ a.setAttribute('data-files', fs); wrapper.setAttribute('data-files', fs); }
+      else { a.removeAttribute('data-files'); wrapper.removeAttribute('data-files'); }
+      var vs = vis.length ? serFiles(vis) : '';
+      if(vs){ a.setAttribute('data-files-visible', vs); wrapper.setAttribute('data-files-visible', vs); }
+      else { a.removeAttribute('data-files-visible'); wrapper.removeAttribute('data-files-visible'); }
+      var ms = serMeta(meta, files);
+      if(ms){ a.setAttribute('data-files-meta', ms); wrapper.setAttribute('data-files-meta', ms); }
+      else { a.removeAttribute('data-files-meta'); wrapper.removeAttribute('data-files-meta'); }
+      a.setAttribute('data-multi', multi ? '1' : '0');
+      wrapper.setAttribute('data-multi', multi ? '1' : '0');
+      wrapper.classList.remove('tile-multi-on','tile-multi-off','tile-single');
+      if(files.length <= 1) wrapper.classList.add('tile-single');
+      else if(multi) wrapper.classList.add('tile-multi-on');
+      else wrapper.classList.add('tile-multi-off');
+      setTileImage(wrapper, cover, meta);
+      updateThumbRowsFromTile(wrapper);
+    }catch(e){}
+  }
+  function reconcileAll(){ qa('.tile-edit-wrapper').forEach(reconcileTile); stampVersion(); }
+
+  // Route generic upload folders into architecture folders.
+  try{
+    window.__CRMO_PENDING_UPLOAD_KIND = '';
+    document.addEventListener('change', function(ev){
+      var t = ev.target;
+      if(!t || !t.id) return;
+      if(t.id === 'te-image' || t.id === 'tm-te-image') window.__CRMO_PENDING_UPLOAD_KIND = 'cover';
+      else if(t.id === 'te-multi-upload' || (t.classList && t.classList.contains('mp-file'))) window.__CRMO_PENDING_UPLOAD_KIND = 'layers';
+    }, true);
+    var __origFileToSrc = window.CRMO_fileToSrc;
+    if(typeof __origFileToSrc === 'function' && !window.__CRMO_1883_FILETOSRC_PATCHED){
+      window.__CRMO_1883_FILETOSRC_PATCHED = true;
+      window.CRMO_fileToSrc = async function(file, folder){
+        try{
+          var w = currentEditingWrapper();
+          if(w){
+            var f = getFolders(w);
+            var kind = String(window.__CRMO_PENDING_UPLOAD_KIND || '').trim();
+            if(kind === 'cover') folder = f.cover;
+            else if(kind === 'layers') folder = f.layers;
+            else if(folder === 'tile-main' || folder === 'gallery-main' || folder === 'drop') folder = f.cover;
+            else if(folder === 'tile-extra' || folder === 'gallery-extra' || folder === 'multi') folder = f.layers;
+          }
+        }catch(e){}
+        var res = await __origFileToSrc.apply(this, arguments.length ? [file, folder] : [file]);
+        try{ window.__CRMO_PENDING_UPLOAD_KIND = ''; }catch(e){}
+        return res;
+      };
+    }
+  }catch(e){}
+
+  // One stable save source after tile editor save.
+  document.addEventListener('click', function(ev){
+    var btn = ev.target && ev.target.closest ? ev.target.closest('#te-save,.tm-te-save') : null;
+    if(!btn) return;
+    setTimeout(function(){ var w = currentEditingWrapper(); if(w) reconcileTile(w); }, 0);
+    setTimeout(function(){ var w = currentEditingWrapper(); if(w) reconcileTile(w); }, 120);
+    setTimeout(function(){ reconcileAll(); try{ if(window.CRMO_tilesManagerSyncFromDom){ var w = currentEditingWrapper(); if(w) window.CRMO_tilesManagerSyncFromDom(w); } }catch(e){} }, 320);
+  }, true);
+  document.addEventListener('crmo:tile-edited', function(){ setTimeout(reconcileAll, 40); setTimeout(reconcileAll, 220); });
+  document.addEventListener('change', function(ev){
+    var t = ev.target;
+    if(!t) return;
+    if(t.id === 'mp-enabled' || (t.classList && (t.classList.contains('mp-show') || t.classList.contains('mp-file'))) || t.id === 'te-image' || t.id === 'tm-te-image' || t.id === 'te-multi-upload'){
+      setTimeout(function(){ var w = currentEditingWrapper(); if(w) reconcileTile(w); }, 120);
+      setTimeout(function(){ var w = currentEditingWrapper(); if(w) reconcileTile(w); }, 480);
+    }
+  }, true);
+
+  // Storage architecture reset + rebuild under galleries/.
+  async function getSb(){
+    try{ return window.CRMO_getSB ? await window.CRMO_getSB() : (window.CRMO_getSbClient ? window.CRMO_getSbClient() : null); }catch(e){ return null; }
+  }
+  async function isSignedIn(){
+    try{ var sb = await getSb(); if(!sb || !sb.auth || !sb.auth.getSession) return false; var r = await sb.auth.getSession(); return !!(r && r.data && r.data.session); }catch(e){ return false; }
+  }
+  async function listRecursive(sb, bucket, prefix){
+    var out = [];
+    async function walk(path){
+      var res = await sb.storage.from(bucket).list(path, { limit: 1000, offset: 0, sortBy: { column: 'name', order: 'asc' } });
+      if(res && res.error) throw res.error;
+      var items = (res && res.data) || [];
+      for(var i=0;i<items.length;i++){
+        var it = items[i] || {};
+        var name = trim(it.name);
+        if(!name || name === '.emptyFolderPlaceholder') continue;
+        var child = path ? (path + '/' + name) : name;
+        var maybeFolder = (it.id == null) || (!!it.metadata === false && !/\.[a-z0-9]{1,8}$/i.test(name));
+        if(maybeFolder) await walk(child);
+        else out.push(child);
+      }
+    }
+    await walk(prefix || '');
+    return out;
+  }
+  window.CRMO_resetGalleriesStorage = async function(opts){
+    opts = opts || {};
+    var sb = await getSb();
+    if(!sb || !sb.storage) return { ok:false, reason:'no-storage' };
+    if(!(await isSignedIn())) return { ok:false, reason:'not-auth' };
+    var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
+    var files = [];
+    try{ files = await listRecursive(sb, bucket, 'galleries'); }catch(e){ return { ok:false, reason:'list-failed', error:String(e&&e.message||e) }; }
+    var removed = 0;
+    while(files.length){
+      var chunk = files.splice(0, 100);
+      try{
+        var rr = await sb.storage.from(bucket).remove(chunk);
+        if(!(rr && rr.error)) removed += chunk.length;
+      }catch(e){}
+    }
+    var rebuilt = null;
+    try{ rebuilt = await (window.CRMO_syncGalleryFolders ? window.CRMO_syncGalleryFolders({ createKeep:true, planOnly:false }) : null); }catch(e){ rebuilt = { ok:false, reason:String(e&&e.message||e) }; }
+    return { ok:true, removed:removed, rebuilt:rebuilt };
+  };
+  async function maybeResetOnce(){
+    try{
+      var key = '__CRMO_GALLERIES_RESET_DONE_V1883';
+      if(localStorage.getItem(key) === '1') return;
+      if(!(await isSignedIn())) return;
+      var res = await window.CRMO_resetGalleriesStorage({ silent:true });
+      if(res && res.ok) localStorage.setItem(key, '1');
+    }catch(e){}
+  }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ stampVersion(); reconcileAll(); setTimeout(maybeResetOnce, 1800); }, { once:true });
+  else { stampVersion(); reconcileAll(); setTimeout(maybeResetOnce, 1800); }
+})();
+</script>
+
+
+<style id="CRMO_v1883_layer_icon_state_patch">
+.tile-edit-wrapper.tile-single .tile-layer-btn{ display:none !important; }
+body.role-admin .tile-edit-wrapper.tile-single .tile-admin-right::before{ content:'' !important; }
+body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn{
+  opacity:1 !important;
+  background:#fff !important;
+  border:1px solid #000 !important;
+}
+body.role-admin .tile-edit-wrapper.tile-multi-on .tile-layer-btn::before{
+  background-image:url('assets/branding/icons/ui/ux_ui_icons_layers-on.svg') !important;
+}
+body.role-admin .tile-edit-wrapper.tile-multi-off .tile-layer-btn{
+  display:inline-flex !important;
+  opacity:.55 !important;
+  background:#fff !important;
+  border:1px solid rgba(0,0,0,.45) !important;
+}
+body.role-admin .tile-edit-wrapper.tile-multi-off .tile-layer-btn::before{
+  background-image:url('assets/branding/icons/ui/ux_ui_icons_layers-off.svg') !important;
+  opacity:.7 !important;
+}
+.tile-edit-wrapper.tile-multi-off .tile-layer-btn .icon-layer-off{ display:block; opacity:.7; }
+.tile-edit-wrapper.tile-multi-on .tile-layer-btn .icon-layer-on{ display:block; }
+.tile-edit-wrapper.tile-single .tile-layer-btn .icon-layer-off,
+.tile-edit-wrapper.tile-single .tile-layer-btn .icon-layer-on{ display:none !important; }
+
+/* remove any copy / duplicate icon buttons if they exist */
+.tile-copy-btn,
+.tile-duplicate-btn,
+[data-crmo-action="copy"],
+[data-crmo-action="duplicate"],
+button[aria-label*="העתק"],
+button[aria-label*="שכפ"],
+button[title*="העתק"],
+button[title*="שכפ"]{
+  display:none !important;
+}
+</style>
+<script id="CRMO_v1883_layer_icon_and_copy_cleanup">
+(function(){
+  function qsa(s,c){ return Array.prototype.slice.call((c||document).querySelectorAll(s)); }
+  function parseFiles(v){
+    try{
+      v = String(v || '').trim();
+      if(!v || v.toLowerCase()==='single') return [];
+      if(window.CRMO_parseMultiFiles) return window.CRMO_parseMultiFiles(v);
+      if(v[0]==='['){ var a=JSON.parse(v); return Array.isArray(a)?a.filter(Boolean):[]; }
+      return v.split(',').map(function(x){ return String(x||'').trim(); }).filter(Boolean);
+    }catch(e){ return []; }
+  }
+  function apply(wrapper){
+    try{
+      if(!wrapper) return;
+      var a = wrapper.querySelector('a.ph') || wrapper;
+      var files = parseFiles((a.getAttribute('data-files') || wrapper.getAttribute('data-files') || ''));
+      var multi = String((a.getAttribute('data-multi') || wrapper.getAttribute('data-multi') || '0')).trim() === '1';
+      wrapper.classList.remove('tile-multi-on','tile-multi-off','tile-single');
+      if(files.length <= 1) wrapper.classList.add('tile-single');
+      else if(multi) wrapper.classList.add('tile-multi-on');
+      else wrapper.classList.add('tile-multi-off');
+    }catch(e){}
+  }
+  function removeCopyIcons(root){
+    qsa('.tile-copy-btn,.tile-duplicate-btn,[data-crmo-action="copy"],[data-crmo-action="duplicate"],button[aria-label*="העתק"],button[aria-label*="שכפ"],button[title*="העתק"],button[title*="שכפ"]', root || document).forEach(function(el){
+      try{ el.remove(); }catch(e){ try{ el.style.display='none'; }catch(e2){} }
+    });
+  }
+  function syncAll(){
+    qsa('.tile-edit-wrapper').forEach(apply);
+    removeCopyIcons(document);
+  }
+  document.addEventListener('DOMContentLoaded', syncAll);
+  document.addEventListener('crmo:tile-edited', function(ev){ apply((ev.detail||{}).tile); removeCopyIcons(document); });
+  setTimeout(syncAll, 60);
+  setTimeout(syncAll, 400);
+  window.CRMO_refreshLayerIcons = syncAll;
+})();
+</script>
+
+
+<style id="crmo_v1883_hard_cache_button">
+#crmo-admin-bar .crmo-admin-bar-btn--danger{
+  background:#b30000 !important;
+  color:#fff !important;
+  border-color:#8f0000 !important;
+}
+#crmo-admin-bar .crmo-admin-bar-btn--danger:hover{
+  background:#930000 !important;
+}
+#crmo-admin-bar .crmo-admin-bar-btn--danger .crmo-admin-bar-icon{
+  color:#fff !important;
+}
+</style>
+<script id="crmo_v1883_hard_cache_reset">
+(function(){
+  async function expireCookies(){
+    try{
+      (document.cookie || '').split(';').forEach(function(c){
+        var eq = c.indexOf('=');
+        var name = (eq > -1 ? c.slice(0, eq) : c).trim();
+        if(!name) return;
+        document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+      });
+    }catch(e){}
+  }
+  async function clearIndexedDB(){
+    try{
+      if(indexedDB && typeof indexedDB.databases === 'function'){
+        var dbs = await indexedDB.databases();
+        for(var i=0;i<dbs.length;i++){
+          try{ if(dbs[i] && dbs[i].name) indexedDB.deleteDatabase(dbs[i].name); }catch(e){}
+        }
+      }
+    }catch(e){}
+  }
+  async function clearCaches(){
+    try{
+      if(window.caches && caches.keys){
+        var keys = await caches.keys();
+        for(var i=0;i<keys.length;i++){
+          try{ await caches.delete(keys[i]); }catch(e){}
+        }
+      }
+    }catch(e){}
+  }
+  async function unregisterSW(){
+    try{
+      if(navigator.serviceWorker && navigator.serviceWorker.getRegistrations){
+        var regs = await navigator.serviceWorker.getRegistrations();
+        for(var i=0;i<regs.length;i++){
+          try{ await regs[i].unregister(); }catch(e){}
+        }
+      }
+    }catch(e){}
+  }
+  async function hardReset(){
+    var ok = confirm('ניקוי קשיח ימחק cache מקומי של האתר בדפדפן הזה, כולל localStorage, sessionStorage, cache API ו-Service Worker. זה לא מוחק קבצים מ-Supabase. להמשיך?');
+    if(!ok) return;
+    var btn = document.getElementById('crmo-adminbar-hardcache');
+    if(btn){ btn.disabled = true; btn.textContent = 'מנקה...'; }
+    try{
+      try{ localStorage.clear(); }catch(e){}
+      try{ sessionStorage.clear(); }catch(e){}
+      await Promise.allSettled([clearCaches(), unregisterSW(), clearIndexedDB(), expireCookies()]);
+      try{ window.name = ''; }catch(e){}
+      var u = new URL(location.href);
+      u.searchParams.set('hardreset', String(Date.now()));
+      location.replace(u.toString());
+      return;
+    }catch(err){
+      alert('ניקוי cache הושלם חלקית. אפשר לרענן ידנית עם Ctrl+F5.');
+    }finally{
+      if(btn){ btn.disabled = false; btn.innerHTML = '<span aria-hidden="true" class="crmo-admin-bar-icon">✕</span> ניקוי CACHE'; }
+    }
+  }
+  window.CRMO_hardBrowserReset = hardReset;
+  document.addEventListener('click', function(e){
+    var btn = e.target && e.target.closest ? e.target.closest('#crmo-adminbar-hardcache') : null;
+    if(!btn) return;
+    e.preventDefault();
+    hardReset();
+  }, true);
 })();
 </script>
 
