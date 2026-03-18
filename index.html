@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1908 -->
+<!-- CRMO_v1909 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -64,8 +64,8 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1908</title>
-<style id="crmo_v1908_network_bar_css">
+<title>CRMO_v1909</title>
+<style id="crmo_v1909_network_bar_css">
 #crmo-admin-bar .crmo-network-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-start;padding:10px 0 8px;border-bottom:1px solid rgba(0,0,0,.08);}
 #crmo-admin-bar .crmo-network-btn{height:40px;padding:0 16px;border-radius:999px;border:1px solid rgba(0,0,0,.18);background:#fff;color:#111;font:700 14px/1 Rubik,Arial,sans-serif;cursor:pointer;}
 #crmo-admin-bar .crmo-network-btn:hover{background:#f5f5f5;}
@@ -7430,7 +7430,7 @@ body.role-admin header{
       <button type="button" class="crmo-network-btn danger" id="crmo-safe-cache-clear">ניקוי CACHE בטוח</button>
       <span class="crmo-network-pill" id="crmo-sb-status">לא נבדק</span>
       <span class="crmo-network-pill" id="crmo-sb-email-badge">לא מחובר</span>
-      <span class="crmo-network-pill crmo-version-pill">v1908</span>
+      <span class="crmo-network-pill crmo-version-pill">v1909</span>
       <span class="crmo-network-pill" id="crmo-sb-syncinfo"></span>
     </div>
         <div class="crmo-admin-bar-row crmo-admin-tabs" dir="rtl">
@@ -12678,7 +12678,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
   </div>
 <div class="crmo-footer-bottom" dir="ltr">
     <img class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg" alt="Creative Monster favicon"/>
-    <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span id="crmo-footer-version">v1908</span>
+    <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span id="crmo-footer-version">v1909</span>
   </div>
 </div>
 </footer>
@@ -28729,7 +28729,7 @@ async function refreshStatus(){
 </script>
 
 
-<script id="CRMO_v1908_network_helper">
+<script id="CRMO_v1909_network_helper">
 (function(){
   window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
   window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
@@ -28791,5 +28791,115 @@ async function refreshStatus(){
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
 </script>
+
+<script id="crmo_server_admin_bridge_v1909">
+(function(){
+  if (window.__CRMO_SERVER_ADMIN_BRIDGE_V1909__) return;
+  window.__CRMO_SERVER_ADMIN_BRIDGE_V1909__ = true;
+  var SESSION_KEY = 'CRMO_AUTH_SESSION_v1';
+  function normEmail(v){ return String(v||'').trim().toLowerCase(); }
+  function readAdminAllowList(){
+    try{
+      var key = 'crmo_supabase_settings__' + (window.CRMO_STORAGE_NS_PATH || '/');
+      var cfg = JSON.parse(localStorage.getItem(key) || 'null') || {};
+      if (Array.isArray(cfg.adminEmails) && cfg.adminEmails.length) return cfg.adminEmails.map(normEmail).filter(Boolean);
+    }catch(e){}
+    try{
+      if (Array.isArray(window.CRMO_SUPABASE_ADMIN_EMAILS) && window.CRMO_SUPABASE_ADMIN_EMAILS.length){
+        return window.CRMO_SUPABASE_ADMIN_EMAILS.map(normEmail).filter(Boolean);
+      }
+    }catch(e){}
+    return [];
+  }
+  function isAllowedEmail(email){
+    var allow = readAdminAllowList();
+    if (!email) return false;
+    if (!allow.length) return true;
+    return allow.indexOf(normEmail(email)) !== -1;
+  }
+  function currentRole(){
+    try{
+      var b = document.body;
+      if (!b || !b.classList) return 'guest';
+      if (b.classList.contains('role-master')) return 'master';
+      if (b.classList.contains('role-admin')) return 'admin';
+      if (b.classList.contains('role-ux')) return 'ux';
+      if (b.classList.contains('role-client')) return 'client';
+      if (b.classList.contains('role-user-social')) return 'social';
+      if (b.classList.contains('role-user')) return 'user';
+    }catch(e){}
+    return 'guest';
+  }
+  function applyAdminRole(role){
+    try{
+      var b = document.body;
+      if (!b || !b.classList) return;
+      b.classList.remove('role-admin','role-user','role-guest','role-master','role-usability','role-ux','role-user-social','role-client');
+      if (role === 'master') b.classList.add('role-admin','role-master');
+      else if (role === 'admin') b.classList.add('role-admin');
+      else b.classList.add('role-guest');
+      try{ window.dispatchEvent(new CustomEvent('crmo:role-changed', { detail: { role: role } })); }catch(e){}
+      try{ window.dispatchEvent(new Event('crmo:role-changed')); }catch(e){}
+    }catch(e){}
+  }
+  function persistAdminSession(email){
+    try{
+      localStorage.setItem(SESSION_KEY, JSON.stringify({
+        role: 'admin',
+        email: normEmail(email),
+        issuedAt: Date.now(),
+        expiresAt: Date.now() + (12*60*60*1000),
+        source: 'supabase-session'
+      }));
+    }catch(e){}
+  }
+  function clearAdminSessionIfBridged(){
+    try{
+      var raw = localStorage.getItem(SESSION_KEY) || '';
+      if (!raw) return;
+      var sess = JSON.parse(raw);
+      if (sess && sess.source === 'supabase-session') localStorage.removeItem(SESSION_KEY);
+    }catch(e){}
+  }
+  async function syncFromSupabase(){
+    try{
+      if (!window.CRMO_getSbClient) return;
+      var sb = await window.CRMO_getSbClient();
+      if (!sb || !sb.auth || !sb.auth.getSession) return;
+      var out = await sb.auth.getSession();
+      var session = out && out.data && out.data.session ? out.data.session : null;
+      var email = session && session.user && session.user.email ? normEmail(session.user.email) : '';
+      if (session && isAllowedEmail(email)){
+        persistAdminSession(email);
+        var role = currentRole();
+        if (role !== 'admin' && role !== 'master' && role !== 'ux') applyAdminRole('admin');
+      }else{
+        clearAdminSessionIfBridged();
+        var role2 = currentRole();
+        if (role2 === 'admin') applyAdminRole('guest');
+      }
+    }catch(e){}
+  }
+  function boot(){
+    syncFromSupabase();
+    try{
+      if (window.CRMO_getSbClient){
+        window.CRMO_getSbClient().then(function(sb){
+          try{
+            if (sb && sb.auth && sb.auth.onAuthStateChange){
+              sb.auth.onAuthStateChange(function(){ setTimeout(syncFromSupabase, 50); });
+            }
+          }catch(e){}
+        }).catch(function(){});
+      }
+    }catch(e){}
+    try{ window.addEventListener('focus', syncFromSupabase); }catch(e){}
+    try{ document.addEventListener('visibilitychange', function(){ if (!document.hidden) syncFromSupabase(); }); }catch(e){}
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
+  else boot();
+})();
+</script>
+
 </body>
 </html>
