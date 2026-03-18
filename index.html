@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1912 -->
+<!-- CRMO_v1913 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -64,7 +64,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1912</title>
+<title>CRMO_v1913</title>
 <style id="crmo_v1908_network_bar_css">
 #crmo-admin-bar .crmo-network-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-start;padding:10px 0 8px;border-bottom:1px solid rgba(0,0,0,.08);}
 #crmo-admin-bar .crmo-network-btn{height:40px;padding:0 16px;border-radius:999px;border:1px solid rgba(0,0,0,.18);background:#fff;color:#111;font:700 14px/1 Rubik,Arial,sans-serif;cursor:pointer;}
@@ -7430,7 +7430,7 @@ body.role-admin header{
       <button type="button" class="crmo-network-btn danger" id="crmo-safe-cache-clear">ניקוי CACHE בטוח</button>
       <span class="crmo-network-pill" id="crmo-sb-status">לא נבדק</span>
       <span class="crmo-network-pill" id="crmo-sb-email-badge">לא מחובר</span>
-      <span class="crmo-network-pill crmo-version-pill">v1911</span>
+      <span class="crmo-network-pill crmo-version-pill">v1913</span>
       <span class="crmo-network-pill" id="crmo-sb-syncinfo"></span>
     </div>
         <div class="crmo-admin-bar-row crmo-admin-tabs" dir="rtl">
@@ -12678,7 +12678,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
   </div>
 <div class="crmo-footer-bottom" dir="ltr">
     <img class="crmo-footer-favicon" src="https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/branding/logo/favicon.svg" alt="Creative Monster favicon"/>
-    <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span id="crmo-footer-version">v1911</span>
+    <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span id="crmo-footer-version">v1913</span>
   </div>
 </div>
 </footer>
@@ -16863,6 +16863,10 @@ if (currentProject) {
           ok = true;
         }
       }
+      if (ok){
+        try{ crmoPersistGalleryModel(); }catch(e){}
+        try{ crmoPersistGallerySnapshot(); }catch(e){}
+      }
       if (ok && typeof window.CRMO_tilesManagerRefresh === 'function'){
         try{ window.CRMO_tilesManagerRefresh(); }catch(e){}
       }
@@ -16901,6 +16905,11 @@ window.CRMO_tilesManagerSyncFromDom(currentTile);
           anchor.style.backgroundSize = 'cover';
           anchor.style.backgroundPosition = 'center center';
         }
+        try{
+          if (window.CRMO_tilesManagerSyncFromDom) window.CRMO_tilesManagerSyncFromDom(currentTile);
+          crmoPersistGalleryModel();
+          crmoPersistGallerySnapshot();
+        }catch(e){}
       })
       .catch(function(err){
         try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(err); }catch(e){}
@@ -20570,6 +20579,13 @@ if (key === currentGalleryKey){
 function ensureGalleryState(key){
     if (!galleryState[key]){
       try{
+        var __model = crmoReadGalleryModel();
+        if (__model && Array.isArray(__model[key]) && __model[key].length){
+          galleryState[key] = JSON.parse(JSON.stringify(__model[key]));
+          return;
+        }
+      }catch(e){}
+      try{
         var __snap = crmoReadGallerySnapshot();
         if (__snap && Array.isArray(__snap[key]) && __snap[key].length){
           galleryState[key] = JSON.parse(JSON.stringify(__snap[key]));
@@ -20758,6 +20774,23 @@ function ensureGalleryState(key){
         if (imageSrc){
           data.imageSrc = imageSrc;
         }
+        try{
+          var anchor2 = w.querySelector('a.ph');
+          var df = ((anchor2 && anchor2.getAttribute('data-files')) || w.getAttribute('data-files') || '').trim();
+          var files = [];
+          if (df && df.toLowerCase() !== 'single'){
+            files = df.split(',').map(function(x){ return (x||'').trim(); }).filter(function(x){ return x && x.toLowerCase() !== 'single'; });
+          }
+          data.files = files;
+          data.multi = ((((anchor2 && anchor2.getAttribute('data-multi')) || w.getAttribute('data-multi') || '0').trim()) === '1') || (files.length > 1);
+          data.imageName = ((anchor2 && anchor2.getAttribute('data-filename')) || w.getAttribute('data-filename') || data.imageName || '').trim();
+          data.filesVisible = ((anchor2 && anchor2.getAttribute('data-files-visible')) || w.getAttribute('data-files-visible') || '').trim();
+          data.subcaps = ((anchor2 && anchor2.getAttribute('data-subcaps')) || w.getAttribute('data-subcaps') || '').trim();
+          try{
+            var dm = ((anchor2 && anchor2.getAttribute('data-files-meta')) || w.getAttribute('data-files-meta') || '').trim();
+            data.filesMeta = dm ? (JSON.parse(dm) || {}) : (data.filesMeta || {});
+          }catch(e2){ data.filesMeta = data.filesMeta || {}; }
+        }catch(e2){}
         arr[i] = data;
       }
     }catch(e){
@@ -27726,6 +27759,7 @@ try{
   }
 
   var CRMO_GALLERY_SNAPSHOT_KEY = 'crmo_gallery_state_v1';
+  var CRMO_GALLERY_MODEL_KEY = 'crmo_gallery_model_v1';
   function crmoGalleryKeys(){
     var keys = [];
     try{
@@ -27905,9 +27939,71 @@ try{
       return true;
     }catch(e){ return false; }
   }
-  document.addEventListener('crmo:tile-edited', function(){ try{ crmoPersistGallerySnapshot(); }catch(e){} });
+
+  function crmoNormalizeGalleryModel(input){
+    var src = input && typeof input === 'object' ? input : {};
+    var out = {};
+    try{
+      Object.keys(src).forEach(function(key){
+        var rows = Array.isArray(src[key]) ? src[key] : [];
+        out[key] = rows.map(function(row){
+          row = row && typeof row === 'object' ? row : {};
+          var files = Array.isArray(row.files) ? row.files : [];
+          files = files.map(function(x){ return String(x||'').trim(); }).filter(function(x){ return x && x.toLowerCase() !== 'single'; });
+          var fm = row.filesMeta && typeof row.filesMeta === 'object' ? row.filesMeta : {};
+          return {
+            client: String(row.client||''),
+            title: String(row.title||'שם הפרויקט'),
+            desc: String(row.desc||'תיאור קצר על הפרויקט'),
+            tag: String(row.tag||''),
+            imageName: String(row.imageName||''),
+            imageSrc: String(row.imageSrc||''),
+            extraImages: Array.isArray(row.extraImages) ? row.extraImages : [],
+            files: files,
+            filesMeta: fm,
+            filesVisible: String(row.filesVisible||''),
+            subcaps: String(row.subcaps||''),
+            multi: !!(row.multi || files.length > 1),
+            link: String(row.link||''),
+            linkNewTab: !!row.linkNewTab,
+            linkDisabled: !!row.linkDisabled
+          };
+        });
+      });
+    }catch(e){}
+    return out;
+  }
+  function crmoPersistGalleryModel(){
+    try{
+      if (!(window.CRMO__galleryState && typeof window.CRMO__galleryState === 'object')) return null;
+      var snap = crmoNormalizeGalleryModel(window.CRMO__galleryState);
+      var raw = JSON.stringify(snap || {});
+      localStorage.setItem(CRMO_GALLERY_MODEL_KEY, raw);
+      try{ if (window.safeSet) window.safeSet(CRMO_GALLERY_MODEL_KEY, raw); }catch(e){}
+      return snap;
+    }catch(e){ return null; }
+  }
+  function crmoReadGalleryModel(){
+    try{
+      var raw = localStorage.getItem(CRMO_GALLERY_MODEL_KEY);
+      return raw ? crmoNormalizeGalleryModel(JSON.parse(raw) || {}) : {};
+    }catch(e){ return {}; }
+  }
+  function crmoHydrateGalleryModel(snapshot){
+    try{
+      var snap = crmoNormalizeGalleryModel(snapshot || crmoReadGalleryModel());
+      if (!(window.CRMO__galleryState && typeof window.CRMO__galleryState === 'object')) return false;
+      Object.keys(snap || {}).forEach(function(key){
+        window.CRMO__galleryState[key] = JSON.parse(JSON.stringify(snap[key] || []));
+      });
+      return true;
+    }catch(e){ return false; }
+  }
+  document.addEventListener('crmo:tile-edited', function(){ try{ crmoPersistGallerySnapshot(); }catch(e){} try{ crmoPersistGalleryModel(); }catch(e){} });
   window.CRMO_persistGallerySnapshot = crmoPersistGallerySnapshot;
   window.CRMO_applyGallerySnapshot = crmoApplyGallerySnapshot;
+  window.CRMO_persistGalleryModel = crmoPersistGalleryModel;
+  window.CRMO_hydrateGalleryModel = crmoHydrateGalleryModel;
 
   function collectCrmoStorage(){
     var out = {};
@@ -27987,6 +28083,7 @@ try{
     }
     var remoteStorage = res.data.storage || {};
     applyCrmoStorage(remoteStorage);
+    try{ crmoHydrateGalleryModel(); }catch(e){}
     try{ crmoApplyGallerySnapshot(); }catch(e){}
     var ts = res.data.updated_at ? new Date(res.data.updated_at).toLocaleString('he-IL') : '';
     setSyncInfo('נטען מהשרת ' + (ts ? '(' + ts + ')' : ''));
@@ -28011,6 +28108,10 @@ try{
     if (!ok) throw new Error('not-auth');
     var table = getConfigTable();
     var id = getConfigId();
+    try{
+      crmoGalleryKeys().forEach(function(key){ try{ syncGalleryStateFromDom(key); }catch(e){} });
+    }catch(e){}
+    try{ crmoPersistGalleryModel(); }catch(e){}
     try{ crmoPersistGallerySnapshot(); }catch(e){}
     var payload = { id: id, storage: collectCrmoStorage() };
     var res = await sb.from(table).upsert(payload, { onConflict: 'id' }).select('updated_at');
@@ -28222,6 +28323,8 @@ async function refreshStatus(){
       if(!isAdminRole){
       }
     }catch(e){}
+    try{ crmoHydrateGalleryModel(); }catch(e){}
+    try{ crmoApplyGallerySnapshot(); }catch(e){}
     try{
       var pullBtn = document.getElementById('crmo-sb-pull');
       var pushBtn = document.getElementById('crmo-sb-push');
@@ -28958,7 +29061,7 @@ async function refreshStatus(){
 </script>
 
 
-<script id="CRMO_v1912_network_helper">
+<script id="CRMO_v1913_network_helper">
 (function(){
   window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
   window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
