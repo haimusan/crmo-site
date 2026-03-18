@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1909 -->
+<!-- CRMO_v1910 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -64,7 +64,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1909</title>
+<title>CRMO_v1910</title>
 <style id="crmo_v1908_network_bar_css">
 #crmo-admin-bar .crmo-network-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-start;padding:10px 0 8px;border-bottom:1px solid rgba(0,0,0,.08);}
 #crmo-admin-bar .crmo-network-btn{height:40px;padding:0 16px;border-radius:999px;border:1px solid rgba(0,0,0,.18);background:#fff;color:#111;font:700 14px/1 Rubik,Arial,sans-serif;cursor:pointer;}
@@ -7430,7 +7430,7 @@ body.role-admin header{
       <button type="button" class="crmo-network-btn danger" id="crmo-safe-cache-clear">ניקוי CACHE בטוח</button>
       <span class="crmo-network-pill" id="crmo-sb-status">לא נבדק</span>
       <span class="crmo-network-pill" id="crmo-sb-email-badge">לא מחובר</span>
-      <span class="crmo-network-pill crmo-version-pill">v1909</span>
+      <span class="crmo-network-pill crmo-version-pill">v1910</span>
       <span class="crmo-network-pill" id="crmo-sb-syncinfo"></span>
     </div>
         <div class="crmo-admin-bar-row crmo-admin-tabs" dir="rtl">
@@ -8950,7 +8950,7 @@ admin@domain.com" rows="3" style="width:100%;padding:10px 12px;border-radius:12p
     <script>
     (function(){
       function cfgKey(){
-        return 'crmo_supabase_settings__' + (window.CRMO_STORAGE_NS_PATH || location.pathname || '');
+        return 'crmo_supabase_settings__/';
       }
       function loadCfg(){
         try{ return JSON.parse(localStorage.getItem(cfgKey()) || 'null'); }catch(e){ return null; }
@@ -12678,7 +12678,7 @@ if(saveBtn) saveBtn.addEventListener('click', function(){
   </div>
 <div class="crmo-footer-bottom" dir="ltr">
     <img class="crmo-footer-favicon" src="assets/branding/logo/favicon.svg" alt="Creative Monster favicon"/>
-    <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span id="crmo-footer-version">v1909</span>
+    <span id="crmo-footer-credit-text">Crafted by Creative Monster Studio | Sales Oriented Design</span><span id="crmo-footer-version">v1910</span>
   </div>
 </div>
 </footer>
@@ -21021,7 +21021,7 @@ function createTileElement(index, tileData, galleryKey){
       + '  <img class="tm-preview-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="">'
       + '  <div class="tm-tile-actions">'
       + '    <button type="button" class="tm-icon-btn tm-edit-btn" aria-label="עריכת אריח">'
-      + '      <img src="assets/branding/icons/ui/ux_ui_icons_edit-off.svg" alt="עריכה">'
+      + '      <img src="' + ((window.CRMO_PUBLIC_ASSET_BASE||'assets/') + 'branding/icons/ui/ux_ui_icons_edit-off.svg') + '" alt="עריכה">'
       + '    </button>'
       + '    <button type="button" class="tm-icon-btn tm-remove-btn" aria-label="מחיקת אריח">✕</button>'
       + '  </div>'
@@ -27702,6 +27702,21 @@ try{
   }
   function getConfigTable(){ return window.CRMO_SUPABASE_CONFIG_TABLE || 'crmo_site_config'; }
   function getConfigId(){ return window.CRMO_SUPABASE_CONFIG_ID || 'main'; }
+  function isCloudSyncKey(key){
+    try{
+      key = String(key || '');
+      if(!key) return false;
+      var lk = key.toLowerCase();
+      if(lk.indexOf('crmo_') !== 0) return false;
+      if(lk === 'crmo_auth_session_v1') return false;
+      if(lk === 'crmo_demo_mode_v1') return false;
+      if(lk.indexOf('crmo_supabase_settings__') === 0) return false;
+      if(lk.indexOf('crmo_last_') === 0) return false;
+      if(lk.indexOf('crmo_recovery') === 0) return false;
+      if(lk.indexOf('crmo_session') === 0) return false;
+      return true;
+    }catch(e){ return false; }
+  }
   function collectCrmoStorage(){
     var out = {};
     try{
@@ -27709,7 +27724,7 @@ try{
         var k = localStorage.key(i);
         if(!k) continue;
         var lk = String(k).toLowerCase();
-        if(lk.indexOf('crmo_') === 0){
+        if(isCloudSyncKey(k)){
           out[k] = localStorage.getItem(k);
         }
       }
@@ -27721,7 +27736,7 @@ try{
       var todel = [];
       for (var i=0;i<localStorage.length;i++){
         var k = localStorage.key(i);
-        if(k && String(k).toLowerCase().indexOf('crmo_') === 0) todel.push(k);
+        if(k && isCloudSyncKey(k)) todel.push(k);
       }
       todel.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
     }catch(e){}
@@ -27749,7 +27764,7 @@ try{
     var q = sb.from(table).select('storage,updated_at').eq('id', id).limit(1);
     var res = q.maybeSingle ? await q.maybeSingle() : await q.single();
     if (res.error) throw res.error;
-        if (!res.data || !res.data.storage){
+    if (!res.data || !res.data.storage){
       try{
         var ok = await isAdminAllowed();
         if (!ok){
@@ -27770,12 +27785,7 @@ try{
         setSyncInfo('נוצר תוכן ראשון בשרת. טוען…');
         applyCrmoStorage(seed);
         if (reloadAfter){
-          try{
-            if(!sessionStorage.getItem('crmo_remote_pulled')){
-              sessionStorage.setItem('crmo_remote_pulled','1');
-              location.reload();
-            }
-          }catch(e){}
+          try{ location.reload(); }catch(e){}
         }
         return true;
       }catch(e){
@@ -27783,13 +27793,17 @@ try{
         return false;
       }
     }
-    applyCrmoStorage(res.data.storage);
+    var remoteStorage = res.data.storage || {};
+    applyCrmoStorage(remoteStorage);
     var ts = res.data.updated_at ? new Date(res.data.updated_at).toLocaleString('he-IL') : '';
     setSyncInfo('נטען מהשרת ' + (ts ? '(' + ts + ')' : ''));
     if (reloadAfter){
       try{
-        if(!sessionStorage.getItem('crmo_remote_pulled')){
-          sessionStorage.setItem('crmo_remote_pulled','1');
+        var stamp = String(res.data.updated_at || '');
+        var stampKey = 'crmo_remote_pull_stamp__' + getConfigTable() + '__' + getConfigId();
+        var prev = sessionStorage.getItem(stampKey) || '';
+        if (stamp && prev !== stamp){
+          sessionStorage.setItem(stampKey, stamp);
           location.reload();
         }
       }catch(e){}
@@ -27854,7 +27868,6 @@ try{
   function autoPullOnce(){
     try{
       if(!_isConfigured()) return;
-      if(sessionStorage.getItem('crmo_remote_pulled')) return;
       pullFromDb(true).catch(function(){});
     }catch(e){}
   }
@@ -27886,7 +27899,7 @@ async function refreshStatus(){
     var settingsBtn = document.getElementById('crmo-sb-settings');
     var clearBtn = document.getElementById('crmo-sb-clear-settings');
     function cfgKey(){
-      return 'crmo_supabase_settings__' + (window.CRMO_STORAGE_NS_PATH || location.pathname || '');
+      return 'crmo_supabase_settings__/';
     }
     function normList(s){
       try{
@@ -27994,6 +28007,14 @@ async function refreshStatus(){
       });
     }
   }
+  async function cloudFirstLoad(){
+    try{
+      if(!_isConfigured()) return false;
+      return await pullFromDb(false);
+    }catch(e){
+      return false;
+    }
+  }
   function boot(){
     try{
       if(!isAdminRole){
@@ -28010,6 +28031,12 @@ async function refreshStatus(){
       });
     }catch(e){}
     refreshStatus();
+    try{
+      if(!window.__CRMO_CLOUD_FIRST_STARTED__){
+        window.__CRMO_CLOUD_FIRST_STARTED__ = true;
+        cloudFirstLoad().catch(function(){});
+      }
+    }catch(e){}
     try{ autoPullOnce(); }catch(e){}
   }
   if(document.readyState === 'loading'){
@@ -28729,7 +28756,7 @@ async function refreshStatus(){
 </script>
 
 
-<script id="CRMO_v1909_network_helper">
+<script id="CRMO_v1910_network_helper">
 (function(){
   window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
   window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
