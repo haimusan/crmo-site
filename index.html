@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1911 -->
+<!-- CRMO_v1912 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -64,7 +64,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1911</title>
+<title>CRMO_v1912</title>
 <style id="crmo_v1908_network_bar_css">
 #crmo-admin-bar .crmo-network-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-start;padding:10px 0 8px;border-bottom:1px solid rgba(0,0,0,.08);}
 #crmo-admin-bar .crmo-network-btn{height:40px;padding:0 16px;border-radius:999px;border:1px solid rgba(0,0,0,.18);background:#fff;color:#111;font:700 14px/1 Rubik,Arial,sans-serif;cursor:pointer;}
@@ -20569,6 +20569,13 @@ if (key === currentGalleryKey){
   function isStandsSubGalleryKey(k){ return false; }
 function ensureGalleryState(key){
     if (!galleryState[key]){
+      try{
+        var __snap = crmoReadGallerySnapshot();
+        if (__snap && Array.isArray(__snap[key]) && __snap[key].length){
+          galleryState[key] = JSON.parse(JSON.stringify(__snap[key]));
+          return;
+        }
+      }catch(e){}
       if (isStandsSubGalleryKey(key)){
         var storeEl = document.getElementById('crmo-stands-store');
         var storeObj = null;
@@ -27717,6 +27724,191 @@ try{
       return true;
     }catch(e){ return false; }
   }
+
+  var CRMO_GALLERY_SNAPSHOT_KEY = 'crmo_gallery_state_v1';
+  function crmoGalleryKeys(){
+    var keys = [];
+    try{
+      if (typeof GALLERIES === 'object' && GALLERIES){
+        Object.keys(GALLERIES).forEach(function(k){ if(k) keys.push(k); });
+      }
+    }catch(e){}
+    try{
+      var secs = document.querySelectorAll('[data-crmo-custom-gallery="1"]');
+      secs.forEach(function(sec){
+        var id = (sec && sec.id || '').trim();
+        if (id && keys.indexOf(id) === -1) keys.push(id);
+      });
+    }catch(e){}
+    return keys;
+  }
+  function crmoExtractGallerySnapshot(){
+    var out = {};
+    try{
+      crmoGalleryKeys().forEach(function(key){
+        try{
+          var cfg = (typeof GALLERIES === 'object' && GALLERIES) ? GALLERIES[key] : null;
+          var secId = (cfg && cfg.sectionId) ? cfg.sectionId : key;
+          var section = document.getElementById(secId);
+          if (!section) return;
+          var wrappers = section.querySelectorAll('.tile-edit-wrapper');
+          if (!wrappers || !wrappers.length) return;
+          out[key] = [];
+          wrappers.forEach(function(w){
+            var a = w.querySelector('a.ph');
+            var hover = w.querySelector('.hover-desc');
+            var strongEl = hover ? hover.querySelector('strong') : null;
+            var descEl = hover ? hover.querySelector('div') : null;
+            var imgSrc = '';
+            try{
+              var img = a ? a.querySelector('img') : null;
+              if (img) imgSrc = img.getAttribute('src') || img.src || '';
+              if (!imgSrc && a){
+                var bg = a.style && a.style.backgroundImage;
+                if (bg && bg.indexOf('url(') !== -1){
+                  imgSrc = bg.replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+                }
+              }
+            }catch(e){}
+            out[key].push({
+              client: (w.getAttribute('data-client') || '').trim(),
+              title: ((strongEl && strongEl.textContent) || (w.querySelector('.crmo-ov h4')||{}).textContent || 'שם הפרויקט').trim(),
+              desc: ((descEl && descEl.textContent) || (w.querySelector('.crmo-ov .desc')||{}).textContent || 'תיאור קצר על הפרויקט').trim(),
+              imageSrc: imgSrc || '',
+              imageName: (w.getAttribute('data-filename') || (a && a.getAttribute('data-filename')) || '').trim(),
+              files: (function(){
+                var df = ((a && a.getAttribute('data-files')) || w.getAttribute('data-files') || '').trim();
+                if (!df || df === 'single') return [];
+                return df.split(',').map(function(x){ return (x||'').trim(); }).filter(function(x){ return x && x !== 'single'; });
+              })(),
+              filesMeta: (function(){
+                try{
+                  var dm = ((a && a.getAttribute('data-files-meta')) || w.getAttribute('data-files-meta') || '').trim();
+                  return dm ? (JSON.parse(dm) || {}) : {};
+                }catch(e){ return {}; }
+              })(),
+              filesVisible: ((a && a.getAttribute('data-files-visible')) || w.getAttribute('data-files-visible') || '').trim(),
+              multi: ((((a && a.getAttribute('data-multi')) || w.getAttribute('data-multi') || '0').trim()) === '1'),
+              subcaps: ((a && a.getAttribute('data-subcaps')) || w.getAttribute('data-subcaps') || '').trim(),
+              link: (w.getAttribute('data-link') || '').trim(),
+              linkNewTab: (w.getAttribute('data-link-newtab') === '1'),
+              linkDisabled: (w.getAttribute('data-link-disabled') === '1')
+            });
+          });
+        }catch(e){}
+      });
+    }catch(e){}
+    return out;
+  }
+  function crmoPersistGallerySnapshot(){
+    try{
+      var snap = crmoExtractGallerySnapshot();
+      localStorage.setItem(CRMO_GALLERY_SNAPSHOT_KEY, JSON.stringify(snap || {}));
+      try{ if (window.safeSet) window.safeSet(CRMO_GALLERY_SNAPSHOT_KEY, JSON.stringify(snap || {})); }catch(e){}
+      return snap;
+    }catch(e){ return null; }
+  }
+  function crmoReadGallerySnapshot(){
+    try{
+      var raw = localStorage.getItem(CRMO_GALLERY_SNAPSHOT_KEY);
+      return raw ? (JSON.parse(raw) || {}) : {};
+    }catch(e){ return {}; }
+  }
+  function crmoApplyGallerySnapshot(snapshot){
+    try{
+      var snap = snapshot || crmoReadGallerySnapshot();
+      Object.keys(snap || {}).forEach(function(key){
+        try{
+          var cfg = (typeof GALLERIES === 'object' && GALLERIES) ? GALLERIES[key] : null;
+          var secId = (cfg && cfg.sectionId) ? cfg.sectionId : key;
+          var section = document.getElementById(secId);
+          var rows = snap[key];
+          if (!section || !Array.isArray(rows) || !rows.length) return;
+          var wrappers = section.querySelectorAll('.tile-edit-wrapper');
+          rows.forEach(function(row, i){
+            var w = wrappers[i];
+            if (!w || !row) return;
+            var a = w.querySelector('a.ph');
+            function setOrRemove(el, name, value){
+              if (!el) return;
+              if (value === null || value === undefined || value === '' || value === false) el.removeAttribute(name);
+              else el.setAttribute(name, String(value));
+            }
+            setOrRemove(w, 'data-client', row.client || '');
+            setOrRemove(w, 'data-filename', row.imageName || '');
+            setOrRemove(w, 'data-files', Array.isArray(row.files) && row.files.length ? row.files.join(',') : '');
+            setOrRemove(w, 'data-multi', row.multi ? '1' : '0');
+            setOrRemove(w, 'data-files-visible', row.filesVisible || '');
+            setOrRemove(w, 'data-subcaps', row.subcaps || '');
+            setOrRemove(w, 'data-link', row.link || '');
+            setOrRemove(w, 'data-link-newtab', row.linkNewTab ? '1' : '');
+            setOrRemove(w, 'data-link-disabled', row.linkDisabled ? '1' : '');
+            try{
+              var metaJson = row.filesMeta && Object.keys(row.filesMeta).length ? JSON.stringify(row.filesMeta) : '';
+              setOrRemove(w, 'data-files-meta', metaJson);
+            }catch(e){ setOrRemove(w, 'data-files-meta', ''); }
+            if (a){
+              setOrRemove(a, 'data-filename', row.imageName || '');
+              setOrRemove(a, 'data-files', Array.isArray(row.files) && row.files.length ? row.files.join(',') : '');
+              setOrRemove(a, 'data-multi', row.multi ? '1' : '0');
+              setOrRemove(a, 'data-files-visible', row.filesVisible || '');
+              setOrRemove(a, 'data-subcaps', row.subcaps || '');
+              setOrRemove(a, 'data-link', row.link || '');
+              setOrRemove(a, 'data-link-newtab', row.linkNewTab ? '1' : '');
+              setOrRemove(a, 'data-link-disabled', row.linkDisabled ? '1' : '');
+              try{
+                var metaJson2 = row.filesMeta && Object.keys(row.filesMeta).length ? JSON.stringify(row.filesMeta) : '';
+                setOrRemove(a, 'data-files-meta', metaJson2);
+              }catch(e){ setOrRemove(a, 'data-files-meta', ''); }
+            }
+            try{
+              var hover = w.querySelector('.hover-desc');
+              if (hover){
+                var strongEl = hover.querySelector('strong');
+                var descEl = hover.querySelector('div');
+                if (strongEl) strongEl.textContent = row.title || 'שם הפרויקט';
+                if (descEl) descEl.textContent = row.desc || 'תיאור קצר על הפרויקט';
+              }
+              var h4 = w.querySelector('.crmo-ov h4');
+              var desc2 = w.querySelector('.crmo-ov .desc');
+              if (h4) h4.textContent = row.title || 'שם הפרויקט';
+              if (desc2) desc2.textContent = row.desc || 'תיאור קצר על הפרויקט';
+            }catch(e){}
+            try{
+              if (a){
+                var img = a.querySelector('img');
+                if (row.imageSrc){
+                  if (!img){ img = document.createElement('img'); a.appendChild(img); }
+                  img.src = row.imageSrc;
+                  img.alt = row.title || '';
+                  a.style.backgroundImage = 'url(' + row.imageSrc + ')';
+                  a.style.backgroundSize = 'cover';
+                  a.style.backgroundPosition = 'center';
+                  a.style.backgroundRepeat = 'no-repeat';
+                }else{
+                  if (img && img.parentNode) img.parentNode.removeChild(img);
+                  a.style.backgroundImage = '';
+                }
+              }
+            }catch(e){}
+          });
+        }catch(e){}
+      });
+      try{
+        if (window.CRMO__galleryState && typeof window.CRMO__galleryState === 'object'){
+          Object.keys(snap || {}).forEach(function(key){
+            var rows = snap[key];
+            if (Array.isArray(rows)) window.CRMO__galleryState[key] = JSON.parse(JSON.stringify(rows));
+          });
+        }
+      }catch(e){}
+      return true;
+    }catch(e){ return false; }
+  }
+  document.addEventListener('crmo:tile-edited', function(){ try{ crmoPersistGallerySnapshot(); }catch(e){} });
+  window.CRMO_persistGallerySnapshot = crmoPersistGallerySnapshot;
+  window.CRMO_applyGallerySnapshot = crmoApplyGallerySnapshot;
+
   function collectCrmoStorage(){
     var out = {};
     try{
@@ -27795,6 +27987,7 @@ try{
     }
     var remoteStorage = res.data.storage || {};
     applyCrmoStorage(remoteStorage);
+    try{ crmoApplyGallerySnapshot(); }catch(e){}
     var ts = res.data.updated_at ? new Date(res.data.updated_at).toLocaleString('he-IL') : '';
     setSyncInfo('נטען מהשרת ' + (ts ? '(' + ts + ')' : ''));
     if (reloadAfter){
@@ -27818,6 +28011,7 @@ try{
     if (!ok) throw new Error('not-auth');
     var table = getConfigTable();
     var id = getConfigId();
+    try{ crmoPersistGallerySnapshot(); }catch(e){}
     var payload = { id: id, storage: collectCrmoStorage() };
     var res = await sb.from(table).upsert(payload, { onConflict: 'id' }).select('updated_at');
     if (res.error) throw res.error;
@@ -27865,6 +28059,14 @@ try{
       window.safeSet = wrapped;
     }
   }catch(e){}
+  document.addEventListener('DOMContentLoaded', function(){
+    try{ crmoApplyGallerySnapshot(); }catch(e){}
+    try{
+      setTimeout(function(){
+        try{ crmoApplyGallerySnapshot(); }catch(e){}
+      }, 300);
+    }catch(e){}
+  });
   function autoPullOnce(){
     try{
       if(!_isConfigured()) return;
@@ -28756,7 +28958,7 @@ async function refreshStatus(){
 </script>
 
 
-<script id="CRMO_v1911_network_helper">
+<script id="CRMO_v1912_network_helper">
 (function(){
   window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
   window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
