@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1916 | based on CRMO_v1908 stable baseline | gallery max tiles raised to 24 -->
+<!-- CRMO_v1915 | based on CRMO_v1908 stable baseline | gallery max tiles raised to 24 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -64,7 +64,7 @@ body.crmo-route-gallery .whatsapp-float{ display:none !important; }
 
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>CRMO_v1916</title>
+<title>CRMO_v1915</title>
 <style id="crmo_v1915_network_bar_css">
 #crmo-admin-bar .crmo-network-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:flex-start;padding:10px 0 8px;border-bottom:1px solid rgba(0,0,0,.08);}
 #crmo-admin-bar .crmo-network-btn{height:40px;padding:0 16px;border-radius:999px;border:1px solid rgba(0,0,0,.18);background:#fff;color:#111;font:700 14px/1 Rubik,Arial,sans-serif;cursor:pointer;}
@@ -20429,10 +20429,6 @@ if (key === currentGalleryKey){
     var input = ev.target;
     var file = input.files && input.files[0];
     if (!file) return;
-    ensureGalleryState(currentEditGalleryKey);
-    var arr = galleryState[currentEditGalleryKey];
-    if (!arr || !arr[currentEditIndex]) return;
-    var data = arr[currentEditIndex];
     (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, 'gallery-main') : Promise.reject(new Error('no-uploader')))
       .then(function(src){
         if(src){
@@ -20541,7 +20537,7 @@ if (key === currentGalleryKey){
         });
     });
   }
-  var CRMO_GALLERY_STATE_KEY = 'crmo_gallery_state_v1916__' + (window.CRMO_STORAGE_NS_PATH || location.pathname || '');
+  var CRMO_GALLERY_STATE_KEY = 'crmo_gallery_state_v1915__' + (window.CRMO_STORAGE_NS_PATH || location.pathname || '');
   function persistGalleryStateToLocal(){
     try{
       Object.keys(GALLERIES || {}).forEach(function(k){
@@ -27424,8 +27420,6 @@ try{
   window.CRMO_SUPABASE_URL = window.CRMO_SUPABASE_URL || "https://rtodtmeqijhszdhelawy.supabase.co";
   window.CRMO_SUPABASE_ANON_KEY = window.CRMO_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
   window.CRMO_SUPABASE_BUCKET = window.CRMO_SUPABASE_BUCKET || "assets";
-  window.CRMO_GALLERIES_BUCKET = window.CRMO_GALLERIES_BUCKET || "galleries";
-  window.CRMO_BRANDS_BUCKET = window.CRMO_BRANDS_BUCKET || "brands";
   window.CRMO_SUPABASE_PUBLIC_ASSETS_BASE = window.CRMO_SUPABASE_PUBLIC_ASSETS_BASE || "https://rtodtmeqijhszdhelawy.supabase.co/storage/v1/object/public/assets/";
   (function(){
     try{
@@ -27565,102 +27559,12 @@ try{
       alert(msg);
     }catch(e){}
   };
-  function _crmoSanitizePathPart(s){
-    s = (s == null) ? '' : (''+s);
-    s = s.trim().replace(/\\/g,'/');
-    s = s.replace(/[^a-zA-Z0-9._\-\/]/g,'_');
-    s = s.replace(/\/+/g,'/').replace(/^\/+/, '').replace(/\/+$/, '');
-    return s;
-  }
-  function _crmoMediaTargetForFolder(folder){
-    var raw = (folder == null ? '' : (''+folder)).trim();
-    var safe = _crmoSanitizePathPart(raw || 'uploads');
-    var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
-    var baseFolder = safe || 'uploads';
-    var galleryFolders = { 'multi':1, 'gallery-main':1, 'gallery-extra':1, 'tile-main':1, 'gallery-embedded':1, 'tile-embedded':1 };
-    if (safe === 'brands' || safe.indexOf('brands/') === 0){
-      bucket = window.CRMO_BRANDS_BUCKET || 'brands';
-      baseFolder = safe || 'brands';
-    } else if (galleryFolders[safe] || safe.indexOf('galleries/') === 0 || safe.indexOf('gallery-') === 0 || safe.indexOf('tile-') === 0 || safe === 'multi'){
-      bucket = window.CRMO_GALLERIES_BUCKET || 'galleries';
-      if (safe === 'gallery-main' || safe === 'tile-main') baseFolder = 'main';
-      else if (safe === 'gallery-extra') baseFolder = 'extra';
-      else if (safe === 'multi') baseFolder = 'multi';
-      else if (safe === 'gallery-embedded' || safe === 'tile-embedded') baseFolder = 'embedded';
-      baseFolder = 'uploads/' + baseFolder;
-    }
-    return { bucket: bucket, folder: baseFolder || 'uploads' };
-  }
-  function _crmoDataUrlToBlob(dataUrl){
-    if (!dataUrl || String(dataUrl).indexOf('data:') !== 0) throw new Error('not-data-url');
-    var parts = String(dataUrl).split(',');
-    if (parts.length < 2) throw new Error('bad-data-url');
-    var header = parts[0] || '';
-    var body = parts.slice(1).join(',');
-    var mimeMatch = header.match(/^data:([^;]+)/i);
-    var mime = mimeMatch ? mimeMatch[1].toLowerCase() : 'application/octet-stream';
-    var binary = atob(body);
-    var len = binary.length;
-    var bytes = new Uint8Array(len);
-    for (var i=0;i<len;i++) bytes[i] = binary.charCodeAt(i);
-    return { blob: new Blob([bytes], { type: mime }), mime: mime };
-  }
-  window.CRMO_uploadDataUrl = async function(dataUrl, folder, preferredName){
-    var conv = _crmoDataUrlToBlob(dataUrl);
-    var mime = conv && conv.mime ? conv.mime : 'application/octet-stream';
-    var ext = 'png';
-    if (mime.indexOf('jpeg') >= 0 || mime.indexOf('jpg') >= 0) ext = 'jpg';
-    else if (mime.indexOf('webp') >= 0) ext = 'webp';
-    else if (mime.indexOf('gif') >= 0) ext = 'gif';
-    var name = _crmoSanitizePathPart(preferredName || 'image');
-    name = name.replace(/^.*\//,'');
-    if (!name) name = 'image';
-    if (!(/\.[a-z0-9]+$/i).test(name)) name += '.' + ext;
-    var file = new File([conv.blob], name, { type: mime });
-    return await window.CRMO_uploadImage(file, folder);
-  };
-  async function _crmoReplaceEmbeddedImagesForServer(storage){
-    if (!storage || typeof storage !== 'object') return storage;
-    var seen = {};
-    async function walk(node, stack){
-      if (typeof node === 'string') return node;
-      if (!node || typeof node !== 'object') return node;
-      if (Array.isArray(node)){
-        for (var i=0;i<node.length;i++) node[i] = await walk(node[i], stack.concat(String(i)));
-        return node;
-      }
-      var keys = Object.keys(node);
-      for (var ki=0; ki<keys.length; ki++) {
-        var key = keys[ki];
-        var val = node[key];
-        if (typeof val === 'string' && val.indexOf('data:image/') === 0){
-          var folder = 'gallery-embedded';
-          if (stack.indexOf('brands') !== -1 || key.toLowerCase().indexOf('brand') !== -1) folder = 'brands';
-          var pref = node.imageName || node.name || node.id || node.filename || (key + '_' + stack.join('_'));
-          var cacheKey = folder + '|' + pref + '|' + val.slice(0,120);
-          if (!seen[cacheKey]) seen[cacheKey] = window.CRMO_uploadDataUrl(val, folder, pref).then(function(res){ return res && res.url ? res.url : val; }).catch(function(){ return val; });
-          node[key] = await seen[cacheKey];
-        } else if (val && typeof val === 'object') {
-          node[key] = await walk(val, stack.concat(key));
-        }
-      }
-      return node;
-    }
-    return await walk(storage, []);
-  }
-  window.CRMO_prepareStorageForServer = async function(storage){
-    var cloned = storage || {};
-    try{ cloned = JSON.parse(JSON.stringify(storage || {})); }catch(e){}
-    try{ cloned = await _crmoReplaceEmbeddedImagesForServer(cloned); }catch(e){}
-    return cloned;
-  };
   window.CRMO_uploadImage = async function(file, folder){
     var sb = await getClient();
     var ok = await isAdminAllowed();
     if (!ok) throw new Error('not-auth');
     if (!file) throw new Error('no-file');
-    var target = _crmoMediaTargetForFolder(folder);
-    var bucket = target.bucket;
+    var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
     var ext = '';
     try{
       var nm = (file.name||'').toString();
@@ -27674,7 +27578,7 @@ try{
       }catch(e){}
     }
     if(!ext) ext = 'png';
-    var safeFolder = _crmoSanitizePathPart(target.folder || 'uploads');
+    var safeFolder = (folder||'uploads').toString().replace(/[^a-zA-Z0-9_\-\/]/g,'').replace(/^\//,'').replace(/\/$/,'');
     if(!safeFolder) safeFolder = 'uploads';
     var ts = new Date().toISOString().replace(/[:.]/g,'-');
     var rnd = Math.random().toString(16).slice(2);
@@ -27952,8 +27856,7 @@ try{
     if (!ok) throw new Error('not-auth');
     var table = getConfigTable();
     var id = getConfigId();
-    var preparedStorage = await (window.CRMO_prepareStorageForServer ? window.CRMO_prepareStorageForServer(collectCrmoStorage()) : collectCrmoStorage());
-    var payload = { id: id, storage: preparedStorage };
+    var payload = { id: id, storage: collectCrmoStorage() };
     var res = await sb.from(table).upsert(payload, { onConflict: 'id' }).select('updated_at');
     if (res.error) throw res.error;
     var row = null;
@@ -27961,7 +27864,6 @@ try{
       row = Array.isArray(res.data) ? res.data[0] : res.data;
     }catch(e){}
     var ts = row && row.updated_at ? new Date(row.updated_at).toLocaleString('he-IL') : '';
-    try{ applyCrmoStorage(preparedStorage); }catch(e){}
     setSyncInfo('נשמר לשרת ' + (ts ? '(' + ts + ')' : ''));
     return true;
   }
@@ -28896,13 +28798,11 @@ async function refreshStatus(){
 </script>
 
 
-<script id="CRMO_v1916_network_helper">
+<script id="CRMO_v1915_network_helper">
 (function(){
   window.CRMO_SUPABASE_URL = "https://rtodtmeqijhszdhelawy.supabase.co";
   window.CRMO_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0b2R0bWVxaWpoc3pkaGVsYXd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjczODM2MzgsImV4cCI6MjA4Mjk1OTYzOH0.HoejT4earusc0bHdC2-rtgHfbcCUP96qXXNc2ljnJi8";
   window.CRMO_SUPABASE_BUCKET = "assets";
-  window.CRMO_GALLERIES_BUCKET = "galleries";
-  window.CRMO_BRANDS_BUCKET = "brands";
   window.CRMO_SUPABASE_CONFIG_TABLE = "crmo_site_config";
   window.CRMO_SUPABASE_CONFIG_ID = "main";
   window.CRMO_SUPABASE_REQUIRE_LOGIN = true;
