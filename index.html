@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1922 -->
+<!-- CRMO_v1923 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1922";
+window.CRMO_BUILD_VERSION = "1923";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -7581,7 +7581,7 @@ body.role-admin #crmo-galleries-admin .crmo-galleries-admin-toggle{ display:flex
 body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role switch bar is dev/admin only */
 </style>
 
-<style id="crmo_topbar_pencil_patch_css_v1922">
+<style id="crmo_topbar_pencil_patch_css_v1923">
 /* Uniform square buttons (no radius) for the X + pencil group we tag via JS */
 .crmo-topbar-uxbtn {
   border-radius: 0 !important;
@@ -7598,7 +7598,7 @@ img.crmo-topbar-pencil{
 }
 </style>
 
-<script id="crmo-preauth-bars-v1922">
+<script id="crmo-preauth-bars-v1923">
 (function(){
   try{
     var hasToken = false;
@@ -7613,7 +7613,7 @@ img.crmo-topbar-pencil{
   }catch(e){}
 })();
 </script>
-<style id="crmo-bars-lock-css-v1922">
+<style id="crmo-bars-lock-css-v1923">
 html.crmo-auth-optimistic #crmo-role-toggle,
 html.crmo-auth-optimistic #crmo-admin-bar,
 html.crmo-auth-optimistic #crmo-admin-subbar,
@@ -7624,8 +7624,16 @@ html.is-admin #crmo-role-toggle,
 html.is-admin #crmo-admin-bar,
 html.is-admin #crmo-admin-subbar{display:flex !important;visibility:visible !important;opacity:1 !important;pointer-events:auto !important;}
 .tile-edit-wrapper{position:relative;}
-.crmo-cloud-ok-badge{position:absolute;top:8px;left:8px;z-index:30;width:22px;height:22px;border-radius:50%;display:none;align-items:center;justify-content:center;font:700 14px/1 Arial,sans-serif;background:#1f9d3a;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18);}
-.tile-edit-wrapper[data-crmo-cloud-ok="1"] .crmo-cloud-ok-badge{display:flex;}
+.crmo-cloud-ok-badge{position:absolute;top:8px;right:40px;z-index:30;width:22px;height:22px;border-radius:50%;display:none;align-items:center;justify-content:center;font:700 14px/1 Arial,sans-serif;background:#1f9d3a;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none;}
+body.role-admin .tile-edit-wrapper[data-crmo-cloud-ok="1"][data-crmo-has-content="1"] .crmo-cloud-ok-badge,
+body.role-master .tile-edit-wrapper[data-crmo-cloud-ok="1"][data-crmo-has-content="1"] .crmo-cloud-ok-badge{display:flex;}
+#crmo-admin-bar .crmo-manual-cloud-note{display:none;align-items:center;gap:10px;margin-inline-start:auto;padding:0 10px;font-size:12px;white-space:nowrap;color:#6b7280}
+body.role-admin #crmo-admin-bar .crmo-manual-cloud-note,
+body.role-master #crmo-admin-bar .crmo-manual-cloud-note{display:flex;}
+#crmo-admin-bar .crmo-manual-cloud-note .msg{font-weight:500}
+#crmo-admin-bar .crmo-manual-cloud-note .msg.ok{color:#1f9d3a}
+#crmo-admin-bar .crmo-manual-cloud-note .msg.warn{color:#9a6a16}
+#crmo-admin-bar .crmo-manual-cloud-note .msg.err{color:#b42318}
 #crmo-manual-cloud-note{position:fixed;left:12px;bottom:12px;z-index:99998;background:rgba(255,255,255,.96);border:1px solid rgba(0,0,0,.12);border-radius:12px;padding:9px 12px;font:600 12px/1.4 Arial,sans-serif;color:#111;box-shadow:0 10px 28px rgba(0,0,0,.08)}
 #crmo-manual-cloud-note .ok{color:#1f9d3a;font-weight:800}
 #crmo-manual-cloud-note .warn{color:#b26a00;font-weight:800}
@@ -29908,7 +29916,7 @@ try{
   }, true);
 })();
 </script>
-<script id="crmo_topbar_pencil_patch_v1922">
+<script id="crmo_topbar_pencil_patch_v1923">
 (function(){
   var PENCIL_DATA = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%3E%0A%20%20%3Cpath%20d%3D%22M12%2020h9%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M16.5%203.5l4%204L8%2020H4v-4L16.5%203.5z%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22%20stroke-linejoin%3D%22round%22/%3E%0A%3C/svg%3E";
 
@@ -29985,27 +29993,42 @@ try{
 })();
 </script>
 
-<script id="crmo_v1922_manual_cloud_patch">
+<script id="crmo_v1923_manual_cloud_patch">
 (function(){
   try{ window.CRMO_SUPABASE_AUTO_SYNC = false; }catch(e){}
   try{ sessionStorage.setItem('CRMO_SKIP_CLOUD_RESTORE','1'); }catch(e){}
   try{ sessionStorage.setItem('crmo_remote_pulled','1'); }catch(e){}
+
+  function isAdminMode(){
+    try{
+      var b = document.body;
+      return !!(b && (b.classList.contains('role-admin') || b.classList.contains('role-master')));
+    }catch(e){ return false; }
+  }
 
   function syncInfo(msg, cls){
     try{
       var el = document.getElementById('crmo-sb-syncinfo');
       if(el) el.textContent = msg || '';
       var note = document.getElementById('crmo-manual-cloud-note-msg');
-      if(note){ note.textContent = msg || ''; note.className = cls || ''; }
+      if(note){
+        note.textContent = msg || '';
+        note.className = 'msg ' + (cls || '');
+      }
     }catch(e){}
   }
 
   function ensureManualNote(){
-    if(document.getElementById('crmo-manual-cloud-note')) return;
-    var box = document.createElement('div');
-    box.id = 'crmo-manual-cloud-note';
-    box.innerHTML = '<div>1922 · Local first · Cloud manual only</div><div id="crmo-manual-cloud-note-msg" class="warn">לא נטען אוטומטית מהשרת</div>';
-    document.body.appendChild(box);
+    var wrap = document.querySelector('#crmo-admin-bar .wrap');
+    if(!wrap) return;
+    var box = document.getElementById('crmo-manual-cloud-note');
+    if(!box){
+      box = document.createElement('div');
+      box.id = 'crmo-manual-cloud-note';
+      box.className = 'crmo-manual-cloud-note';
+      box.innerHTML = '<div>1923 · Local first · Cloud manual only</div><div id="crmo-manual-cloud-note-msg" class="msg warn">לא נטען אוטומטית מהשרת</div>';
+      wrap.appendChild(box);
+    }
   }
 
   function getTileSrc(wrapper){
@@ -30032,8 +30055,39 @@ try{
     return /supabase\.co\/storage\/v1\/object\/public\//i.test(src) || /^https?:\/\//i.test(src);
   }
 
+  function wrapperHasRealContent(wrapper){
+    try{
+      if(!wrapper) return false;
+      var src = getTileSrc(wrapper);
+      if(src && !/^data:image\//i.test(src) && !/placeholder|dummy|sample/i.test(src)) return true;
+      var attrs = ['data-title','data-desc','data-caption','data-link','data-url'];
+      for(var i=0;i<attrs.length;i++){
+        var v = String(wrapper.getAttribute(attrs[i]) || '').trim();
+        if(v) return true;
+      }
+      var textSels = ['figcaption','.label','.caption','.project-title','.tile-title','h3','h4','p'];
+      for(var j=0;j<textSels.length;j++){
+        var n = wrapper.querySelector(textSels[j]);
+        var txt = n ? String(n.textContent || '').trim() : '';
+        if(txt && !/^\d+(\.\d+)?$/.test(txt)) return true;
+      }
+      var files = String(wrapper.getAttribute('data-files') || '').trim();
+      if(files && !/^,+$/.test(files)) return true;
+      var metaRaw = wrapper.getAttribute('data-files-meta') || '';
+      if(metaRaw){
+        try{
+          var meta = JSON.parse(metaRaw);
+          var keys = Object.keys(meta || {});
+          if(keys.length) return true;
+        }catch(_e){}
+      }
+    }catch(e){}
+    return false;
+  }
+
   function wrapperLooksCloudConfirmed(wrapper){
     try{
+      if(!wrapperHasRealContent(wrapper)) return false;
       var src = getTileSrc(wrapper);
       if(!isCloudUrl(src)) return false;
       var metaRaw = wrapper.getAttribute('data-files-meta') || '';
@@ -30062,22 +30116,40 @@ try{
         if(!badge){
           badge = document.createElement('div');
           badge.className = 'crmo-cloud-ok-badge';
-          badge.title = 'נראה שהאריח באוויר';
+          badge.title = 'האריח נראה באוויר';
           badge.textContent = 'V';
           w.appendChild(badge);
         }
-        w.setAttribute('data-crmo-cloud-ok', wrapperLooksCloudConfirmed(w) ? '1' : '0');
+        w.setAttribute('data-crmo-has-content', wrapperHasRealContent(w) ? '1' : '0');
+        w.setAttribute('data-crmo-cloud-ok', (isAdminMode() && wrapperLooksCloudConfirmed(w)) ? '1' : '0');
       });
     }catch(e){}
+  }
+
+  function safeOpenClientModal(ev){
+    try{ if(ev){ ev.preventDefault(); ev.stopPropagation(); } }catch(e){}
+    try{
+      if(typeof window.CRMO_openCustomerAuthAuto === 'function'){ window.CRMO_openCustomerAuthAuto('login'); return true; }
+      if(typeof window.CRMO_openAuthAuto === 'function'){ window.CRMO_openAuthAuto(); return true; }
+      if(typeof window.CRMO_openAuth === 'function'){ window.CRMO_openAuth('admin'); return true; }
+    }catch(e){}
+    return false;
+  }
+
+  function bindClientLoginTriggers(){
+    ['login-trigger','login-trigger-mobile'].forEach(function(id){
+      var btn = document.getElementById(id);
+      if(!btn || btn.__v1923) return;
+      btn.__v1923 = true;
+      btn.addEventListener('click', function(ev){ safeOpenClientModal(ev); }, true);
+    });
   }
 
   function wrapManualCloud(){
     if(typeof window.CRMO_scheduleCloudSave === 'function') window.CRMO_scheduleCloudSave = function(){ return false; };
     if(typeof window.schedulePush === 'function') window.schedulePush = function(){ return false; };
     if(typeof window.CRMO_cloudRestoreOnce === 'function') window.CRMO_cloudRestoreOnce = async function(){ return false; };
-    if(typeof window.pullFromDb === 'function'){}
-    if(typeof window.pushToDb === 'function'){}
-    if(typeof window.CRMO_sbPushNow === 'function' && !window.CRMO_sbPushNow.__v1922){
+    if(typeof window.CRMO_sbPushNow === 'function' && !window.CRMO_sbPushNow.__v1923){
       var origPush = window.CRMO_sbPushNow;
       window.CRMO_sbPushNow = async function(){
         syncInfo('שומר לשרת…');
@@ -30088,13 +30160,13 @@ try{
           setTimeout(refreshCloudBadges, 1200);
           return out;
         }catch(err){
-          syncInfo('שגיאה בשמירה לשרת', 'warn');
+          syncInfo('שגיאה בשמירה לשרת', 'err');
           throw err;
         }
       };
-      window.CRMO_sbPushNow.__v1922 = true;
+      window.CRMO_sbPushNow.__v1923 = true;
     }
-    if(typeof window.CRMO_sbPullNow === 'function' && !window.CRMO_sbPullNow.__v1922){
+    if(typeof window.CRMO_sbPullNow === 'function' && !window.CRMO_sbPullNow.__v1923){
       var origPull = window.CRMO_sbPullNow;
       window.CRMO_sbPullNow = async function(reloadAfter){
         syncInfo('טוען מהשרת…');
@@ -30104,15 +30176,15 @@ try{
           setTimeout(refreshCloudBadges, 300);
           return out;
         }catch(err){
-          syncInfo('שגיאה בטעינה מהשרת', 'warn');
+          syncInfo('שגיאה בטעינה מהשרת', 'err');
           throw err;
         }
       };
-      window.CRMO_sbPullNow.__v1922 = true;
+      window.CRMO_sbPullNow.__v1923 = true;
     }
     var pushBtn = document.getElementById('crmo-sb-push');
-    if(pushBtn && !pushBtn.__v1922){
-      pushBtn.__v1922 = true;
+    if(pushBtn && !pushBtn.__v1923){
+      pushBtn.__v1923 = true;
       pushBtn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopImmediatePropagation && e.stopImmediatePropagation();
@@ -30120,8 +30192,8 @@ try{
       }, true);
     }
     var pullBtn = document.getElementById('crmo-sb-pull');
-    if(pullBtn && !pullBtn.__v1922){
-      pullBtn.__v1922 = true;
+    if(pullBtn && !pullBtn.__v1923){
+      pullBtn.__v1923 = true;
       pullBtn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopImmediatePropagation && e.stopImmediatePropagation();
@@ -30133,14 +30205,19 @@ try{
   document.addEventListener('DOMContentLoaded', function(){
     ensureManualNote();
     wrapManualCloud();
+    bindClientLoginTriggers();
     refreshCloudBadges();
     syncInfo('לא נטען אוטומטית מהשרת', 'warn');
-    setInterval(refreshCloudBadges, 2500);
+    setInterval(function(){
+      bindClientLoginTriggers();
+      refreshCloudBadges();
+    }, 2500);
   });
 
   document.addEventListener('crmo:tile-edited', function(){ setTimeout(refreshCloudBadges, 100); setTimeout(refreshCloudBadges, 800); }, true);
+  window.addEventListener('crmo:role-changed', function(){ setTimeout(refreshCloudBadges, 80); });
 })();
-</script>
+</script></script>
 
 </body>
 </html>
