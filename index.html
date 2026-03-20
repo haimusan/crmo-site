@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- CRMO_v1923 -->
+<!-- CRMO_v1924 -->
 
 <html dir="rtl" lang="he">
 <head>
@@ -21,7 +21,7 @@
 })();
 </script>
 <script id="crmo_build_info">
-window.CRMO_BUILD_VERSION = "1923";
+window.CRMO_BUILD_VERSION = "1924";
 window.CRMO_STUDIO_TITLE = "CRMO";
 </script>
 
@@ -7581,7 +7581,7 @@ body.role-admin #crmo-galleries-admin .crmo-galleries-admin-toggle{ display:flex
 body:not(.role-admin) #crmo-role-toggle{ display:none !important; } /* role switch bar is dev/admin only */
 </style>
 
-<style id="crmo_topbar_pencil_patch_css_v1923">
+<style id="crmo_topbar_pencil_patch_css_v1924">
 /* Uniform square buttons (no radius) for the X + pencil group we tag via JS */
 .crmo-topbar-uxbtn {
   border-radius: 0 !important;
@@ -7598,7 +7598,7 @@ img.crmo-topbar-pencil{
 }
 </style>
 
-<script id="crmo-preauth-bars-v1923">
+<script id="crmo-preauth-bars-v1924">
 (function(){
   try{
     var hasToken = false;
@@ -7613,7 +7613,7 @@ img.crmo-topbar-pencil{
   }catch(e){}
 })();
 </script>
-<style id="crmo-bars-lock-css-v1923">
+<style id="crmo-bars-lock-css-v1924">
 html.crmo-auth-optimistic #crmo-role-toggle,
 html.crmo-auth-optimistic #crmo-admin-bar,
 html.crmo-auth-optimistic #crmo-admin-subbar,
@@ -29916,7 +29916,7 @@ try{
   }, true);
 })();
 </script>
-<script id="crmo_topbar_pencil_patch_v1923">
+<script id="crmo_topbar_pencil_patch_v1924">
 (function(){
   var PENCIL_DATA = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%3E%0A%20%20%3Cpath%20d%3D%22M12%2020h9%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22/%3E%0A%20%20%3Cpath%20d%3D%22M16.5%203.5l4%204L8%2020H4v-4L16.5%203.5z%22%20stroke%3D%22%23000%22%20stroke-width%3D%222%22%20stroke-linejoin%3D%22round%22/%3E%0A%3C/svg%3E";
 
@@ -29993,7 +29993,7 @@ try{
 })();
 </script>
 
-<script id="crmo_v1923_manual_cloud_patch">
+<script id="crmo_v1924_manual_cloud_patch">
 (function(){
   try{ window.CRMO_SUPABASE_AUTO_SYNC = false; }catch(e){}
   try{ sessionStorage.setItem('CRMO_SKIP_CLOUD_RESTORE','1'); }catch(e){}
@@ -30026,7 +30026,7 @@ try{
       box = document.createElement('div');
       box.id = 'crmo-manual-cloud-note';
       box.className = 'crmo-manual-cloud-note';
-      box.innerHTML = '<div>1923 · Local first · Cloud manual only</div><div id="crmo-manual-cloud-note-msg" class="msg warn">לא נטען אוטומטית מהשרת</div>';
+      box.innerHTML = '<div>1924 · Local first · Cloud manual only</div><div id="crmo-manual-cloud-note-msg" class="msg warn">לא נטען אוטומטית מהשרת</div>';
       wrap.appendChild(box);
     }
   }
@@ -30139,8 +30139,8 @@ try{
   function bindClientLoginTriggers(){
     ['login-trigger','login-trigger-mobile'].forEach(function(id){
       var btn = document.getElementById(id);
-      if(!btn || btn.__v1923) return;
-      btn.__v1923 = true;
+      if(!btn || btn.__v1924) return;
+      btn.__v1924 = true;
       btn.addEventListener('click', function(ev){ safeOpenClientModal(ev); }, true);
     });
   }
@@ -30149,7 +30149,7 @@ try{
     if(typeof window.CRMO_scheduleCloudSave === 'function') window.CRMO_scheduleCloudSave = function(){ return false; };
     if(typeof window.schedulePush === 'function') window.schedulePush = function(){ return false; };
     if(typeof window.CRMO_cloudRestoreOnce === 'function') window.CRMO_cloudRestoreOnce = async function(){ return false; };
-    if(typeof window.CRMO_sbPushNow === 'function' && !window.CRMO_sbPushNow.__v1923){
+    if(typeof window.CRMO_sbPushNow === 'function' && !window.CRMO_sbPushNow.__v1924){
       var origPush = window.CRMO_sbPushNow;
       window.CRMO_sbPushNow = async function(){
         syncInfo('שומר לשרת…');
@@ -30164,9 +30164,9 @@ try{
           throw err;
         }
       };
-      window.CRMO_sbPushNow.__v1923 = true;
+      window.CRMO_sbPushNow.__v1924 = true;
     }
-    if(typeof window.CRMO_sbPullNow === 'function' && !window.CRMO_sbPullNow.__v1923){
+    if(typeof window.CRMO_sbPullNow === 'function' && !window.CRMO_sbPullNow.__v1924){
       var origPull = window.CRMO_sbPullNow;
       window.CRMO_sbPullNow = async function(reloadAfter){
         syncInfo('טוען מהשרת…');
@@ -30180,11 +30180,11 @@ try{
           throw err;
         }
       };
-      window.CRMO_sbPullNow.__v1923 = true;
+      window.CRMO_sbPullNow.__v1924 = true;
     }
     var pushBtn = document.getElementById('crmo-sb-push');
-    if(pushBtn && !pushBtn.__v1923){
-      pushBtn.__v1923 = true;
+    if(pushBtn && !pushBtn.__v1924){
+      pushBtn.__v1924 = true;
       pushBtn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopImmediatePropagation && e.stopImmediatePropagation();
@@ -30192,8 +30192,8 @@ try{
       }, true);
     }
     var pullBtn = document.getElementById('crmo-sb-pull');
-    if(pullBtn && !pullBtn.__v1923){
-      pullBtn.__v1923 = true;
+    if(pullBtn && !pullBtn.__v1924){
+      pullBtn.__v1924 = true;
       pullBtn.addEventListener('click', function(e){
         e.preventDefault();
         e.stopImmediatePropagation && e.stopImmediatePropagation();
@@ -30218,6 +30218,180 @@ try{
   window.addEventListener('crmo:role-changed', function(){ setTimeout(refreshCloudBadges, 80); });
 })();
 </script></script>
+
+
+<style id="crmo_v1924_overrides">
+html.crmo-dev-admin body #crmo-role-toggle,
+html.crmo-dev-admin body #crmo-admin-bar,
+html.crmo-dev-admin body #crmo-admin-subbar{display:flex !important;visibility:visible !important;opacity:1 !important;pointer-events:auto !important;}
+html.crmo-dev-admin body #crmo-admin-bar{display:block !important;}
+html.crmo-dev-admin body #crmo-role-toggle{display:flex !important;}
+#crmo-manual-cloud-note{display:none !important;}
+#crmo-admin-bar .crmo-manual-cloud-note{display:flex !important;}
+img.crmo-topbar-pencil{display:none !important;}
+.crmo-topbar-uxbtn img.crmo-topbar-pencil{display:none !important;}
+body .tile-edit-wrapper .crmo-cloud-ok-badge{right:40px;top:8px;}
+html:not(.crmo-dev-admin) body:not(.role-admin):not(.role-master) .crmo-cloud-ok-badge{display:none !important;}
+</style>
+<script id="crmo_v1924_patch">
+(function(){
+  var html = document.documentElement;
+  var CONFIRM_KEY = 'CRMO_CLOUD_CONFIRMED_TILES_v1924';
+  function byId(id){ return document.getElementById(id); }
+  function getDevMode(){
+    try{
+      if(html.classList.contains('is-admin') || html.classList.contains('crmo-owner') || html.classList.contains('crmo-auth-optimistic')) return true;
+      var raw = localStorage.getItem('CRMO_AUTH_SESSION_v1') || '';
+      if(raw){
+        var sess = JSON.parse(raw);
+        if(sess && (sess.role==='admin' || sess.role==='master' || sess.role==='ux')) return true;
+      }
+    }catch(e){}
+    return false;
+  }
+  function refreshDevMode(){
+    try{ html.classList.toggle('crmo-dev-admin', !!getDevMode()); }catch(e){}
+  }
+  function getWrapKey(w){
+    try{
+      var g = (w.getAttribute('data-crmo-owner-key') || w.closest('[data-gallery-key]')?.getAttribute('data-gallery-key') || '').trim();
+      var i = (w.getAttribute('data-crmo-idx') || '').trim();
+      var s = String(w.getAttribute('data-src') || '');
+      return [g,i,s].join('::');
+    }catch(e){ return ''; }
+  }
+  function getConfirmedMap(){
+    try{ return JSON.parse(localStorage.getItem(CONFIRM_KEY) || '{}') || {}; }catch(e){ return {}; }
+  }
+  function setConfirmedMap(map){
+    try{ localStorage.setItem(CONFIRM_KEY, JSON.stringify(map||{})); }catch(e){}
+  }
+  function isCloudUrl(src){
+    src = String(src||'').trim();
+    if(!src || /^data:image\//i.test(src) || /^blob:/i.test(src)) return false;
+    return /supabase\.co\/storage\/v1\/object\/public\//i.test(src) || /^https?:\/\//i.test(src);
+  }
+  function hasRealContent(w){
+    try{
+      var src = '';
+      var img = w.querySelector('img'); if(img && img.src) src = img.src;
+      if(!src) src = w.getAttribute('data-src') || '';
+      if(src && isCloudUrl(src) && !/placeholder|dummy|sample/i.test(src)) return true;
+      var attrs = ['data-title','data-desc','data-caption','data-link','data-url'];
+      for(var i=0;i<attrs.length;i++){ var v = String(w.getAttribute(attrs[i])||'').trim(); if(v) return true; }
+      var files = String(w.getAttribute('data-files') || '').trim();
+      if(files && !/^(,|\s)*$/.test(files) && !/data:image\//i.test(files)) return true;
+    }catch(e){}
+    return false;
+  }
+  function looksCloudConfirmedStrict(w){
+    try{
+      if(!w || !hasRealContent(w)) return false;
+      var src=''; var img=w.querySelector('img'); if(img&&img.src) src=img.src; if(!src) src=w.getAttribute('data-src')||'';
+      if(!isCloudUrl(src)) return false;
+      var map = getConfirmedMap();
+      var key = getWrapKey(w);
+      if(!key || map[key] !== 1) return false;
+      return true;
+    }catch(e){ return false; }
+  }
+  function refreshCloudBadgesStrict(){
+    try{
+      refreshDevMode();
+      var adminView = !!(html.classList.contains('crmo-dev-admin') || document.body.classList.contains('role-admin') || document.body.classList.contains('role-master'));
+      document.querySelectorAll('.tile-edit-wrapper').forEach(function(w){
+        var badge = w.querySelector('.crmo-cloud-ok-badge');
+        if(!badge){
+          badge = document.createElement('div');
+          badge.className = 'crmo-cloud-ok-badge';
+          badge.title = 'תוכן מאומת בשרת';
+          badge.textContent = 'V';
+          w.appendChild(badge);
+        }
+        var ok = adminView && looksCloudConfirmedStrict(w);
+        w.setAttribute('data-crmo-has-content', hasRealContent(w) ? '1' : '0');
+        w.setAttribute('data-crmo-cloud-ok', ok ? '1' : '0');
+      });
+    }catch(e){}
+  }
+  function stampConfirmedTiles(){
+    try{
+      var map = getConfirmedMap();
+      document.querySelectorAll('.tile-edit-wrapper').forEach(function(w){
+        if(looksMaybeServerTile(w)) map[getWrapKey(w)] = 1;
+      });
+      setConfirmedMap(map);
+    }catch(e){}
+  }
+  function looksMaybeServerTile(w){
+    try{
+      if(!hasRealContent(w)) return false;
+      var src=''; var img=w.querySelector('img'); if(img&&img.src) src=img.src; if(!src) src=w.getAttribute('data-src')||'';
+      if(!isCloudUrl(src)) return false;
+      var metaRaw = w.getAttribute('data-files-meta') || '';
+      if(metaRaw){
+        try{
+          var meta = JSON.parse(metaRaw); var keys = Object.keys(meta||{});
+          for(var i=0;i<keys.length;i++){
+            var ms = String((meta[keys[i]]||{}).src || '');
+            if(ms && !isCloudUrl(ms)) return false;
+          }
+        }catch(e){ return false; }
+      }
+      return true;
+    }catch(e){ return false; }
+  }
+  function moveNoteIntoAdminBar(){
+    try{
+      var wrap = document.querySelector('#crmo-admin-bar .wrap');
+      if(!wrap) return;
+      var box = byId('crmo-manual-cloud-note');
+      if(box && box.parentNode !== wrap) wrap.appendChild(box);
+      if(box) box.style.display = 'none';
+    }catch(e){}
+  }
+  function bindClientLoginHard(){
+    ['login-trigger','login-trigger-mobile'].forEach(function(id){
+      var btn = byId(id); if(!btn || btn.__v1924) return; btn.__v1924 = true;
+      btn.style.cursor = 'pointer';
+      btn.addEventListener('click', function(ev){
+        try{ ev.preventDefault(); ev.stopPropagation(); }catch(e){}
+        try{
+          if(typeof window.CRMO_openCustomerAuthAuto === 'function'){ window.CRMO_openCustomerAuthAuto('login'); return false; }
+          if(typeof window.CRMO_openAuthAuto === 'function'){ window.CRMO_openAuthAuto(); return false; }
+          if(typeof window.CRMO_openAuth === 'function'){ window.CRMO_openAuth('admin'); return false; }
+        }catch(e){}
+        return false;
+      }, true);
+    });
+  }
+  function removeTopbarPencil(){
+    try{
+      document.querySelectorAll('img.crmo-topbar-pencil').forEach(function(img){ img.remove(); });
+    }catch(e){}
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    refreshDevMode();
+    moveNoteIntoAdminBar();
+    bindClientLoginHard();
+    removeTopbarPencil();
+    setTimeout(refreshCloudBadgesStrict, 200);
+    setTimeout(refreshCloudBadgesStrict, 1200);
+    if(typeof window.CRMO_sbPushNow === 'function' && !window.CRMO_sbPushNow.__v1924confirmed){
+      var oldPush = window.CRMO_sbPushNow;
+      window.CRMO_sbPushNow = async function(){
+        var out = await oldPush.apply(this, arguments);
+        setTimeout(function(){ try{ stampConfirmedTiles(); refreshCloudBadgesStrict(); }catch(e){} }, 700);
+        setTimeout(function(){ try{ stampConfirmedTiles(); refreshCloudBadgesStrict(); }catch(e){} }, 1800);
+        return out;
+      };
+      window.CRMO_sbPushNow.__v1924confirmed = true;
+    }
+    setInterval(function(){ refreshDevMode(); bindClientLoginHard(); removeTopbarPencil(); refreshCloudBadgesStrict(); }, 2500);
+  });
+  window.addEventListener('crmo:role-changed', function(){ setTimeout(function(){ refreshDevMode(); refreshCloudBadgesStrict(); }, 80); });
+})();
+</script>
 
 </body>
 </html>
