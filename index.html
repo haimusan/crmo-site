@@ -16869,6 +16869,122 @@ inputEl.addEventListener('click', function(){
   var closeXBtn   = document.getElementById('te-close-x');
   var currentTile    = null;
   var currentProject = null;
+  function saveTileImage(galleryId, tileId, file){
+    return new Promise(function(resolve, reject){
+      try{
+        if (!file) throw new Error('no-file');
+        console.log('[tile-edit] start', galleryId, tileId, file.name, file.size);
+        var folder = (typeof CRMO_getTileUploadFolder === 'function') ? CRMO_getTileUploadFolder() : 'galleries/uploads';
+        var uploadPath = (folder || 'galleries/uploads') + '/single';
+        var uploadPromise;
+        if (window.supabase && window.supabase.createClient){
+          uploadPromise = (async function(){
+            var sb = null;
+            if (window.CRMO_getSbClient){
+              try{ sb = await window.CRMO_getSbClient(); }catch(e){}
+            }
+            if (!sb){
+              sb = window.supabase.createClient(window.CRMO_SUPABASE_URL, window.CRMO_SUPABASE_ANON_KEY);
+            }
+            var bucket = window.CRMO_SUPABASE_BUCKET || 'assets';
+            var ext = ((file.name || '').split('.').pop() || 'png').toLowerCase();
+            var ts = new Date().toISOString().replace(/[:.]/g,'-');
+            var rnd = Math.random().toString(16).slice(2);
+            var objectPath = String(uploadPath || 'galleries/uploads/single').replace(/^\/+|\/+$/g,'') + '/' + String(galleryId || 'gallery') + '/' + String(tileId || 'tile') + '_' + ts + '_' + rnd + '.' + ext;
+            var up = await sb.storage.from(bucket).upload(objectPath, file, { upsert:true, contentType:file.type || undefined });
+            if (up && up.error) throw up.error;
+            var pub = sb.storage.from(bucket).getPublicUrl(objectPath);
+            var publicUrl = pub && pub.data && pub.data.publicUrl;
+            if (!publicUrl) throw new Error('no-public-url');
+            return publicUrl;
+          })();
+        } else {
+          uploadPromise = (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, uploadPath) : Promise.reject(new Error('no-uploader')));
+        }
+        Promise.resolve(uploadPromise).then(function(publicUrl){
+          if (!publicUrl) throw new Error('no-public-url');
+          console.log('[tile-edit] uploaded', publicUrl);
+          var wrapper = currentTile;
+          var anchor = wrapper && wrapper.querySelector ? wrapper.querySelector('a.ph') : null;
+          var filename = (file && file.name) ? file.name : '';
+          if (wrapper){
+            if (filename){
+              wrapper.setAttribute('data-filename', filename);
+              wrapper.setAttribute('data-files', filename);
+            }
+          }
+          if (anchor){
+            if (filename){
+              anchor.setAttribute('data-filename', filename);
+              anchor.setAttribute('data-files', filename);
+            }
+            var img = anchor.querySelector('img');
+            if (img) img.src = publicUrl;
+            else {
+              anchor.style.backgroundImage = 'url(' + publicUrl + ')';
+              anchor.style.backgroundSize = 'cover';
+              anchor.style.backgroundPosition = 'center center';
+            }
+          }
+          if (window.CRMO_mpThumbs && filename){ window.CRMO_mpThumbs[filename] = publicUrl; }
+          try{
+            if (galleryId && tileId !== '' && tileId !== null && typeof window.CRMO__galleryState === 'object'){
+              if (!window.CRMO__galleryState[galleryId]) window.CRMO__galleryState[galleryId] = [];
+              var arr = window.CRMO__galleryState[galleryId];
+              var idx = parseInt(tileId, 10);
+              if (!isNaN(idx)){
+                var data = arr[idx] || {};
+                data.imageSrc = publicUrl;
+                if (filename) data.imageName = filename;
+                if (filename) data.files = [filename];
+                data.multi = false;
+                data.extraImages = [];
+                if (Array.isArray(data.images)){
+                  data.images[0] = publicUrl;
+                }else if (data.layers && typeof data.layers === 'object'){
+                  var layerKey = data.layers['1.1'] ? '1.1' : (Object.keys(data.layers)[0] || '1.1');
+                  if (data.layers[layerKey] && typeof data.layers[layerKey] === 'object'){
+                    if ('src' in data.layers[layerKey]) data.layers[layerKey].src = publicUrl;
+                    else if ('url' in data.layers[layerKey]) data.layers[layerKey].url = publicUrl;
+                    else data.layers[layerKey] = publicUrl;
+                  }else{
+                    data.layers[layerKey] = publicUrl;
+                  }
+                }
+                arr[idx] = data;
+              }
+            }
+          }catch(stateErr){
+            throw stateErr;
+          }
+          try{
+            if (typeof window.CRMO_persistEditorState === 'function') window.CRMO_persistEditorState('tile-edit-image');
+            else if (typeof window.persistGalleryState === 'function') window.persistGalleryState(galleryId);
+            else if (typeof window.saveState === 'function') window.saveState();
+            else localStorage.setItem('crmo_gallery_state_v1', JSON.stringify(window.CRMO__galleryState || {}));
+          }catch(pErr){
+            throw pErr;
+          }
+          console.log('[tile-edit] persisted');
+          try{
+            if (typeof window.renderGallery === 'function') window.renderGallery(galleryId);
+            if (typeof window.renderTiles === 'function') window.renderTiles(galleryId);
+            if (typeof window.CRMO_renderGallery === 'function') window.CRMO_renderGallery();
+            if (typeof window.CRMO_tilesManagerRefresh === 'function') window.CRMO_tilesManagerRefresh();
+          }catch(_renderErr){}
+          resolve(publicUrl);
+        }).catch(function(err){
+          console.error('[tile-edit] failed', err);
+          alert('שמירת אריח נכשלה - בדוק Console');
+          reject(err);
+        });
+      }catch(err){
+        console.error('[tile-edit] failed', err);
+        alert('שמירת אריח נכשלה - בדוק Console');
+        reject(err);
+      }
+    });
+  }
   function openEditorForTile(wrapper) {
     lockBodyScroll();
     currentTile = wrapper;
@@ -16945,6 +17061,7 @@ inputEl.addEventListener('click', function(){
       fileLabel.textContent = fname ? ('קובץ נוכחי: ' + fname) : '';
     }
     imgInput.value = '';
+    try{ imgInput.removeAttribute('data-crmo-uploaded'); }catch(e){}
     panel.classList.add('open');
   }
   function closeEditor() {
@@ -17059,45 +17176,16 @@ saveBtn.addEventListener('click', function () {
       }
     }catch(e){}
     currentTile.setAttribute('data-tags',   tagsInput.value);
-    if (imgInput && imgInput.files && imgInput.files[0]) {
-      try {
-        var mainFile = imgInput.files[0];
-        var mainName = mainFile && mainFile.name ? mainFile.name : '';
-        if (mainName) {
-          var baseAnchor2 = currentTile.querySelector('a.ph');
-          currentTile.setAttribute('data-filename', mainName);
-          currentTile.setAttribute('data-files', mainName);
-          if (baseAnchor2) {
-            baseAnchor2.setAttribute('data-filename', mainName);
-            baseAnchor2.setAttribute('data-files', mainName);
-          }
-        }
-        (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(mainFile, CRMO_getTileUploadFolder() + '/main') : Promise.reject(new Error('no-uploader')))
-          .then(function(urlMain){
-            if (!urlMain) return;
-            try{
-              if (window.CRMO_mpThumbs && mainName){
-                window.CRMO_mpThumbs[mainName] = urlMain;
-              }
-            }catch(e){}
-            var anchor2 = currentTile.querySelector('a.ph');
-            var img2 = anchor2 && anchor2.querySelector('img');
-            if (img2){
-              img2.src = urlMain;
-            } else if (anchor2){
-              anchor2.style.backgroundImage = 'url(' + urlMain + ')';
-              anchor2.style.backgroundSize = 'cover';
-              anchor2.style.backgroundPosition = 'center center';
-            }
-          })
-          .catch(function(e){
-            try{ if(window.console && console.warn) console.warn('te main image upload failed', e); }catch(_){}
-            try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_){}
-          });
-      } catch(e) {
-        if (window.console && console.warn){
-          console.warn('te main image save failed', e);
-        }
+    if (imgInput && imgInput.files && imgInput.files[0] && imgInput.getAttribute('data-crmo-uploaded') !== '1') {
+      try{
+        var saveFile = imgInput.files[0];
+        var saveGalleryId = (currentTile && currentTile.getAttribute('data-crmo-owner-key') || '').trim();
+        var saveTileId = (currentTile && currentTile.getAttribute('data-crmo-idx') || '').trim();
+        saveTileImage(saveGalleryId, saveTileId, saveFile).catch(function(e){
+          try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(e); }catch(_e){}
+        });
+      }catch(e){
+        console.error('[tile-edit] failed', e);
       }
     }
 if (currentProject) {
@@ -17209,30 +17297,10 @@ window.CRMO_tilesManagerSyncFromDom(currentTile);
   imgInput.addEventListener('change', function () {
     if (!currentTile || !this.files || !this.files[0]) return;
     var file = this.files[0];
-    var filename = file && file.name ? file.name : '';
-    if (filename) {
-      var baseAnchor = currentTile.querySelector('a.ph');
-      currentTile.setAttribute('data-filename', filename);
-      currentTile.setAttribute('data-files', filename);
-      if (baseAnchor) {
-        baseAnchor.setAttribute('data-filename', filename);
-        baseAnchor.setAttribute('data-files', filename);
-      }
-    }
-    (window.CRMO_fileToSrc ? window.CRMO_fileToSrc(file, CRMO_getTileUploadFolder() + '/extra') : Promise.reject(new Error('no-uploader')))
-      .then(function(url){
-        if(!url) return;
-        var anchor = currentTile.querySelector('a.ph');
-        var img = anchor && anchor.querySelector('img');
-        if (img) {
-          img.src = url;
-        } else if (anchor) {
-          anchor.style.backgroundImage = 'url(' + url + ')';
-          anchor.style.backgroundSize = 'cover';
-          anchor.style.backgroundPosition = 'center center';
-        }
-        try{ if (typeof CRMO_persistEditorState === 'function') CRMO_persistEditorState('upload'); }catch(e){}
-      })
+    var galleryId = (currentTile.getAttribute('data-crmo-owner-key') || '').trim();
+    var tileId = (currentTile.getAttribute('data-crmo-idx') || '').trim();
+    saveTileImage(galleryId, tileId, file)
+      .then(function(){ try{ imgInput.setAttribute('data-crmo-uploaded','1'); }catch(_e){} })
       .catch(function(err){
         try{ if(window.CRMO_showUploadHint) window.CRMO_showUploadHint(err); }catch(e){}
       });
